@@ -1,0 +1,58 @@
+C:\windows\system32>manage-bde -protectors -add C: -recoverypassword
+BitLocker Drive Encryption: Configuration Tool version 10.0.18362
+Copyright (C) 2013 Microsoft Corporation. All rights reserved.
+
+Key Protectors Added:
+
+    Numerical Password:
+      ID: {B73BFCF4-E977-427A-8D83-07452DF28038}
+      Password:
+        028303-297550-329747-498938-519090-348315-120340-275649
+
+ACTIONS REQUIRED:
+
+    1. Save this numerical recovery password in a secure location away from
+    your computer:
+
+    028303-297550-329747-498938-519090-348315-120340-275649
+
+    To prevent data loss, save this password immediately. This password helps
+    ensure that you can unlock the encrypted volume.
+
+
+C:\windows\system32>manage-bde -protectors -adbackup -id {B73BFCF4-E977-427A-8D83-07452DF28038}
+BitLocker Drive Encryption: Configuration Tool version 10.0.18362
+Copyright (C) 2013 Microsoft Corporation. All rights reserved.
+
+ERROR: A volume letter is required.
+
+C:\windows\system32>manage-bde -protectors C: -adbackup -id {B73BFCF4-E977-427A-8D83-07452DF28038}
+BitLocker Drive Encryption: Configuration Tool version 10.0.18362
+Copyright (C) 2013 Microsoft Corporation. All rights reserved.
+
+Recovery information was successfully backed up to Active Directory.
+
+C:\windows\system32>manage-bde -on C:
+BitLocker Drive Encryption: Configuration Tool version 10.0.18362
+Copyright (C) 2013 Microsoft Corporation. All rights reserved.
+
+Volume C: [Windows ]
+[OS Volume]
+ACTIONS REQUIRED:
+
+    1. Save this numerical recovery password in a secure location away from
+    your computer:
+
+    028303-297550-329747-498938-519090-348315-120340-275649
+
+    To prevent data loss, save this password immediately. This password helps
+    ensure that you can unlock the encrypted volume.
+
+    2. Restart the computer to run a hardware test.
+    (Type "shutdown /?" for command line instructions.)
+
+    3. Type "manage-bde -status" to check if the hardware test succeeded.
+
+NOTE: Encryption will begin after the hardware test succeeds.
+
+C:\windows\system32>

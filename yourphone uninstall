@@ -1,0 +1,18 @@
+# Check if the Microsoft Your Phone app is installed
+$appName = "Microsoft.YourPhone"
+$app = Get-AppxPackage | Where-Object {$_.Name -eq $appName}
+
+# If the app is installed, remove it
+if ($app -ne $null) {
+    Remove-AppxPackage -Package $app.PackageFullName
+    Write-Host "The $appName app has been removed."
+}
+
+# Deny future reinstalls
+$appName = "Microsoft.YourPhone"
+$app = Get-AppxPackage -AllUsers | Where-Object {$_.Name -eq $appName}
+
+if ($app -ne $null) {
+    Add-AppxPackage -DisableDevelopmentMode -Register $app.InstallLocation\AppxManifest.xml
+    Write-Host "The $appName app has been denied future reinstalls."
+}

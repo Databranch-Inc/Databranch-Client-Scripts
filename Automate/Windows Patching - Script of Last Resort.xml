@@ -1,0 +1,49 @@
+<LabTech_Expansion
+	Version="190.161"
+	Name="LabTech Script Expansion"
+	Type="PackedScript">
+	<PackedScript>
+		<NewDataSet>
+			<Table>
+				<ScriptId>5084</ScriptId>
+				<FolderId>185</FolderId>
+				<ScriptName>Windows Patching - Script of Last Resort</ScriptName>
+				<ScriptNotes>Run when Windows Update is really broken.
+https://support.microsoft.com/en-us/help/971058/how-do-i-reset-windows-update-components
+</ScriptNotes>
+				<Permission>1,11,</Permission>
+				<EditPermission>1,</EditPermission>
+				<ComputerScript>1</ComputerScript>
+				<LocationScript>0</LocationScript>
+				<MaintenanceScript>0</MaintenanceScript>
+				<FunctionScript>0</FunctionScript>
+				<LicenseData>H4sIAAAAAAAEAFWPwQrCMBBE74L/kA9oSLJtalOWXFS8WBAV72kaMJe0pC3Yv9cWhXpadmbeDotnb13o3cEMRuN96pwWyJaJ1zHs2zEMLmqObLXh8dX5ODNOV21ozJSQykT7JAISAlwAKUoJJQC5VMhWabzZ6Lvh4WLv2zCf/Re+/mn0jbZZxne1SWluC0mFcIIqDpKCUmkus0+LMj9+AZCtn9lu3h3IcRvcAAAA</LicenseData>
+				<ScriptData>H4sIAAAAAAAEAOWc72/aOBiAv590/4M1Ce16UlvyAzrarhojdKvErYiUoZP4YhK3+BrizHYI/e/PCaGlaMm1m96u9n1qXjsJycNr7KeJfeoHnCbSwxKf/f4bQqfrWBSBCvsryXFee05JFAp0uKkYYo4XRBK+VfYpYjMcbRWsT/ZV7URZfGadHj4ueLTXp5SGZ4HrNo9m2NlvB+9a+5ZFrP1O027t252O0265Tcvu4M1ZigOKaz7cvujydL4kyf1ddANZXkC5VZafp3ERX4R53Va0fZPWzk3bO7GzE7s7cWuLB+PyrKmuN/9blvVYLGmckrz8frusuxQDuqDFIZvNsuYiDkkscXEzqnY73EbyQKEGi12HxXGqweSfXG49AnTWPHbKGvv/g8pp15CaUSm+D+sns8kyBlGW4lQQvgTBZBuDCScJDcUyAMHkGIMp4HeqRwDC5OqEye7UYPJVg6MBEciXLElICIKrpRMuqy6rPBKhN43uYDD2+yN/OLo8vxj0G9NukkQ0KC4G5YOl6V804Eywazn9QmTG+O3UY1kcMRwSPv22uOF/HoRYvgGh3a6gbb1G2rXJqWirESbyFccMc+JRITmdpQXmcxYpliAAj4xJVx6iQzUc/4YaExp7lDem32MJAvGdaVkYlg34GDXEnEQRJyKNZAMEXsfgDBR3QpKFY0/V7yVnTNoww+IqddA2/za4XiL/LK2sojYBRXBAVgSJUBCJcgtD3vEf3ZOTXm/Q8yej4WToXQ0ue6NR7+TkxP97b13n7dT63qg38SaXap+P3b2H4++P7I73Ks86HO/BfEtVUqNfjo9I/vV8vLjykU+ClFN5hzwiig9i/EVSXiv1eXrKb6zaoLSvsi9d0171jGpwIdA4UU5AflkDMMfSOLkRS+7YRTNQww8so4MwimCwaaVbz8KW8mjBYjhyVZ6lP7mFmMsFYM5pJVfPIifmIQuWGRy6KrXSH92Mq06EpBSMna2VUz2L3T/rnhYOXZVQ6Y9uOYNmp5XmPO/XLuA8heth7Sqn0Z/cQqwAO1hbK8V4PjgHjlyVRRhCrg1HzlyRwIFcJXx1B8fOXJXIHyIm6QwOnbkukdFY8lQAjkzMlYlQCBLPwcg55qoEFxiUnLkmcZPcBiKBI2eyRwQzLAgcOnNFQkQz0KQz1ySKN+zC6AaOnbkuwSKCU6liMHbm2oRiBwnOYJXIHyFCojNXJWhMZXIL9691x1yTyFKcwIFzzRWJ/M0NEsN1r665JlGis+DYmesSWRpEEvApomuuS2RpIuC4mWsSOTe4YYlrrkZkaUbg/jXsmusQ+RQcOG7mKkTODfRJjmuuQ6w71hUcOnMdYgH6O9cy2SEUuCUcOa0U4j9exVbsqJCEIzkn66kI1zQiAuE4LIp2XtMuKg9gsGo1W702IWMixTx/EitYcIt4/r47DDJzpm8knK3uguubog3vA83I/gGZ6LxOXPcZNpcyWWcYKhDCgNNKJp42+SRvmjCwqgTiVTbK/HHTy6/f0tJqtnktI9AFXFpVYqAfJ9AVXFpazR2v5QS6hEu7atD/Kjk9dQ0XzCXQGi5traaEt49qeI2HXveqj+ZMXtMV8vtXKEnFnITv3zbfosnn/qiPVKcocRSpsibqfvE2O1hFoNovZ0sV2kXYY4skVd5w4aH36MND9AHme9DKDVo17XvnRn8ajFYGYNesN1i8HQmROlotW2XlFvxSufMr5j5v4nLtzX8Ba7c2m4pTAAA=</ScriptData>
+				<ScriptVersion>1</ScriptVersion>
+				<ScriptGuid>c4407ba3-6c85-11e1-9025-29936540129a</ScriptGuid>
+				<ScriptFlags>0</ScriptFlags>
+				<Parameters></Parameters>
+			</Table>
+		</NewDataSet>
+		<ScriptFolder>
+			<NewDataSet>
+				<Table>
+					<FolderID>185</FolderID>
+					<ParentID>170</ParentID>
+					<Name>Patching</Name>
+					<GUID>8279ba71-6265-44bc-9993-5970111d7e4d</GUID>
+				</Table>
+			</NewDataSet>
+		</ScriptFolder>
+		<ScriptFolder>
+			<NewDataSet>
+				<Table>
+					<FolderID>170</FolderID>
+					<ParentID>0</ParentID>
+					<Name>ITSC</Name>
+					<GUID>e1976b4e-2edc-4280-ad18-83060e749512</GUID>
+				</Table>
+			</NewDataSet>
+		</ScriptFolder>
+	</PackedScript>
+</LabTech_Expansion>

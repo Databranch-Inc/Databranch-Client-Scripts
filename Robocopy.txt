@@ -1,0 +1,1 @@
+robocopy \\db-fs2012\sw \\dbnas\databranch\sw /xo /e /copyall /r:1 /w:1 /v /log:D:\Folders.txt /tee

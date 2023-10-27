@@ -1,0 +1,95 @@
+Received: from DM6PR08MB4409.namprd08.prod.outlook.com (2603:10b6:405:75::29)
+ by BN6PR08MB3393.namprd08.prod.outlook.com with HTTPS via
+ BN6PR17CA0040.NAMPRD17.PROD.OUTLOOK.COM; Fri, 15 Nov 2019 16:43:40 +0000
+Received: from MWHPR08CA0048.namprd08.prod.outlook.com (2603:10b6:300:c0::22)
+ by DM6PR08MB4409.namprd08.prod.outlook.com (2603:10b6:5:a2::25) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2430.25; Fri, 15 Nov
+ 2019 16:43:38 +0000
+Received: from MW2NAM12FT041.eop-nam12.prod.protection.outlook.com
+ (2a01:111:f400:fe5a::208) by MWHPR08CA0048.outlook.office365.com
+ (2603:10b6:300:c0::22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.2451.23 via Frontend
+ Transport; Fri, 15 Nov 2019 16:43:38 +0000
+Received: from transport-2.inbound.emailservice.io (52.0.31.31) by
+ MW2NAM12FT041.mail.protection.outlook.com (10.13.181.1) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.2451.23 via Frontend Transport; Fri, 15 Nov 2019 16:43:37 +0000
+Received: from igate-1.inbound.emailservice.io (igate-1.us-east-1.mailprotector.net [54.152.152.44])
+	by transport-2.inbound.emailservice.io (Postfix) with ESMTPS id E6FB5A111A;
+	Fri, 15 Nov 2019 16:43:36 +0000 (UTC)
+Received: from med.kyushu-u.ac.jp (mail.med.kyushu-u.ac.jp [133.5.208.1])
+	by igate-1.inbound.emailservice.io (Postfix) with ESMTP id 91DC662E64;
+	Fri, 15 Nov 2019 16:43:35 +0000 (UTC)
+Received: from www.med.kyushu-u.ac.jp (wonder.med.kyushu-u.ac.jp [133.5.208.10])1:17 PM 11/15/2019
+	by med.kyushu-u.ac.jp (Postfix) with ESMTP id 113A4618D415;
+	Sat, 16 Nov 2019 01:09:07 +0900 (JST)
+From: 0FFICE 365 <SUPP0RT@office365.microsoft.com>
+To: "SUPP0RT@office365.microsoft.com" <SUPP0RT@office365.microsoft.com>
+Subject: Re: VERIFICATI0N
+Thread-Topic: VERIFICATI0N
+Thread-Index: AQHVm9PV5d1sugi+PkWJtFkrj2Visw==
+Importance: high
+X-Priority: 1
+Date: Fri, 15 Nov 2019 16:09:07 +0000
+Message-ID: <2bcaf373902bc27f2c5fbddebe5927bf@med.kyushu-u.ac.jp>
+References: <94994a1022343736e7f468b738cebc79@med.kyushu-u.ac.jp>
+ <e6c3055105578d749703819c82005c3b@med.kyushu-u.ac.jp>
+In-Reply-To: <e6c3055105578d749703819c82005c3b@med.kyushu-u.ac.jp>
+Content-Language: en-US
+X-MS-Exchange-Organization-AuthSource:
+ MW2NAM12FT041.eop-nam12.prod.protection.outlook.com
+X-MS-Has-Attach:
+X-MS-Exchange-Organization-Network-Message-Id:
+ 94ab834d-979c-462a-3bc8-08d769eaf6b6
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+received-spf: None (protection.outlook.com: office365.microsoft.com does not
+ designate permitted sender hosts)
+X-Microsoft-Antispam-Mailbox-Delivery:
+ ucf:0;jmr:0;ex:0;auth:0;dest:I;ENG:(20160513016)(750127)(520002050)(701014)(944504077)(944701077)(944506383)(944626516);
+X-Microsoft-Antispam-Message-Info:
+ =?utf-8?B?NlcyNjVyQzQxNWt4WllHWkZtdks0a3AzTE1HVHlKeitWamgxeHFyWGpUY1dE?=
+ =?utf-8?B?Z2JBSTh5TkpNWXpuZWZxWWl2dlp6SXZiZXhKWG5wM25wL25EcWdzMStRTGh3?=
+ =?utf-8?B?aDVZdm52bDJPalR0cDN2bk9lWGV6QnJyUmZ3MFAxdXpRVitRQWtKYURsTUoz?=
+ =?utf-8?B?bkJLaVBCWnlZM3luc1NNdDdZWFpBYXpPMURVMmhFODRScUpVczZRb2dIVGdh?=
+ =?utf-8?B?QmZnTXBzZU5vWDIxdm5Wb0g5UmdPQUg5ckwwWVBSR20xSzExYkFKSTRrNDJy?=
+ =?utf-8?B?U0J4NGduOVcyQ1VnMW1YWm5jbk9udFhacGZvV3NnZ3FvZmV6aWhRUlQzdnJx?=
+ =?utf-8?B?a0M1bU1DeWUycFU3ckx4RVh5RFhFaVFEVWlpREU4M3A5a1NBOGRKeEZlNFV5?=
+ =?utf-8?B?Y0NDVnhNMWJFYXVYWTBybkVhcVN0S3pPeTYvVWdqVjIvY1FkRk9Zd0xTY05L?=
+ =?utf-8?B?L1hYS2tNZFhQQ1U0UithcW5qRGJvUkpGOGVGUlY0NEJQaUg3bGIweHo1NFg5?=
+ =?utf-8?B?a3Q3UmRUSzkxQnpBYU1vbE05UmlGdzNMbU9nR3dBVkVaczZOWnQxa1FYTm8z?=
+ =?utf-8?B?ckRZaFRIa3RzSTBabXRDVUxhQzhiWm5CTnRLV0dsTG5BTHNEeGI3WkxXalR3?=
+ =?utf-8?B?V3hGZGJkWDgrSXBmT096eTFXVWh5TDBKckNDY0x6blNpRlF2V0p6dEpLV3ZK?=
+ =?utf-8?B?YXYzYUJWbm4zcHpNdytpWTBxVkVpK05oUnpHRVI4WjZycE9VWENhWVEvaW9u?=
+ =?utf-8?B?aDZyOTZtakNsdThmblJuRy9JMTVPVmR2TDk5NGorYytSTVNSNDFXaTBuNzRi?=
+ =?utf-8?B?S2ZuWDZYeUNQQ0dId2FWSmtjaFZndkRnS0FucWFWVWsxVnJ0MFFSVXdkUkhN?=
+ =?utf-8?B?UVdRbDUvK3pydk1ibmRnalZpVFFPeGZwdDhhaTJOZFlheldzMkh4WTFicWlK?=
+ =?utf-8?B?cklVVnZKcFh6bVA4WGdMZDZZRGZqeE9SaG5RN3JDVUNrRXM1azAvS2RwdW45?=
+ =?utf-8?B?S1ZVcTFmdVl3dVhidDdEQit2N3d2VjhHVGdkQ2w5N1BEWE5DVGNYdFA2WnZw?=
+ =?utf-8?B?YWUxbXlqdHZMejU3VVAxYjUrR0Y2bjVxaE0yYWU3T3ZxYjhoam03d0xNTWZM?=
+ =?utf-8?B?N2FFWTB0M2REN1BDYjloVi9xcUxZcWc5ZC8xK3BVai9kU2R1ZS9xNmIzUGVz?=
+ =?utf-8?B?eTlia3dDMjRmUWh4WThaOGZRY3ZJY1hlUlVHK0VXVnFoNmZTUzFOWE5SMS84?=
+ =?utf-8?B?TVhsSGtVbmUxQXNuSWhITVNiSGxMdE9nUVBVck45a0Q5ZU12YjBCZkFhYlVU?=
+ =?utf-8?B?MGl0cmZJWjc1Sm1weWtFNmVjcUVrZzhPZ0FKVEhPNE1SRndBYzJDYmcrQlEz?=
+ =?utf-8?B?bll2VENTVFdQRzdybXlzRWwvVlBNL0NlRVcyaFVVNEM3QzhwMlJqSGRaMHVa?=
+ =?utf-8?B?TGFVbGVRYmdaZThBTU5UQThJNTVtd25jNW5FWnpGNTRlS29hV1V1bE1BS1RC?=
+ =?utf-8?B?NzA3dmlrREVCbjM3MkZQSCt0bGoxdVdTMUl5YWZQMHp6Uy8xYWFKd3JyQUkv?=
+ =?utf-8?B?M2tzS2pzbWhEMXlaQTY4QjVxNUtLL2ltTW1CUWpXenpuTExoTFlLYWYySXBh?=
+ =?utf-8?B?UTJJUHdxb1Zya0F3Z2xPUHliTE1iTG5oS3N3UHlzMkt2QVFXbXFkVEJ1TVNu?=
+ =?utf-8?B?VEEwWC9PUEJ2Qk9URWd1cFdPeHhUSW5Iby9acThrRjlvZWNzbUpiYTk3U0Nl?=
+ =?utf-8?B?eHduUVRXcndzK09VZGJRRFh4N29LYXN0V25pMlB3bllZV1pvVGNNaTRMK1Nv?=
+ =?utf-8?B?bEYyV1d6bXhiVndpM29DZW51RUd6M0pvYXcvREE1TXVkSmdGZ2VEK25Iendp?=
+ =?utf-8?B?V0wwcHF6S3ZVWWJsSGVuSVNKazZHSzl5L2MrSGJCbENaZjVzQ24yMWw4TXl4?=
+ =?utf-8?B?WkdQSlRnQ1MxbEFSS2t6Y0ZNc3RwY2l2RFVPRnRmT0JDRWg5cHhOMm9JODJZ?=
+ =?utf-8?B?cHpvSzM2REx1MzhpeTN6SStWSlJoTUFnenFrYWpac2tNUnpjTTlXaEF2b3pW?=
+ =?utf-8?B?T2lmWFVLanN5RTQ1a3RmVkFMamtISzBMU2JSb3JSSXBmeXVxZ2NnME9yZ1JZ?=
+ =?utf-8?B?SFNNV25EVzVOeEcvTXhHVHpTYW9jRTFhVXhac2JlT0FFMWhKOUpWZCtFc3Mr?=
+ =?utf-8?B?clpTNEkwaldoM3VnUXBYMEtOVlJ0bnIrQjVkbE02TmY3WVU0TWVDZ3dWcHhP?=
+ =?utf-8?B?MlpPZng3YjVEa21XUkMxYjBFRFR5RGFyN3JUbUhDdGhoYUlXNXB6WDA5QlhN?=
+ =?utf-8?B?c3I2bUhSaExZVkU2bUZSQ3lNcVkzSGdENEdjUkZnN2JHL2tiNGd0b2dRRWlV?=
+ =?utf-8?B?bytPVG1MTGc2Z0luR3kzT1JTTVhsaEdMRjJuSUhNMHVnRU9TWVZUdVhhK2Nw?=
+ =?utf-8?Q?rWvx0xCWOLISXgZWI0KzxojANyFvLvphdiA=3D?=
+Content-Type: multipart/alternative;
+	boundary="_000_2bcaf373902bc27f2c5fbddebe5927bfmedkyushuuacjp_"
+MIME-Version: 1.0

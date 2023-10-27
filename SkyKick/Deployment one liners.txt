@@ -1,0 +1,22 @@
+Endpoints[?PolicyName == '!!! - Disable Protection - TEMP USE ONLY - !!!' && Deactivated == `false`].[HostName, `| Last seen: `, LastSeen]
+
+
+
+Start-Process -FilePath "msiexec.exe" -ArgumentList "/i C:\Databranch\skoa\skoa\SkyKickOutlookAssistant-Desktop.msi /qn ORGANIZATIONKEY=TfQ0aJ4P0fZJ//3QAb+s7h0rxGOvripXQxNJ5r/6bIIjcw3b6DcFgxdDi+Yj9QPo" -Wait -Passthru
+
+
+Start-Process -FilePath "msiexec.exe" -ArgumentList "/i C:\Databranch\skoa\skoa\SkyKickOutlookAssistant-ClientService-x64.msi /qn ORGANIZATIONKEY=TfQ0aJ4P0fZJ//3QAb+s7h0rxGOvripXQxNJ5r/6bIIjcw3b6DcFgxdDi+Yj9QPo" -Wait -Passthru
+
+
+
+
+Expand-Archive \\CM-FS01\data\deployments\O365.zip -destinationpath C:\Databranch\O365\O365
+
+Start-Process -FilePath "C:\databranch\o365\o365\setup.exe" -ArgumentList "/configure C:\databranch\o365\o365\Cameron_MFG_O365_Config.xml" -Wait -Passthru
+
+C:\databranch\o365\o365\setup.exe /configure C:\databranch\o365\o365\Cameron_MFG_O365_Config.xml
+
+
+
+
+5358782037101482

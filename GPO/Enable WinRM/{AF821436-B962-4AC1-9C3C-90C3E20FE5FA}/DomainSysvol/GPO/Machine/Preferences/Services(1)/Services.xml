@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NTServices clsid="{2CFB484A-4E96-4b5d-A0B6-093D2F91E6AE}"><NTService clsid="{AB6F0B67-341F-4e51-92F9-005FBFBA1A43}" name="WinRM" image="1" changed="2018-08-27 20:14:16" uid="{BDB798D4-29A0-4938-A7A7-BD78E0E918B1}"><Properties startupType="AUTODELAYED" serviceName="WinRM" serviceAction="START" timeout="30"/></NTService>
+</NTServices>
