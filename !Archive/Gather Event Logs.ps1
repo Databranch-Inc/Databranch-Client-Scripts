@@ -28,3 +28,5 @@ foreach ($Server in $Servers)
         Get-WinEvent -ComputerName $Server -FilterHashtable @{Logname=$Logname;StartTime=$Date} | Where-Object {$_.LevelDisplayName -eq "Error" -or $_.LevelDisplayName -eq "Critical"} | Select-Object -Property LevelDisplayName,Message,Id,TimeCreated |  Export-Csv -Path "C:\Databranch\$Server $Logname Event Log.csv" -Force -NoTypeInformation -Encoding UTF8
         }
     }
+
+    #Line Added test.
