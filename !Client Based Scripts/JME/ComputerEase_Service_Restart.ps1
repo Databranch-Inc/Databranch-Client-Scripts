@@ -35,7 +35,7 @@ Start-Process -FilePath "C:\LocalComputerEase\mm.exe"
 Start-Sleep -Seconds 120
 
 #ProcessCheck and Stop if detected - post update
-$ProcessList = "mm", "mmr")
+$ProcessList = "mm", "mmr"
 
 foreach ($Process in $ProcessList)
 {
