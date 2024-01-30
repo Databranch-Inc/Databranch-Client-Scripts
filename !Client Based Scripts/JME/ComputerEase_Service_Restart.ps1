@@ -16,11 +16,11 @@ Previously, some parts of this automation were set to run in Connectwise Automat
 #>
 
 #ProcessCheck and Stop if detected - pre update
-$ProcessList = "mm", "mmr"
+$ProcessList = ("mm", "mmr")
 
 foreach ($Process in $ProcessList)
 {
-    if(Get-Process -Name $process)
+    ifif(Get-Process -Name $process -ErrorAction SilentlyContinue)
     {
         Stop-Process -Name $Process -Force
     }
@@ -35,11 +35,11 @@ Start-Process -FilePath "C:\LocalComputerEase\mm.exe"
 Start-Sleep -Seconds 120
 
 #ProcessCheck and Stop if detected - post update
-$ProcessList = "mm", "mmr"
+$ProcessList = ("mm", "mmr")
 
 foreach ($Process in $ProcessList)
 {
-    if(Get-Process -Name $process)
+    if(Get-Process -Name $process -ErrorAction SilentlyContinue)
     {
         Stop-Process -Name $Process -Force
     }
@@ -48,11 +48,5 @@ foreach ($Process in $ProcessList)
         Write-host "$Process is not running on machine, moving to next process or step"
     }
 }
-
-<#
-Legacy Code - Clean up after verified
-Stop-Process -Name "mm"
-Stop-Process -Name "mmr"
-#>
 
 Exit
