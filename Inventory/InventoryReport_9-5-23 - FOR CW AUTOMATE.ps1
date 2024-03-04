@@ -72,7 +72,7 @@ GET-ADCOMPUTER -filter {OperatingSystem -Like "Windows* *server*"} -properties *
 #AD Cleanups - Check for Disabled Items OU
 if (Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' ){
 
-    Write-Host "Disabled Items OU found."
+    Write-Host "Disabled Items OU found." -ForegroundColor Green
     
     }
     
@@ -85,11 +85,11 @@ if (Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' ){
 
 #Upload Items to review for last login, and move legacy items to Disabled Items 
 $DisabledOU = Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' | Select-Object DistinguishedName
-$DesktopExpChecks = Import-Csv C:\Databranch\desktopsAD.csv | Select-Object -ExpandProperty name,lastlogondate
+$DesktopExpChecks = Import-Csv C:\Databranch\desktopsAD.csv | Select-Object name,lastlogondate
     
 foreach ($DesktopExpCheck in $DesktopExpChecks)
     {
-    if ($DisableDate < $(DesktopExpCheck.lastlogondate)){
+    if ($DisableDate -lt $DesktopExpCheck.lastlogondate){
     
         Get-ADComputer -Identity $(DesktopExpCheck.Name) | Disable-ADAccount -PassThru | Move-ADObject -TargetPath $DisabledOU
         Write-Host "$(DesktopExpCheck.Name) has been moved to Disabled Items"
