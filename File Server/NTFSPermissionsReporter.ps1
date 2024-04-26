@@ -42,32 +42,33 @@ $AdGroups = $permissions."group/user" | Sort-Object | Get-Unique
 $distinguisheddomain = Get-ADDomain | Select-Object -ExpandProperty DistinguishedName
 $domain = (get-addomain -Identity $distinguisheddomain).netbiosname
 
+
+<#
 #Trim list of $ADGroups to only have items that are AD Based.
 foreach ($adgroup in $adgroups){
 
-if ($adgroup.Contains("$domain")){
+    if ($adgroup.Contains("$domain")){
 
-    #Trim Domain from from DOMAIN\GROUPNAME
+        #Trim Domain from from DOMAIN\GROUPNAME
    
-    $TrimStep1 = ("$adgroup").Trim("$domain")
-    $AdgroupTrimmed = ($TrimStep1).TrimStart("\")
+        $TrimStep1 = ("$adgroup").Trim("$domain")
+        $AdgroupTrimmed = ($TrimStep1).TrimStart("\")
 
 
-    Write-Host "$AdgroupTrimmed is in the $Domain domain" -ForegroundColor Green
-    <#
-    Write-Host "Members of AD Group $AdgorupTrimmed" are:
+        Write-Host "$AdgroupTrimmed is in the $Domain domain" -ForegroundColor Green
+        <#
+        Write-Host "Members of AD Group $AdgorupTrimmed" are:
 
-    #Get Members of AD Group
-    Get-ADGroupMember -Identity $AdgroupTrimmed | Select-Object -ExpandProperty Name
-   #>
+        #Get Members of AD Group
+        Get-ADGroupMember -Identity $AdgroupTrimmed | Select-Object -ExpandProperty Name
+        #>
+
+    }
+    else{
+
+        Write-Host "$adgroup is not a group in the $Domain domain. It is either a Domain user, or it is a Local Group/User" -ForegroundColor Yellow
+
+    }
 
 }
-else{
-
-    Write-Host "$adgroup is not a group in the $Domain domain. It is either a Domain user, or it is a Local Group/User" -ForegroundColor Yellow
-
-}
-
-}
-
-#Create Report
+#>

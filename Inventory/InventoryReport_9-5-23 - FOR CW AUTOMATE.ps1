@@ -27,8 +27,6 @@ $Date = Get-Date -Format "MM/dd/yyyy hh:mm:ss tt"
 $90DaysAgo =(Get-Date).AddDays(-90)
 $DisableDate = Get-Date -Date $90DaysAgo -Format "MM/dd/yyyy hh:mm:ss tt"
  
-#AD
-
 
 #Test for folder C:\Databranch
 If (Test-Path C:\Databranch)
@@ -39,32 +37,7 @@ Else
     {
     New-Item -ItemType Directory -Path C:\ -Name Databranch
     }
-       
-#Get AD information for desktops and laptops
-Write-Host "Gathering AD Information" -ForegroundColor Green
-GET-ADCOMPUTER -filter {OperatingSystem -NotLike "*server*"} -properties * |select-object name,OperatingSystem,lastlogondate,enabled,ipv4address,description,DistinguishedName| Export-csv C:\Databranch\desktopsAD.csv -notypeinformation -encoding utf8
-
-#Get AD information for users
-GET-ADUSER -filter * -properties * |select-object name,lastlogondate,enabled,description,DistinguishedName | Export-csv C:\Databranch\usersAD.csv -notypeinformation -encoding utf8
-
-#Get AD information for servers
-GET-ADCOMPUTER -filter {OperatingSystem -Like "Windows* *server*"} -properties * |select-object name,OperatingSystem,lastlogondate,enabled,ipv4address,description,DistinguishedName| Export-csv C:\Databranch\serverAD.csv -notypeinformation -encoding utf8
-
-#AD Cleanups - Check for Disabled Items OU
-
-
-
-
-
-
-
-
-#These commands generate files called desktopsAD.csv, usersAD.csv and serverAD.csv at the root of drive C. Updated 6/28/18 - Added aditional filter to the servedr pull to include the wildcard for the registerd symbol (®) in Windows® Small Business Server 2011 Standard - Josh Britton
-
-
-#Upload Desktop names from AD to gather Model information
-$Desktops = Import-Csv C:\Databranch\desktopsAD.csv | Select-Object -ExpandProperty name
-
+     
 #Clear old files from C:\Databranch to avoid duplicate entries
 Write-Host "Performing cleanup on old Desktop info files" -ForegroundColor Green
 
@@ -84,6 +57,81 @@ Else
     Write-Host "C:\Databranch\desktops$FileName.csv does not exist. Moving to next file." -ForegroundColor Green
     }
 }
+
+
+#Get AD information for desktops and laptops
+Write-Host "Gathering AD Information" -ForegroundColor Green
+GET-ADCOMPUTER -filter {OperatingSystem -NotLike "*server*"} -properties * |select-object name,OperatingSystem,lastlogondate,enabled,ipv4address,description,DistinguishedName| Export-csv C:\Databranch\desktopsAD.csv -notypeinformation -encoding utf8
+
+#Get AD information for users
+GET-ADUSER -filter * -properties * |select-object name,lastlogondate,enabled,description,DistinguishedName | Export-csv C:\Databranch\usersAD.csv -notypeinformation -encoding utf8
+
+#Get AD information for servers
+GET-ADCOMPUTER -filter {OperatingSystem -Like "Windows* *server*"} -properties * |select-object name,OperatingSystem,lastlogondate,enabled,ipv4address,description,DistinguishedName| Export-csv C:\Databranch\serverAD.csv -notypeinformation -encoding utf8
+
+#AD Cleanups - Check for Disabled Items OU
+if (Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' ){
+
+    Write-Host "Disabled Items OU found." -ForegroundColor Green
+    
+    }
+    
+    else{
+    #Create Disabled Items OU
+    New-ADOrganizationalUnit -Name "Disabled Items"
+    }
+    
+#Move Disabled items to OU
+
+#Upload Items to review for last login, and move legacy items to Disabled Items 
+$DisabledOU = Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' | Select-Object * -ExpandProperty DistinguishedName
+$DesktopExpChecks = Search-ADAccount -ComputersOnly -AccountInactive -TimeSpan (New-TimeSpan -Days 90) | Where-Object -Property enabled -EQ True | Select-Object name,lastlogondate,enabled
+    
+foreach ($DesktopExpCheck in $DesktopExpChecks){
+    $group = "Do not Disable"
+    $Authorization = Get-ADGroupMember -Identity $group | Where-Object {$_.name -eq $DesktopExpCheck.Name}
+    if ($Authorization){ 
+        Write-Host ""$DesktopExpCheck.Name" is a member of the AD Group Do Not Disable. This object will not be disabled or moved in AD" -ForegroundColor Cyan
+        
+    }
+    else{       
+        Get-ADComputer -Identity $DesktopExpCheck.Name | Disable-ADAccount -PassThru 
+        $DesktopDescription = Get-ADComputer -Identity $DesktopExpCheck.Name | Select-Object -ExpandProperty Description
+        Move-ADObject  -Identity $DesktopExpCheck.Name -TargetPath $DisabledOU
+        Set-ADComputer -Identity $DesktopExpCheck.Name -Description "$Desktopdescription | Disabled on $date by Databranch AD Inventory Script"
+        Write-Host ""$DesktopExpCheck.Name" has been moved to Disabled Items" -ForegroundColor Yellow
+    }
+}            
+   
+$UserExpChecks = Search-ADAccount -UsersOnly -AccountInactive -TimeSpan (New-TimeSpan -Days 90) | Where-Object -Property enabled -EQ True | Select-Object name,SamAccountName,ObjectGUID,lastlogondate,Description,enabled
+
+foreach ($UserExpCheck in $UserExpChecks){
+        $Authorization = Get-ADGroupMember -Identity $group | Where-Object {$_.name -eq $UserExpCheck.Name}
+    if ($Authorization){ 
+        Write-Host ""$UserExpCheck.Name" is a member of the AD Group Do Not Disable. This object will not be disabled or moved in AD" -ForegroundColor Cyan
+        
+    }
+    else{       
+        Get-ADUser -Identity $UserExpCheck.SamAccountName | Disable-ADAccount -PassThru
+        $UserDescription =  Get-ADUser -Identity $UserExpCheck.SamAccountName -Properties Description | Select-Object -ExpandProperty Description
+        Move-ADObject -Identity $UserExpCheck.ObjectGUID -TargetPath $DisabledOU
+        Set-ADUser -Identity $UserExpCheck.SamAccountName -Description "$UserDescription | Disabled on $date by Databranch AD Inventory Script"
+        Write-Host ""$UserExpCheck.Name" has been moved to Disabled Items" -ForegroundColor Yellow
+    }
+}    
+   
+  
+#Disabled Items check
+
+$DisabledUsers = Get-ADuser -Filter * -SearchBase $DisabledOU | Where-Object {$_.Enabled -eq $False} | Select-Object -ExpandProperty samaccountname
+
+
+#These commands generate files called desktopsAD.csv, usersAD.csv and serverAD.csv at the root of drive C. Updated 6/28/18 - Added aditional filter to the server pull to include the wildcard for the registerd symbol (®) in Windows® Small Business Server 2011 Standard - Josh Britton
+
+
+#Upload Desktop names from AD to gather Model information
+$Desktops = Import-Csv C:\Databranch\desktopsAD.csv | Select-Object -ExpandProperty name
+
 
 #Gather CIM information about desktop Models
 Write-Host "Gathering Desktop Model and Serial information" -ForegroundColor Green
