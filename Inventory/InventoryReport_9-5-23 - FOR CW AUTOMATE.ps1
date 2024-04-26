@@ -84,22 +84,42 @@ if (Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' ){
 #Move Disabled items to OU
 
 #Upload Items to review for last login, and move legacy items to Disabled Items 
-$DisabledOU = Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' | Select-Object DistinguishedName
-$DesktopExpChecks = Import-Csv C:\Databranch\desktopsAD.csv | Select-Object name,lastlogondate
+$DisabledOU = Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' | Select-Object * -ExpandProperty DistinguishedName
+$DesktopExpChecks = Search-ADAccount -ComputersOnly -AccountInactive -TimeSpan (New-TimeSpan -Days 90) | Where-Object -Property enabled -EQ True | Select-Object name,lastlogondate,enabled
     
-foreach ($DesktopExpCheck in $DesktopExpChecks)
-    {
-    if ($DisableDate -lt $DesktopExpCheck.lastlogondate){
-    
-        Get-ADComputer -Identity $(DesktopExpCheck.Name) | Disable-ADAccount -PassThru | Move-ADObject -TargetPath $DisabledOU
-        Write-Host "$(DesktopExpCheck.Name) has been moved to Disabled Items"
-        }
-    
-    Else{
-            Write-Host "$(DesktopExpCheck.Name) has not been inactive for at least 90 days, moving to next machine"
-        }
+foreach ($DesktopExpCheck in $DesktopExpChecks){
+    $group = "Do not Disable"
+    $Authorization = Get-ADGroupMember -Identity $group | Where-Object {$_.name -eq $DesktopExpCheck.Name}
+    if ($Authorization){ 
+        Write-Host ""$DesktopExpCheck.Name" is a member of the AD Group Do Not Disable. This object will not be disabled or moved in AD" -ForegroundColor Cyan
+        
     }
-    
+    else{       
+        Get-ADComputer -Identity $DesktopExpCheck.Name | Disable-ADAccount -PassThru 
+        $DesktopDescription = Get-ADComputer -Identity $DesktopExpCheck.Name | Select-Object -ExpandProperty Description
+        Move-ADObject  -Identity $DesktopExpCheck.Name -TargetPath $DisabledOU
+        Set-ADComputer -Identity $DesktopExpCheck.Name -Description "$Desktopdescription | Disabled on $date by Databranch AD Inventory Script"
+        Write-Host ""$DesktopExpCheck.Name" has been moved to Disabled Items" -ForegroundColor Yellow
+    }
+}            
+   
+$UserExpChecks = Search-ADAccount -UsersOnly -AccountInactive -TimeSpan (New-TimeSpan -Days 90) | Where-Object -Property enabled -EQ True | Select-Object name,SamAccountName,ObjectGUID,lastlogondate,Description,enabled
+
+foreach ($UserExpCheck in $UserExpChecks){
+        $Authorization = Get-ADGroupMember -Identity $group | Where-Object {$_.name -eq $UserExpCheck.Name}
+    if ($Authorization){ 
+        Write-Host ""$UserExpCheck.Name" is a member of the AD Group Do Not Disable. This object will not be disabled or moved in AD" -ForegroundColor Cyan
+        
+    }
+    else{       
+        Get-ADUser -Identity $UserExpCheck.SamAccountName | Disable-ADAccount -PassThru
+        $UserDescription =  Get-ADUser -Identity $UserExpCheck.SamAccountName -Properties Description | Select-Object -ExpandProperty Description
+        Move-ADObject -Identity $UserExpCheck.ObjectGUID -TargetPath $DisabledOU
+        Set-ADUser -Identity $UserExpCheck.SamAccountName -Description "$UserDescription | Disabled on $date by Databranch AD Inventory Script"
+        Write-Host ""$UserExpCheck.Name" has been moved to Disabled Items" -ForegroundColor Yellow
+    }
+}    
+   
   
 #Disabled Items check
 
