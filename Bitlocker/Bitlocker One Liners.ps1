@@ -14,3 +14,6 @@ $obj = @{}
 $obj.RecoveryKey = $RecoveryKey
 $Final = [string]::Join("|",($obj.GetEnumerator() | %{$_.Name + "=" + $_.Value}))
 Write-Output $Final
+
+#Send Bitlocker Key to AD
+Backup-BitLockerKeyProtector -MountPoint $SystemDrive -KeyProtectorId $RecoveryKey

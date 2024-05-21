@@ -10,6 +10,9 @@ Josh Britton
 1.0
 #>
 
-Write-Host "Succesffuly talked to GITHUB!"
+function Talk-DatabranchGithub {
 
-Start-Sleep 10
+
+Write-Host "Successfuly talked to GITHUB!"
+
+Start-Sleep 10}

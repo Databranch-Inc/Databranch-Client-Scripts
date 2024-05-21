@@ -85,6 +85,8 @@ if (Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' ){
 
 #Upload Items to review for last login, and move legacy items to Disabled Items 
 $DisabledOU = Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' | Select-Object * -ExpandProperty DistinguishedName
+
+#Desktop Check
 $DesktopExpChecks = Search-ADAccount -ComputersOnly -AccountInactive -TimeSpan (New-TimeSpan -Days 90) | Where-Object -Property enabled -EQ True | Select-Object name,lastlogondate,enabled
     
 foreach ($DesktopExpCheck in $DesktopExpChecks){
@@ -102,11 +104,13 @@ foreach ($DesktopExpCheck in $DesktopExpChecks){
         Write-Host ""$DesktopExpCheck.Name" has been moved to Disabled Items" -ForegroundColor Yellow
     }
 }            
-   
+
+#User Check
 $UserExpChecks = Search-ADAccount -UsersOnly -AccountInactive -TimeSpan (New-TimeSpan -Days 90) | Where-Object -Property enabled -EQ True | Select-Object name,SamAccountName,ObjectGUID,lastlogondate,Description,enabled
 
 foreach ($UserExpCheck in $UserExpChecks){
-        $Authorization = Get-ADGroupMember -Identity $group | Where-Object {$_.name -eq $UserExpCheck.Name}
+    $group = "Do not Disable"    
+    $Authorization = Get-ADGroupMember -Identity $group | Where-Object {$_.name -eq $UserExpCheck.Name}
     if ($Authorization){ 
         Write-Host ""$UserExpCheck.Name" is a member of the AD Group Do Not Disable. This object will not be disabled or moved in AD" -ForegroundColor Cyan
         
@@ -120,10 +124,71 @@ foreach ($UserExpCheck in $UserExpChecks){
     }
 }    
    
-  
-#Disabled Items check
+#Check Disabled Items OU for items to delete
 
+#Desktop Check
+
+
+
+
+
+
+#User Check
 $DisabledUsers = Get-ADuser -Filter * -SearchBase $DisabledOU | Where-Object {$_.Enabled -eq $False} | Select-Object -ExpandProperty samaccountname
+
+foreach ($DisabledUser in $DisabledUsers){
+    $ObjectDisabledDateAttribute = Get-ADUser -Identity $DisabledUser -Properties whenChanged | select-object -ExpandProperty whenChanged
+    $ObjectDisabledDateConverted = ($ObjectDisabledDateAttribute).tostring("MM/dd/yyyy hh:mm:ss tt")
+
+    if($ObjectDisabledDateConverted -lt $DisableDate){
+
+    }
+    else{
+
+    }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #These commands generate files called desktopsAD.csv, usersAD.csv and serverAD.csv at the root of drive C. Updated 6/28/18 - Added aditional filter to the server pull to include the wildcard for the registerd symbol (®) in Windows® Small Business Server 2011 Standard - Josh Britton
@@ -131,7 +196,6 @@ $DisabledUsers = Get-ADuser -Filter * -SearchBase $DisabledOU | Where-Object {$_
 
 #Upload Desktop names from AD to gather Model information
 $Desktops = Import-Csv C:\Databranch\desktopsAD.csv | Select-Object -ExpandProperty name
-
 
 #Gather CIM information about desktop Models
 Write-Host "Gathering Desktop Model and Serial information" -ForegroundColor Green

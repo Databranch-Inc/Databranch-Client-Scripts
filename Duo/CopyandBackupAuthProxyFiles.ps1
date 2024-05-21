@@ -17,9 +17,9 @@ Josh Britton
 
 #Variable Set:
 $date = get-date -Format "MM-dd-yyyy"
-$ConfigFolder = Get-ChildItem "C:\Program Files\Duo Security Authentication Proxy\conf"
+$ConfigFolder = "C:\Program Files\Duo Security Authentication Proxy\conf"
 
-Compress-Archive -Path $ConfigFolder -DestinationPath "C:\databranch\DuoAuthBackup$date.zip"
+Compress-Archive -Path $ConfigFolder -DestinationPath "C:\databranch\DuoAuthBackup$date.zip" | Out-Null
 
 if (Test-Path "C:\databranch\DuoAuthBackup$date.zip"){
 Write-Host "Duo config backup saved at C:\databranch\DuoAuthBackup$date.zip"
