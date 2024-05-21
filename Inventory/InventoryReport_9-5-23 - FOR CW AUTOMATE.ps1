@@ -120,10 +120,27 @@ foreach ($UserExpCheck in $UserExpChecks){
         $UserDescription =  Get-ADUser -Identity $UserExpCheck.SamAccountName -Properties Description | Select-Object -ExpandProperty Description
         Move-ADObject -Identity $UserExpCheck.ObjectGUID -TargetPath $DisabledOU
         Set-ADUser -Identity $UserExpCheck.SamAccountName -Description "$UserDescription | Disabled on $date by Databranch AD Inventory Script"
-        Write-Host ""$UserExpCheck.Name" has been moved to Disabled Items" -ForegroundColor Yellow
+        Write-Host ""$UserExpCheck.SamAccountName" has been moved to Disabled Items" -ForegroundColor Yellow
     }
 }    
-   
+
+#Move disabled users and computers from other OUs to Disabled Items OU
+$DisabledObjectCleanups = Search-ADAccount -AccountDisabled | Where-Object {$_.DistinguishedName -NotLike "*OU=Disabled Items,DC=databranch,DC=com*"} | Select-Object SamAccountName,ObjectGUID,objectclass
+
+foreach ($DisabledObjectCleanup in $DisabledObjectCleanups){
+if ($DisabledObjectCleanup.objectclass -eq "user")
+{
+    $UserDescription =  Get-ADUser -Identity $DisabledObjectCleanup.SamAccountName -Properties Description | Select-Object -ExpandProperty Description
+    Move-ADObject -Identity $DisabledObjectCleanup.ObjectGUID -TargetPath $DisabledOU
+    Set-ADUser -Identity $DisabledObjectCleanup.SamAccountName -Description "$UserDescription | Moved to Disabled Items on $date by Databranch AD Inventory Script"
+    Write-Host ""$DisabledObjectCleanup.SamAccountName" was already disabled but not in the Disabled Items OU. "$DisabledObjectCleanup.SamAccountName" has been moved to Disabled Items" -ForegroundColor Yellow
+}
+elseif($DisabledObjectCleanup.objectclass -eq "user")
+{
+ Write-Host ""$DisabledObjectCleanup.SamAccountName" is not a user object" -ForegroundColor Cyan
+}
+}
+
 #Check Disabled Items OU for items to delete
 
 #Desktop Check
