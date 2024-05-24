@@ -23,6 +23,7 @@ $Keys = @(
     '96A780A4-19E1-489B-9F17-6F5A757E1786'
     'CBFE412A-73C7-4137-9A00-12C618BBC143'
     'AD606E62-1755-440B-A6C5-9963B838C5D7'
+    '91FCB869-B65C-43CF-80E7-474A2F1A4FC2'
 )
 
 #Test for version via Regkey and GUID path, update keys when proper version found.

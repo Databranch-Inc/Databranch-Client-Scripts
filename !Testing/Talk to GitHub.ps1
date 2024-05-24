@@ -12,7 +12,8 @@ Josh Britton
 
 function Talk-DatabranchGithub {
 
+$Date = Get-Date
 
-Write-Host "Successfuly talked to GITHUB!"
+Write-Host "Successfuly talked to GITHUB! on $Date"
 
 Start-Sleep 10}
