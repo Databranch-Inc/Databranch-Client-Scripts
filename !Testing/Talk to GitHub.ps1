@@ -10,6 +10,8 @@ Josh Britton
 1.0
 #>
 
+
+#Create a Function to wrap the script. The line of the function is called in the CW Automate Script
 function Talk-DatabranchGithub {
 
 $Date = Get-Date
