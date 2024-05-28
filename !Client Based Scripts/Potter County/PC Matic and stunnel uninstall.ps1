@@ -12,7 +12,7 @@ Initial Build
 
 ========================================================================================================
 #>
-
+function Uninstall-PCMatic {
 
 #Variable Set
 $Keys = @(
@@ -90,4 +90,6 @@ if($stunnelpath -eq $true){
 else{
 
     Write-host "Stunnel not found on this machine. Ending script"
+}
+
 }
