@@ -96,4 +96,7 @@ else{
     Write-host "Stunnel not found on this machine. Ending script"
 }
 
+#Allow time for uninstall actions to complete before refreshing software list in Automate
+Start-Sleep 300
+
 }
