@@ -3,6 +3,10 @@ This PC will check an array of GUIDs based on different versions of PC Matic. On
 
 The script will then look for the STUNNEL applicaiton, and run a silent uninstall if found
 
+
+Script is called in the Following RMM Script:
+*** JB - Potter County - Remove PC Matic and STunnel applications
+
 Josh Britton
 5-3-24
 ========================================================================================================
