@@ -20,7 +20,6 @@ Original Created Date - 9/23/19
 #Import AD Module into shell
 Import-Module ActiveDirectory
 
-
 #Inital Variable Set
 #Dates
 $Date = Get-Date -Format "MM/dd/yyyy hh:mm:ss tt"
@@ -69,7 +68,14 @@ GET-ADUSER -filter * -properties * |select-object name,lastlogondate,enabled,des
 #Get AD information for servers
 GET-ADCOMPUTER -filter {OperatingSystem -Like "Windows* *server*"} -properties * |select-object name,OperatingSystem,lastlogondate,enabled,ipv4address,description,DistinguishedName| Export-csv C:\Databranch\serverAD.csv -notypeinformation -encoding utf8
 
-#AD Cleanups - Check for Disabled Items OU
+
+<#======================================================================================================
+
+AD Cleanups
+
+========================================================================================================#>
+
+#Check for Disabled Items OU
 if (Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' ){
 
     Write-Host "Disabled Items OU found." -ForegroundColor Green
@@ -125,30 +131,44 @@ foreach ($UserExpCheck in $UserExpChecks){
 }    
 
 #Move disabled users and computers from other OUs to Disabled Items OU
-$DisabledObjectCleanups = Search-ADAccount -AccountDisabled | Where-Object {$_.DistinguishedName -NotLike "*OU=Disabled Items,DC=databranch,DC=com*"} | Select-Object SamAccountName,ObjectGUID,objectclass
+$DisabledObjectCleanups = Search-ADAccount -AccountDisabled | Where-Object {$_.DistinguishedName -NotLike "*OU=Disabled Items,*"} | Select-Object SamAccountName,ObjectGUID,objectclass
 
 foreach ($DisabledObjectCleanup in $DisabledObjectCleanups){
-if ($DisabledObjectCleanup.objectclass -eq "user")
-{
-    $UserDescription =  Get-ADUser -Identity $DisabledObjectCleanup.SamAccountName -Properties Description | Select-Object -ExpandProperty Description
-    Move-ADObject -Identity $DisabledObjectCleanup.ObjectGUID -TargetPath $DisabledOU
-    Set-ADUser -Identity $DisabledObjectCleanup.SamAccountName -Description "$UserDescription | Moved to Disabled Items on $date by Databranch AD Inventory Script"
-    Write-Host ""$DisabledObjectCleanup.SamAccountName" was already disabled but not in the Disabled Items OU. "$DisabledObjectCleanup.SamAccountName" has been moved to Disabled Items" -ForegroundColor Yellow
-}
-elseif($DisabledObjectCleanup.objectclass -eq "user")
-{
- Write-Host ""$DisabledObjectCleanup.SamAccountName" is not a user object" -ForegroundColor Cyan
-}
+    if ($DisabledObjectCleanup.objectclass -eq "user"){
+        $UserDescription =  Get-ADUser -Identity $DisabledObjectCleanup.SamAccountName -Properties Description | Select-Object -ExpandProperty Description
+        Move-ADObject -Identity $DisabledObjectCleanup.ObjectGUID -TargetPath $DisabledOU
+        Set-ADUser -Identity $DisabledObjectCleanup.SamAccountName -Description "$UserDescription | Moved to Disabled Items on $date by Databranch AD Inventory Script"
+        Write-Host ""$DisabledObjectCleanup.SamAccountName" was already disabled but not in the Disabled Items OU. "$DisabledObjectCleanup.SamAccountName" has been moved to Disabled Items" -ForegroundColor Yellow
+    }
+    elseif($DisabledObjectCleanup.objectclass -eq "computer"){
+        Write-Host ""$DisabledObjectCleanup.SamAccountName" is not a user object" -ForegroundColor Cyan
+        $ComputerDescription =  Get-ADComputer -Identity $DisabledObjectCleanup.SamAccountName -Properties Description | Select-Object -ExpandProperty Description
+        Move-ADObject -Identity $DisabledObjectCleanup.ObjectGUID -TargetPath $DisabledOU
+        Set-ADComputer -Identity $DisabledObjectCleanup.SamAccountName -Description "$ComputerDescription | Moved to Disabled Items on $date by Databranch AD Inventory Script"
+        Write-Host ""$DisabledObjectCleanup.SamAccountName" was already disabled but not in the Disabled Items OU. "$DisabledObjectCleanup.SamAccountName" has been moved to Disabled Items" -ForegroundColor Yellow
+    }
+    else{
+        Write-host ""$DisabledObjectCleanup.SamAccountName" is not a user or computer object" -ForegroundColor Cyan
+    }
 }
 
 #Check Disabled Items OU for items to delete
 
 #Desktop Check
+$DisabledComputers = Get-ADComputer -Filter * -SearchBase $DisabledOU | Where-Object {$_.Enabled -eq $False} | Select-Object -ExpandProperty samaccountname
 
+foreach ($DisabledComputer in $DisabledComputers){
+    $ObjectDisabledDateAttribute = Get-ADUser -Identity $DisabledUser -Properties whenChanged | select-object -ExpandProperty whenChanged
+    $ObjectDisabledDateConverted = ($ObjectDisabledDateAttribute).tostring("MM/dd/yyyy hh:mm:ss tt")
 
-
-
-
+    if($ObjectDisabledDateConverted -lt $DisableDate){
+        Write-Host "Computer Object $DisabledComputer been disabled longer than 90 days. Deleting from AD" -ForegroundColor Yellow
+        #Remove-ADComputer -Identity $DisabledComputer
+    }
+    else{
+        Write-Host "Comptuer Object $DisabledComputer has NOT been disabled longer than 90 days. Moving to next object" -ForegroundColor Cyan
+   }
+}
 
 #User Check
 $DisabledUsers = Get-ADuser -Filter * -SearchBase $DisabledOU | Where-Object {$_.Enabled -eq $False} | Select-Object -ExpandProperty samaccountname
@@ -158,22 +178,13 @@ foreach ($DisabledUser in $DisabledUsers){
     $ObjectDisabledDateConverted = ($ObjectDisabledDateAttribute).tostring("MM/dd/yyyy hh:mm:ss tt")
 
     if($ObjectDisabledDateConverted -lt $DisableDate){
-
+        Write-Host "User object $Disableduser has been disabled longer than 90 days. Deleting from AD" -ForegroundColor Yellow
+        Remove-ADUser -Identity $DisabledUser
     }
     else{
-
-    }
-
-
+        Write-Host "User Object $Disableduser has NOT been disabled longer than 90 days. Moving to next object" -ForegroundColor Cyan
+   }
 }
-
-
-
-
-
-
-
-
 
 #These commands generate files called desktopsAD.csv, usersAD.csv and serverAD.csv at the root of drive C. Updated 6/28/18 - Added aditional filter to the server pull to include the wildcard for the registerd symbol (®) in Windows® Small Business Server 2011 Standard - Josh Britton
 
