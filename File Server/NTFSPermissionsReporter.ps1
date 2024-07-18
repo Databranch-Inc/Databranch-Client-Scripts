@@ -56,12 +56,12 @@ foreach ($adgroup in $adgroups){
 
 
         Write-Host "$AdgroupTrimmed is in the $Domain domain" -ForegroundColor Green
-        <#
+        
         Write-Host "Members of AD Group $AdgorupTrimmed" are:
 
         #Get Members of AD Group
         Get-ADGroupMember -Identity $AdgroupTrimmed | Select-Object -ExpandProperty Name
-        #>
+        
 
     }
     else{

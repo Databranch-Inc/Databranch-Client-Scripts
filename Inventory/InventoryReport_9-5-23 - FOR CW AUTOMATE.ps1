@@ -87,7 +87,21 @@ if (Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' ){
     New-ADOrganizationalUnit -Name "Disabled Items"
     }
     
-#Move Disabled items to OU
+
+#Check for "Do Not Disable AD Group"
+$group = "Do not Disable"
+
+if (Get-ADGroup -Identity $group){
+
+    Write-host "$Group AD Group found in Active Directory. Moving to disable and delete actions" -ForegroundColor Green
+}
+Else{
+
+    Write-host "$group AD Group not found in in Active Directory. Creating this group and skipping disable and delete actions" -ForegroundColor Cyan
+    New-Adgroup -Name $group -Description "Items in this group will not be disabled via the Databranch Inventory Script"
+}
+
+    #Move Disabled items to OU
 
 #Upload Items to review for last login, and move legacy items to Disabled Items 
 $DisabledOU = Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' | Select-Object * -ExpandProperty DistinguishedName
@@ -96,7 +110,7 @@ $DisabledOU = Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' | Sel
 $DesktopExpChecks = Search-ADAccount -ComputersOnly -AccountInactive -TimeSpan (New-TimeSpan -Days 90) | Where-Object -Property enabled -EQ True | Select-Object name,lastlogondate,enabled
     
 foreach ($DesktopExpCheck in $DesktopExpChecks){
-    $group = "Do not Disable"
+    
     $Authorization = Get-ADGroupMember -Identity $group | Where-Object {$_.name -eq $DesktopExpCheck.Name}
     if ($Authorization){ 
         Write-Host ""$DesktopExpCheck.Name" is a member of the AD Group Do Not Disable. This object will not be disabled or moved in AD" -ForegroundColor Cyan
@@ -158,7 +172,7 @@ foreach ($DisabledObjectCleanup in $DisabledObjectCleanups){
 $DisabledComputers = Get-ADComputer -Filter * -SearchBase $DisabledOU | Where-Object {$_.Enabled -eq $False} | Select-Object -ExpandProperty samaccountname
 
 foreach ($DisabledComputer in $DisabledComputers){
-    $ObjectDisabledDateAttribute = Get-ADUser -Identity $DisabledUser -Properties whenChanged | select-object -ExpandProperty whenChanged
+    $ObjectDisabledDateAttribute = Get-ADComputer -Identity $DisabledComputer -Properties whenChanged | select-object -ExpandProperty whenChanged
     $ObjectDisabledDateConverted = ($ObjectDisabledDateAttribute).tostring("MM/dd/yyyy hh:mm:ss tt")
 
     if($ObjectDisabledDateConverted -lt $DisableDate){
@@ -179,7 +193,7 @@ foreach ($DisabledUser in $DisabledUsers){
 
     if($ObjectDisabledDateConverted -lt $DisableDate){
         Write-Host "User object $Disableduser has been disabled longer than 90 days. Deleting from AD" -ForegroundColor Yellow
-        Remove-ADUser -Identity $DisabledUser
+        #Remove-ADUser -Identity $DisabledUser
     }
     else{
         Write-Host "User Object $Disableduser has NOT been disabled longer than 90 days. Moving to next object" -ForegroundColor Cyan
