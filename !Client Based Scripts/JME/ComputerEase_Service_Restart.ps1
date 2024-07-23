@@ -20,7 +20,7 @@ $ProcessList = ("mm", "mmr")
 
 foreach ($Process in $ProcessList)
 {
-    ifif(Get-Process -Name $process -ErrorAction SilentlyContinue)
+    if(Get-Process -Name $process -ErrorAction SilentlyContinue)
     {
         Stop-Process -Name $Process -Force
     }

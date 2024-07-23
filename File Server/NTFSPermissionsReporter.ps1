@@ -24,10 +24,10 @@ Import-Module ActiveDirectory
 $FolderPath = Get-ChildItem -Directory -Path $RootFolder -Recurse -Force -ErrorAction SilentlyContinue
 $Output = @() 
 ForEach ($Folder in $FolderPath) { 
-    $Acl = Get-Acl -Path $Folder.FullName -ErrorAction SilentlyContinue
+    $Acl = Get-Acl -LiteralPath $Folder.FullName -ErrorAction SilentlyContinue
     ForEach ($Access in $Acl.Access) { 
-$Properties = [ordered]@{'Folder Name'=$Folder.FullName;'Group/User'=$Access.IdentityReference;'Permissions'=$Access.FileSystemRights;'Inherited'=$Access.IsInherited} 
-$Output += New-Object -TypeName PSObject -Property $Properties 
+        $Properties = [ordered]@{'Folder Name'=$Folder.FullName;'Group/User'=$Access.IdentityReference;'Permissions'=$Access.FileSystemRights;'Inherited'=$Access.IsInherited} 
+        $Output += New-Object -TypeName PSObject -Property $Properties 
     } 
 } 
 $Output | Export-Csv -Path "C:\Databranch\NTFSPermissions Reporter.csv" -NoTypeInformation -Encoding UTF8 -Append
