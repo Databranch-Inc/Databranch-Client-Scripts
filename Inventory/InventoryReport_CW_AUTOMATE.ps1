@@ -1,17 +1,36 @@
 <#
 Databranch inventory report
 This script will gather the current Servers, Desktops, and Users from Active Directory, and will give general infomration about them. Then, the data will be combined to create .CSV files for Databranch inventory.
+
 Josh Britton
-Current Version 1.5
-Last Update - 9-5-23
-Original Created Date - 9/23/19
+Current Version 2.0
+
+Last Update - 7-29-24
+Original Created Date - 9-23-19
 =======================================================================================================
-1.5 Update - Cleaning process for end file creation. Adding check and notes to review PC Last Logon Dates and disable/move disabled items to Disabled OU at root of Directory - JB 9-5-23
+2.0 Update
+
+New Items:
+Updated File checks to review for log folder locations and create if found
+Created AD Check functions for user and computer objects - This will look for inactive items over 90 days, disabled items not in the proper OU, and disbled items to delete.
+Checking for Disabled Items OU and Do not Disabel AD group, will exit script if group is not found after attempting to create.
+Added a transaction log, will be pulled into CW Autoamte via Automate script at a later time
+
+JB - 7-29-24
+
+=======================================================================================================
+1.5 Update
+
+Cleaning process for end file creation. Adding check and notes to review PC Last Logon Dates and disable/move disabled items to Disabled OU at root of Directory - JB 9-5-23
 ========================================================================================================
-1.4 Update - adding logic to test for previous inventory files before attempting to delete. This should reduce false error messages. -JB 9/23/19
+1.4 Update
+
+Adding logic to test for previous inventory files before attempting to delete. This should reduce false error messages. -JB 9/23/19
 
 ========================================================================================================
-1.3.2 Update - Re-located if/else to test for C:\Databranch Folder to have it created before running AD Exports
+1.3.2 Update
+
+Re-located if/else to test for C:\Databranch Folder to have it created before running AD Exports
 
 ========================================================================================================
 1.3.1 Update - Added if/else to test for C:\Databranch Folder.
@@ -25,18 +44,31 @@ Import-Module ActiveDirectory
 $Date = Get-Date -Format "MM/dd/yyyy hh:mm:ss tt"
 $90DaysAgo =(Get-Date).AddDays(-90)
 $DisableDate = Get-Date -Date $90DaysAgo -Format "MM/dd/yyyy hh:mm:ss tt"
+$TranscriptDate = Get-Date -Format "MM-dd-yyyy_hhmmsstt"
  
 
 #Test for folder C:\Databranch
 If (Test-Path C:\Databranch)
     {
     Write-Host "C:\Databranch exists" -ForegroundColor Green
+
+    If (Test-path C:\Databranch\Logs){
+        Write-Host "C:\Databranch\Logs exists" -ForegroundColor Green
+    } 
+
+    Else{
+        New-Item -ItemType Directory -Path C:\Databranch -Name Logs
+    }
     }
 Else
     {
     New-Item -ItemType Directory -Path C:\ -Name Databranch
+    New-Item -ItemType Directory -Path C:\Databranch -Name Logs
     }
      
+#Start Transcript for AD Actions:
+Start-Transcript -Path "C:\Databranch\Logs\DB_Inventory_Script_Logs_$TranscriptDate.txt" -NoClobber
+
 #Clear old files from C:\Databranch to avoid duplicate entries
 Write-Host "Performing cleanup on old Desktop info files" -ForegroundColor Green
 
@@ -99,9 +131,17 @@ Else{
 
     Write-host "$group AD Group not found in in Active Directory. Creating this group and skipping disable and delete actions" -ForegroundColor Cyan
     New-Adgroup -Name $group -Description "Items in this group will not be disabled via the Databranch Inventory Script"
+    if (Get-ADGroup -Identity $group){
+        Write-Host "$Group AD Group successfully created in Active Directory. Since this is a new group, review is needed to add members to this group before additional run. Exiting Script" -ForegroundColor Yellow
+        Exit-PSHostProcess
+    }
+    Else{
+        Write-Host "$Group AD Group failed to create in Active Directory. Review and resolve erorrs before attempting to run script again. Exiting Script" -ForegroundColor Red
+        Exit-PSHostProcess
+    }
 }
 
-    #Move Disabled items to OU
+#Move Disabled items to OU
 
 #Upload Items to review for last login, and move legacy items to Disabled Items 
 $DisabledOU = Get-ADOrganizationalUnit -Filter 'Name -eq "Disabled Items"' | Select-Object * -ExpandProperty DistinguishedName
@@ -176,11 +216,11 @@ foreach ($DisabledComputer in $DisabledComputers){
     $ObjectDisabledDateConverted = ($ObjectDisabledDateAttribute).tostring("MM/dd/yyyy hh:mm:ss tt")
 
     if($ObjectDisabledDateConverted -lt $DisableDate){
-        Write-Host "Computer Object $DisabledComputer been disabled longer than 90 days. Deleting from AD" -ForegroundColor Yellow
+        Write-Host "Computer object $DisabledComputer been disabled longer than 90 days. Deleting from AD" -ForegroundColor Yellow
         #Remove-ADComputer -Identity $DisabledComputer
     }
     else{
-        Write-Host "Comptuer Object $DisabledComputer has NOT been disabled longer than 90 days. Moving to next object" -ForegroundColor Cyan
+        Write-Host "Comptuer object $DisabledComputer has NOT been disabled longer than 90 days. Moving to next object" -ForegroundColor Cyan
    }
 }
 
@@ -196,7 +236,7 @@ foreach ($DisabledUser in $DisabledUsers){
         #Remove-ADUser -Identity $DisabledUser
     }
     else{
-        Write-Host "User Object $Disableduser has NOT been disabled longer than 90 days. Moving to next object" -ForegroundColor Cyan
+        Write-Host "User object $Disableduser has NOT been disabled longer than 90 days. Moving to next object" -ForegroundColor Cyan
    }
 }
 
@@ -205,6 +245,9 @@ foreach ($DisabledUser in $DisabledUsers){
 
 #Upload Desktop names from AD to gather Model information
 $Desktops = Import-Csv C:\Databranch\desktopsAD.csv | Select-Object -ExpandProperty name
+
+#Stop Transcript of AD Actions
+Stop-Transcript
 
 #Gather CIM information about desktop Models
 Write-Host "Gathering Desktop Model and Serial information" -ForegroundColor Green

@@ -17,3 +17,7 @@ function Write-Log {
     $logEntry = "$timestamp - $Message"
     Add-Content -Path $LogPath -Value $logEntry
 }
+
+#Additional Varaible Set
+$RunningScript = return split-path $MyInvocation.PSCommandPath -Leaf
+$LogPath = "C:\Databranch\$Runningscript.log"
