@@ -26,7 +26,7 @@ Function Set-BitlockerEDF{
 $SystemDrive = (Get-WmiObject Win32_OperatingSystem).SystemDrive
 
 #Check for encryption on the System Drive
-$DriveEncrpytionStatus =  (Get-BitLockerVolume -MountPoint $SystemDrive).VolumeStatus
+$DriveEncrpytionStatus = (Get-BitLockerVolume -MountPoint $SystemDrive).VolumeStatus
 
 If ($DriveEncrpytionStatus -eq "FullyDecrypted"){
 
