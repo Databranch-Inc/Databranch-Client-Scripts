@@ -30,7 +30,7 @@ $DriveEncrpytionStatus = (Get-BitLockerVolume -MountPoint $SystemDrive).VolumeSt
 
 If ($DriveEncrpytionStatus -eq "FullyDecrypted"){
 
-        
+    $DriveEncrpytionStatus    
 }
 
 else {
