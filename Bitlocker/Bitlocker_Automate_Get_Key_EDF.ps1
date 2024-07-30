@@ -61,7 +61,7 @@ else {
 
 #Create variable Array for CW Automate
 $obj = @{}
-$obj.$DriveEncrpytionStatus = $DriveEncrpytionStatus
+$obj.DriveEncrpytionStatus = $DriveEncrpytionStatus
 $obj.RecoveryKey = $RecoveryKey
 $obj.KeyProtectorID = $KeyProtectorID
 $Final = [string]::Join("|",($obj.GetEnumerator() | %{$_.Name + "=" + $_.Value}))
