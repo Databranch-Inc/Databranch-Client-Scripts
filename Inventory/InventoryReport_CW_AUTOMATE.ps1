@@ -36,6 +36,8 @@ Re-located if/else to test for C:\Databranch Folder to have it created before ru
 1.3.1 Update - Added if/else to test for C:\Databranch Folder.
 #>
 
+function Initialize-DatabranchADInventory{
+
 #Import AD Module into shell
 Import-Module ActiveDirectory
 
@@ -778,3 +780,4 @@ $CSV6 = Import-CSV C:\Databranch\server.csv
 Join-Object -Left $CSV3 -LeftJoinProperty Name -Right $CSV4 -RightJoinProperty __SERVER -Type AllInBoth -ErrorAction SilentlyContinue  | Export-Csv C:\Databranch\desktopsFINAL.csv -notypeinformation -Append -encoding utf8
 #>
 
+}
