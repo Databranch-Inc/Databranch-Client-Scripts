@@ -5,11 +5,15 @@ The script will check for the proper AD Group Membership to enable Bitlocker Enc
 
 Josh Britton
 
-v1.3
+v1.3.0.1
 
-6-9-23
 ========================================================================================================
-1.3 Update
+1.3.0.1 Update 8-20-24
+
+Wrapping script as a function for CW Automate Script use. Cleaning up naming convention before Github Commit - JB
+
+========================================================================================================
+1.3 Update 6-9-23
 
 Splitting Automation into multiple PowerShell Scripts - This will now be the First Script to Check for AD Group Membership and log the results in the Databranch Folder on the C Drive.
 
@@ -23,6 +27,8 @@ Re-write of ADSI Call to verify Group Membership
 Updating script to cleanup un-needed test methods for script actions. Script as of this date is the PowerShell steps in the CW Automate Script
 ========================================================================================================
 #>
+
+Function Get-BitlockerADGroupInfo{
 
 #Test for/create log file
 $DatabranchPath = "C:\Databranch"
@@ -106,3 +112,4 @@ $obj = @{}
 $obj.GroupCheckResult = $GroupCheckResult
 $Final = [string]::Join("|",($obj.GetEnumerator() | %{$_.Name + "=" + $_.Value}))
 Write-Output $Final
+}
