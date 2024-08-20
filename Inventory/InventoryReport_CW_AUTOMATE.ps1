@@ -211,7 +211,7 @@ foreach ($DisabledObjectCleanup in $DisabledObjectCleanups){
 #Check Disabled Items OU for items to delete
 
 #Desktop Check
-$DisabledComputers = Get-ADComputer -Filter * -SearchBase $DisabledOU | Where-Object {$_.Enabled -eq $False} | Select-Object -ExpandProperty samaccountname
+$DisabledComputers = Get-ADComputer -Filter * -SearchBase $DisabledOU | Where-Object {$_.Enabled -eq $False} | Select-Object -ExpandProperty name
 
 foreach ($DisabledComputer in $DisabledComputers){
     $ObjectDisabledDateAttribute = Get-ADComputer -Identity $DisabledComputer -Properties whenChanged | select-object -ExpandProperty whenChanged
