@@ -219,7 +219,7 @@ foreach ($DisabledComputer in $DisabledComputers){
 
     if($ObjectDisabledDateConverted -lt $DisableDate){
         Write-Host "Computer object $DisabledComputer been disabled longer than 90 days. Deleting from AD" -ForegroundColor Yellow
-        Remove-ADObject -Identity $DisabledComputer -Confirm:$True
+        Remove-ADComputer -Identity $DisabledComputer -Confirm:$True
     }
     else{
         Write-Host "Comptuer object $DisabledComputer has NOT been disabled longer than 90 days. Moving to next object" -ForegroundColor Cyan
