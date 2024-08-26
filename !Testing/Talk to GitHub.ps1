@@ -14,8 +14,15 @@ Josh Britton
 #Create a Function to wrap the script. The line of the function is called in the CW Automate Script
 function Talk-DatabranchGithub {
 
+    $wc = New-Object System.Net.WebClient
+    $wc.Headers.Add('Authorization','token @Github Token@')
+    $wc.Headers.Add('Accept','application/vnd.github.v3.raw')
+    $wc.DownloadString('https://raw.githubusercontent.com/Databranch-Inc/Databranch-Client-Scripts/main/Functions/Function_Set_Logging.ps1') | iex
+
+
+
 $Date = Get-Date
 
-Write-Host "Successfuly talked to GITHUB! on $Date"
+Write-Log -logpath $logpath -message "Successfuly talked to GITHUB! on $Date"
 
 Start-Sleep 10}
