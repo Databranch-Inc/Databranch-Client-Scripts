@@ -19,5 +19,6 @@ function Write-Log {
 }
 
 #Additional Varaible Set
+$RunningScript = $MyInvocation.ScriptName
 $RunningScript = return split-path $MyInvocation.PSCommandPath -Leaf
 $LogPath = "C:\Databranch\$Runningscript.log"
