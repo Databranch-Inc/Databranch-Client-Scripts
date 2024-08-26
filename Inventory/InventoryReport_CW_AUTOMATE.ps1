@@ -219,7 +219,7 @@ foreach ($DisabledComputer in $DisabledComputers){
 
     if($ObjectDisabledDateConverted -lt $DisableDate){
         Write-Host "Computer object $DisabledComputer been disabled longer than 90 days. Deleting from AD" -ForegroundColor Yellow
-        Remove-ADComputer -Identity $DisabledComputer -Confirm:$True
+        Remove-ADComputer -Identity $DisabledComputer -Confirm:$False
     }
     else{
         Write-Host "Comptuer object $DisabledComputer has NOT been disabled longer than 90 days. Moving to next object" -ForegroundColor Cyan
@@ -235,7 +235,7 @@ foreach ($DisabledUser in $DisabledUsers){
 
     if($ObjectDisabledDateConverted -lt $DisableDate){
         Write-Host "User object $Disableduser has been disabled longer than 90 days. Deleting from AD" -ForegroundColor Yellow
-        Remove-ADUser -Identity $DisabledUser -Confirm:$True
+        Remove-ADUser -Identity $DisabledUser -Confirm:$False
     }
     else{
         Write-Host "User object $Disableduser has NOT been disabled longer than 90 days. Moving to next object" -ForegroundColor Cyan
