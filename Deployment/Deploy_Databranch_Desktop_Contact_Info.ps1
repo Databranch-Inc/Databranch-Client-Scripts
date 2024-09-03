@@ -62,7 +62,7 @@ Else{
 }
 
 #Test file copies
-If (Test-Path “C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp”){
+If (Test-Path “C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\Desktop Info Databranch\DesktopInfo64.exe - Shortcut.lnk”){
 
     $DeploymentStatus = "Deployment Complete"
 
