@@ -63,7 +63,7 @@ Else{
 
 #Test file copies
 
-$Shortcut = “C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\Desktop Info Databranch\DesktopInfo64.exe - Shortcut.lnk”
+$Shortcut = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\Desktop Info Databranch\DesktopInfo64.exe - Shortcut.lnk'
 
 If (Test-Path $Shortcut ){
 
