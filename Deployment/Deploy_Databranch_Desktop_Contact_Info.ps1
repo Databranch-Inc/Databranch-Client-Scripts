@@ -16,7 +16,7 @@ Original Write
 ===========================================================================================================
 #>
 
-
+function Install-DatabranchDesktopInfo{
 
 #Test for folder C:\Databranch
 If (Test-Path C:\Databranch)
@@ -80,3 +80,5 @@ $obj.ZipFileTest = $ZipFileTest
 $obj.$DeploymentStatus = $DeploymentStatus
 $Final = [string]::Join("|",($obj.GetEnumerator() | %{$_.Name + "=" + $_.Value}))
 Write-Output $Final
+
+}
