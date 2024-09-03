@@ -52,7 +52,7 @@ If (Test-Path $ZipFile){
     Expand-Archive -LiteralPath $ZipFile -DestinationPath "C:\Program Files\Databranch"
 
     #Move shortcut to Startup folder
-    Copy-Item -LiteralPath "C:\Program Files\Databranch\Desktop Info Databranch\DesktopInfo64.exe - Shortcut.lnk" -Destination “C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp” -Force
+    Copy-Item -LiteralPath "C:\Program Files\Databranch\Desktop Info Databranch\DesktopInfo64.exe - Shortcut.lnk" -Destination 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp' -Force
 
 }
 Else{
