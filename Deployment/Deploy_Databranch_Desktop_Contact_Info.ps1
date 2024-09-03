@@ -49,7 +49,7 @@ If (Test-Path $ZipFile){
     $ZipFileTest = "C:\Databranch\DesktopInfo\Desktop Info Databranch.Zip exists"
 
     #Extract Files
-    Expand-Archive -LiteralPath $ZipFile -DestinationPath "C:\Program Files\Databranch"
+    Expand-Archive -LiteralPath $ZipFile -DestinationPath "C:\Program Files\Databranch\Desktop Info Databranch"
 
     #Move shortcut to Startup folder
     Copy-Item -LiteralPath "C:\Program Files\Databranch\Desktop Info Databranch\DesktopInfo64.exe - Shortcut.lnk" -Destination 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp' -Force
@@ -57,7 +57,7 @@ If (Test-Path $ZipFile){
 }
 Else{
 
-    $ZipFileTest = "C:\Databranch\DesktopInfo\DesktopInfo Databranch.Zip does not exist. Exiting PS Script and noting Autoamte"
+    $ZipFileTest = "C:\Databranch\DesktopInfo\Desktop Info Databranch.Zip does not exist. Exiting PS Script and noting Autoamte"
   
 }
 
