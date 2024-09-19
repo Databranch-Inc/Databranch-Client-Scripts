@@ -13,11 +13,9 @@ Josh Britton
 
 function Talk-DatabranchGithub2 {
 
-$token = 
-
-
     $wc = New-Object System.Net.WebClient
-  
+ 
+ 
 
 
 }
