@@ -49,7 +49,7 @@ If (Test-Path $ZipFile){
     $ZipFileTest = "C:\Databranch\DesktopInfo\Desktop Info Databranch.Zip exists"
 
     #Extract Files
-    Expand-Archive -LiteralPath $ZipFile -DestinationPath "C:\Program Files\Databranch\Desktop Info Databranch"
+    Expand-Archive -LiteralPath $ZipFile -DestinationPath "C:\Program Files\Databranch\Desktop Info Databranch" -Force
 
     #Move shortcut to Startup folder
     Copy-Item -LiteralPath "C:\Program Files\Databranch\Desktop Info Databranch\DesktopInfo64.exe - Shortcut.lnk" -Destination 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp' -Force
