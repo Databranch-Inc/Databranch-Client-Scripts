@@ -75,7 +75,6 @@ if ($arrMonitors.Count -gt 0){
 }
 
 if ($strMonitors -eq ''){$strMonitors = 'None Found'}
-$strMonitors
 
 $obj = @{}
 $obj.strMonitors = $strMonitors
