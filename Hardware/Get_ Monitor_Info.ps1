@@ -77,4 +77,10 @@ if ($arrMonitors.Count -gt 0){
 if ($strMonitors -eq ''){$strMonitors = 'None Found'}
 $strMonitors
 
+$obj = @{}
+$obj.strMonitors = $strMonitors
+$obj.Date = $Date
+$Final = [string]::Join("|",($obj.GetEnumerator() | %{$_.Name + "=" + $_.Value}))
+Write-Output $Final
+
 }
