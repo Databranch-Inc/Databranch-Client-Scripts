@@ -1,3 +1,27 @@
+<#
+Get Monitor Info
+This script is used to to gather the current connected montitors to a machine. This incudes the model of the monitor and the connector type.
+
+Original scipt was developed by Steven Peterson. Modified by Josh Britton for use with ConnectWise Automate
+
+Script load date 9-23-24
+
+Version 1.0
+================================================================================================================
+Version 1.0 9-23-24
+Moved script to Github folder and wrapped in function to be called by CW Automate.
+
+Added Get-Date cmdlets for use as a field to determine last run
+================================================================================================================
+
+#>
+function Get-MonitorInfoDB {
+
+#Get Date for Logging
+
+$Date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
+
 $adapterTypes = @{ #https://www.magnumdb.com/search?q=parent:D3DKMDT_VIDEO_OUTPUT_TECHNOLOGY
     '-2' = 'Unknown'
     '-1' = 'Unknown'
@@ -52,3 +76,5 @@ if ($arrMonitors.Count -gt 0){
 
 if ($strMonitors -eq ''){$strMonitors = 'None Found'}
 $strMonitors
+
+}
