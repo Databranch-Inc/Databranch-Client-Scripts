@@ -70,6 +70,7 @@ Else
      
 #Start Transcript for AD Actions:
 Start-Transcript -Path "C:\Databranch\Logs\DB_Inventory_Script_Logs_$TranscriptDate.txt" -NoClobber
+$Transcript = "C:\Databranch\Logs\DB_Inventory_Script_Logs_$TranscriptDate.txt"
 
 #Clear old files from C:\Databranch to avoid duplicate entries
 Write-Host "Performing cleanup on old Desktop info files" -ForegroundColor Green
@@ -772,6 +773,12 @@ $CSV4 = Import-CSV C:\Databranch\desktopsSERIAL.csv
 
 Join-Object -Left $CSV3 -LeftJoinProperty Name -Right $CSV4 -RightJoinProperty __SERVER -Type AllInBoth -ErrorAction SilentlyContinue  | Export-Csv C:\Databranch\desktopsFINAL.csv -notypeinformation -Append -encoding utf8
 
+#Create Array of variables that can be pulled into CW Automate
+
+$obj = @{}
+$obj.Transcript = $Transcript
+$Final = [string]::Join("|",($obj.GetEnumerator() | %{$_.Name + "=" + $_.Value}))
+Write-Output $Final
 
 <#
 $CSV5 = Import-CSV C:\Databranch\desktopsFINAL.csv

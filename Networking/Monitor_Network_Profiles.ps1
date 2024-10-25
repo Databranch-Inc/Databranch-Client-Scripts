@@ -17,3 +17,8 @@ Last Update
 Script Initial Write
 =====================================================================================
 #>
+
+
+#Gather Network Info
+$NetConnectionProfile = Get-NetConnectionProfile | Select-Object -Property Name,InterfaceAlias,NetworkCategory
+
