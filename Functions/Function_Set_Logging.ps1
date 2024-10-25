@@ -14,7 +14,7 @@ function Write-Log {
         [Parameter(Mandatory = $true)]
         [string] $Message,
         [Parameter(Mandatory = $false)]
-        [string] $LogFilePath = "C:\Databranch\Logs\$($MyInvocation.MyCommand).log"
+        [string] $LogFilePath = "C:\Databranch\Logs\TESTLOG.log"
     )
 
     # Create the log file if it doesn't exist
