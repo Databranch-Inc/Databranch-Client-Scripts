@@ -23,6 +23,6 @@ function Talk-DatabranchGithub {
 
 $Date = Get-Date
 
-Write-Log -logpath $logpath -message "Successfuly talked to GITHUB! on $Date"
+Write-Log -message "Successfuly talked to GITHUB! on $Date"
 
 Start-Sleep 10}
