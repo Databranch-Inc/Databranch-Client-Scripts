@@ -33,10 +33,10 @@ $TranscriptDate = Get-Date -Format "MM-dd-yyyy_hhmmsstt"
 $ParentFolder = "C:\Databranch"
 
 #Start Transcript for Cleanup Actions:
-Start-Transcript -Path "C:\Databranch\Logs\Databranch_Folder)Cleanup_Script_Logs_$TranscriptDate.txt" -NoClobber
-$Transcript = "C:\Databranch\Logs\Databranch_Folder)Cleanup_Script_Logs_$TranscriptDate.txt"
+Start-Transcript -Path "C:\Databranch\Logs\Databranch_Folder_Cleanup_Script_Logs_$TranscriptDate.txt" -NoClobber
+$Transcript = "C:\Databranch\Logs\Databranch_Folder_Cleanup_Script_Logs_$TranscriptDate.txt"
 
-$OldFiles = Get-ChildItem -Path $ParentFolder -Recurse | Where-Object -Property LastWriteTime -LT $RemoveDate
+$OldFiles = Get-ChildItem -Path $ParentFolder -Attributes A -Recurse | Where-Object -Property LastWriteTime -LT $RemoveDate
 
 foreach ($OldFile in $OldFiles){
     Remove-Item -Path $ParentFolder\$OldFile -Force
