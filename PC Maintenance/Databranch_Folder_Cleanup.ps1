@@ -39,11 +39,11 @@ $Transcript = "C:\Databranch\Logs\Databranch_Folder)Cleanup_Script_Logs_$Transcr
 $OldFiles = Get-ChildItem -Path $ParentFolder -Recurse | Where-Object -Property LastWriteTime -LT $RemoveDate
 
 foreach ($OldFile in $OldFiles){
-    Remove-Item -Path "$ParentFolder\$OldFile -Force
+    Remove-Item -Path $ParentFolder\$OldFile -Force
     Write-Host "$OldFile removed"
 }
 
-$EmptyFolders = Get-ChildItem -Path $ParentFolder -Directory | Where-Object { $_.GetFileSystemInfos().Count -eq 0 -and $_.Name -ne "Logs}
+$EmptyFolders = Get-ChildItem -Path $ParentFolder -Directory | Where-Object { $_.GetFileSystemInfos().Count -eq 0 -and $_.Name -ne "Logs"}
 
 Foreach ($EmptyFolder in $EmptyFolders){
 
