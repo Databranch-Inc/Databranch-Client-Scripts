@@ -18,6 +18,9 @@ Origional Write
 
 Function Cleanup-FolderDatabranch{
 
+Write-Host "TEST NEW DOWNLOAD - JB"
+
+
 #Current Date set to format to match Get-Childitem output
 $CurrentDate = get-date -Format "MM/dd/yyyy h:mm tt"
 
