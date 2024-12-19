@@ -36,7 +36,7 @@ $ParentFolder = "C:\Databranch"
 Start-Transcript -Path "C:\Databranch\Logs\Databranch_Folder_Cleanup_Script_Logs_$TranscriptDate.txt" -NoClobber
 $Transcript = "C:\Databranch\Logs\Databranch_Folder_Cleanup_Script_Logs_$TranscriptDate.txt"
 
-$OldFiles = Get-ChildItem -Path $ParentFolder -Attributes A -Recurse | Where-Object -Property LastWriteTime -LT $RemoveDate
+$OldFiles = Get-ChildItem -Path $ParentFolder -Attributes A -Recurse | Where-Object -Property LastWriteTime -LT $RemoveDate | Select-Object -ExpandProperty FullName
 
 foreach ($OldFile in $OldFiles){
     Remove-Item -Path $OldFile -Force
