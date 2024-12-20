@@ -46,7 +46,7 @@ foreach ($OldFile in $OldFiles){
     Write-Host "$OldFile removed"
 }
 
-$EmptyFolders = Get-ChildItem -Path $ParentFolder -Directory | Where-Object { $_.GetFileSystemInfos().Count -eq 0 -and $_.Name -ne "Logs"}
+$EmptyFolders = Get-ChildItem -Path $ParentFolder -Directory | Where-Object { $_.GetFileSystemInfos().Count -eq 0 -and $_.Name -ne "Logs"} | Select-Object -ExpandProperty FullName
 
 Foreach ($EmptyFolder in $EmptyFolders){
 
