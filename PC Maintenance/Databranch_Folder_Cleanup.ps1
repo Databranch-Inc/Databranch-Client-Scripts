@@ -57,4 +57,11 @@ Foreach ($EmptyFolder in $EmptyFolders){
 #Stop Transcript of File Delete Actions
 Stop-Transcript
 
+#Create Array of variables that can be pulled into CW Automate
+
+$obj = @{}
+$obj.transcript = $Transcript
+$Final = [string]::Join("|",($obj.GetEnumerator() | %{$_.Name + "=" + $_.Value}))
+Write-Output $Final
+
 }
