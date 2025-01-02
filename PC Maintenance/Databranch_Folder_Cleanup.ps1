@@ -18,12 +18,6 @@ Origional Write
 
 Function Cleanup-FolderDatabranch{
 
-Write-Host "TEST NEW DOWNLOAD - JB"
-
-
-#Current Date set to format to match Get-Childitem output
-$CurrentDate = get-date -Format "MM/dd/yyyy h:mm tt"
-
 #Set Delete Date for 30 Days ago
 $30DaysAgo =(Get-Date).AddDays(-30)
 $RemoveDate = Get-Date -Date $30DaysAgo -Format "MM/dd/yyyy h:mm:ss tt"
