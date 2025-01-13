@@ -1,0 +1,24 @@
+SELECT DISTINCT computers.computerid AS TestValue,
+   computers.name AS identityfield,
+   computers.computerid,
+   Computers.Name AS computername,
+   locations.locationid,
+   locations.name AS locationname,
+   clients.name AS `Client Name`,
+   clients.Clientid,
+   clients.name AS clientname,
+   computers.domain AS `Computer Domain`,
+   computers.username AS `Computer User`, 
+   aCD.NoAlerts, 
+   ACD.UpTimeStart, 
+   ACD.UpTimeEnd
+FROM Computers 
+LEFT JOIN inv_operatingsystem ON (Computers.ComputerId=inv_operatingsystem.ComputerId)
+LEFT JOIN Clients ON (Computers.ClientId=Clients.ClientId)
+LEFT JOIN Locations ON (Computers.LocationId=Locations.LocationID)
+LEFT JOIN ExtraFieldData edfAssigned1 ON (edfAssigned1.id=Computers.ComputerId AND edfAssigned1.ExtraFieldId =(SELECT ExtraField.id FROM ExtraField WHERE LTGuid='36f6c8c3-2385-4739-bb2e-6d6b2ed839d0'))
+LEFT JOIN ExtraFieldData edfDefault1 ON (edfDefault1.id=0 AND edfDefault1.ExtraFieldId =(SELECT ExtraField.id FROM ExtraField WHERE LTGuid='36f6c8c3-2385-4739-bb2e-6d6b2ed839d0'))
+LEFT JOIN Software ON (Software.ComputerId = Computers.ComputerId)
+JOIN AgentComputerData ACD ON computers.computerid=acd.computerid
+WHERE 
+((((IFNULL(IFNULL(edfAssigned1.Value,edfDefault1.value),'0')=0) AND (Software.Name <> 'ScreenConnect Client (1a5d6cc5d5f07e3e)') AND (INSTR(Software.Name,'ScreenConnect Client') > 0))))
