@@ -21,4 +21,4 @@ LEFT JOIN ExtraFieldData edfDefault1 ON (edfDefault1.id=0 AND edfDefault1.ExtraF
 LEFT JOIN Software ON (Software.ComputerId = Computers.ComputerId)
 JOIN AgentComputerData ACD ON computers.computerid=acd.computerid
 WHERE 
-((((IFNULL(IFNULL(edfAssigned1.Value,edfDefault1.value),'0')=0) AND (Software.Name <> 'ScreenConnect Client (1a5d6cc5d5f07e3e)') AND (INSTR(Software.Name,'ScreenConnect Client') > 0))))
+((((IFNULL(IFNULL(edfAssigned1.Value,edfDefault1.value),'0')=0) AND (Software.Name <> 'ScreenConnect Client (1a5d6cc5d5f07e3e)')AND (Software.Name <> 'ScreenConnect Client (e42f1a55ebebba9a)') AND (INSTR(Software.Name,'ScreenConnect Client') > 0))))
