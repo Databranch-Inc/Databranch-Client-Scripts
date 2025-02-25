@@ -5,7 +5,7 @@ This script will gather the current Servers, Desktops, and Users from Active Dir
 Josh Britton
 Current Version 2.1
 
-Last Update - 7-29-24
+Last Update - 1-24-25
 Original Created Date - 9-23-19
 =======================================================================================================
 2.1 Update
