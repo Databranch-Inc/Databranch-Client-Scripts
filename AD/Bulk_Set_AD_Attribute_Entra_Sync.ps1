@@ -19,8 +19,8 @@ Import-Module ActiveDirectory
 
 #Variable Set
 
-$UPN = chpc.care #@upn@
-$CompanyID = Chautauqua Hospice #@CompanyID@
+$UPN = @upn@
+$CompanyID = @CompanyID@
 
 
 #Get the users AD .csv file and clear the login script field to prevent this non-existant file from running. Should save set the options to force a password change and remove the restriction on changing passwords
