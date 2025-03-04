@@ -9,19 +9,38 @@ Fork from other Bulk Update Scripts designed to be run on Domain Controllers
 ===================================================================================
 1.0
 
-Uploads a users.csv file to get desired usernames. Sets the UPN to 
+Uploads a users.csv file to get desired usernames. Gathers the UPN and Company ID from the Automate Call of the PowerShell script
 
 ===================================================================================
 #>
 Function Update-ADUserEntraID{
+
+    <#
+    .SYNOPSIS
+        Sets specific account information to prepare for 
+    .DESCRIPTION
+        Checks the account is a Domain Admin, generates a secure password if needed and resets the password
+    .PARAMETER UPN
+        The Domain's UPN
+    .PARAMETER CompanyID
+        Updates the company ID 
+    .OUTPUTS
+        
+    .NOTES
+        
+    .EXAMPLE
+        
+    #>
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$UPN,
+
+        [Parameter(Mandatory = $true)]
+        [string]$CompanyID
+    )
+
 #Import AD Module
 Import-Module ActiveDirectory
-
-#Variable Set
-
-$UPN = "@upn@"
-$CompanyID = "@CompanyID@"
-
 
 #Get the users AD .csv file and clear the login script field to prevent this non-existant file from running. Should save set the options to force a password change and remove the restriction on changing passwords
 
