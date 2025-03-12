@@ -49,7 +49,7 @@ $users = Import-Csv "C:\Databranch\users.csv" | Select-Object -ExpandProperty SA
 ForEach ($user in $users)
 {
     Set-ADUser -Identity $user -Clear mail
-    Set-ADUser -Identity $user -UserPrincipalName $UPN
+    Set-ADUser -Identity $user -UserPrincipalName $User + $UPN
     Set-ADUser -Identity $user -Company $CompanyID
 }
 }

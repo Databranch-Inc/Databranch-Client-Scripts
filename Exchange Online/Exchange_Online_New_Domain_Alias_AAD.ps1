@@ -18,16 +18,14 @@ References
 
 ============================================================================================================
 #>
-Function Update-ADUserEntraID{
+Function Update-ADUserProxyEmail{
     <#
     .SYNOPSIS
-        Resets a Domain Admin Password
+        Adds a new smtp Proxy email address to all users pulled in from a CSV file
     .DESCRIPTION
-        Checks the account is a Domain Admin, generates a secure password if needed and resets the password
-    .PARAMETER UPN
-        The Domain's UPN
-    .PARAMETER 
-        The password to set which is optional
+        Pulls the users via SAM Name, gathers the email proxy address 
+    .PARAMETER SMTPDomain
+        The new email domain to add to the additional smtp proxy addresses
     .OUTPUTS
         
     .NOTES
@@ -36,11 +34,7 @@ Function Update-ADUserEntraID{
         
     #>
 
-
-
-
-
-    
+   
     #Module Upload
     Import-Module ActiveDirectory
 

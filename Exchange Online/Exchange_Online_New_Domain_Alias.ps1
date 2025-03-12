@@ -10,8 +10,6 @@ Version 1.0
 
 References
 
-
-
 ============================================================================================================
 1.0
 
@@ -19,3 +17,38 @@ References
 ============================================================================================================
 #>
 
+Function Add-EmailDomain{
+
+    <#
+    .SYNOPSIS
+        Adds an additional validated email domain to all users in an O365 tenant
+    .DESCRIPTION
+        
+    .PARAMETER domain
+        The new domain to add to all users
+    .OUTPUTS
+        
+    .NOTES
+        
+    .EXAMPLE
+        
+    #>
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$domain
+
+    )
+
+#Connect to Exchange Online
+Connect-ExchangeOnline
+
+#Get the users 
+
+$users = Get-Mailbox -ResultSize Unlimited
+
+ForEach ($user in $users)
+{
+    $alias = $user.Alias + "@" + "$Domain"
+    Set-Mailbox -Identity $user.Identity -EmailAddresses @{Add=$alias}
+}
+}

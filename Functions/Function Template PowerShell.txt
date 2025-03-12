@@ -1,0 +1,17 @@
+Function Update-ADUserProxyEmail{
+    <#
+    .SYNOPSIS
+        
+    .DESCRIPTION
+        
+    .PARAMETER paramaternames
+        
+    .OUTPUTS
+        
+    .NOTES
+        
+    .EXAMPLE
+        
+    #>
+
+}
