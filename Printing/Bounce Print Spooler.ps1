@@ -4,11 +4,16 @@ Josh Britton
 1/8/19
 1.0#>
 
-#Stop the print spooler service
-Stop-Service -Name Spooler
+function Restart-PrintSpooler {
+    # Stop the print spooler service
+    Stop-Service -Name Spooler
 
-#Remove all items from the Spooler Folder
-Remove-Item C:\Windows\System32\spool\PRINTERS\*.* -ErrorAction SilentlyContinue
+    # Remove all items from the Spooler Folder
+    Remove-Item C:\Windows\System32\spool\PRINTERS\*.* -ErrorAction SilentlyContinue
 
-#Restart the Print Spooler Service
-Start-Service -Name Spooler
+    # Restart the Print Spooler Service
+    Start-Service -Name Spooler
+}
+
+# Call the function to restart the print spooler
+Restart-PrintSpooler
