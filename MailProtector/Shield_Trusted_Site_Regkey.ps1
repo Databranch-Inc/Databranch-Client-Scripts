@@ -31,7 +31,21 @@ Function Add-TrustedSite {
     # Create the registry key for the domain
     $domainKeyPath = Join-Path $regPath $domain
     if (-not (Test-Path $domainKeyPath)) {
-        New-Item -Path $domainKeyPath -Force | Out-Null
+        try {
+            New-Item -Path $domainKeyPath -Force | Out-Null
+        } catch {
+            Write-Error "Failed to create registry key at '$domainKeyPath'. Ensure you have sufficient permissions."
+            return
+        }
+    } else {
+        try {
+            # Test if the key is writable
+            Set-ItemProperty -Path $domainKeyPath -Name "TestWrite" -Value 1 -ErrorAction Stop
+            Remove-ItemProperty -Path $domainKeyPath -Name "TestWrite" -ErrorAction Stop
+        } catch {
+            Write-Error "Registry key at '$domainKeyPath' exists but is not writable. Ensure you have sufficient permissions."
+            return
+        }
     }
 
     # Set the value to mark the site as trusted (Zone 2)
