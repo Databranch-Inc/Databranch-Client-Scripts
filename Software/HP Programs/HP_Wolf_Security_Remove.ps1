@@ -29,6 +29,8 @@ $Keys = @(
 
 foreach ($key in $keys){
 
+    Write-Host "64 Bit Installer Path Check" - foregroundColor Cyan
+
     $Regpath = Test-Path "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{$key}"
 
     if ($Regpath -eq $true){
@@ -42,9 +44,27 @@ foreach ($key in $keys){
 
     }
     else {
-        Write-host "Guid $key does not exist on this machine. Checking next version" -ForegroundColor Yellow
+        Write-host "Guid $key does not exist in the 64 bit hive on this machine. Checking next version" -ForegroundColor Yellow
     }
     
+    Write-Host "32 Bit Installer Path Check" - foregroundColor Cyan
+
+    $32Regpath = Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{$key}"
+
+    if ($32Regpath -eq $true){
+
+        #Set variables for uninstall
+        $uninstall = "msiexec.exe"
+        $arguments = "/X{$key} /quiet /norestart"
+
+        #Run Uninstall
+        Start-Process $uninstall -Wait -ArgumentList $arguments
+
+    }
+    else {
+        Write-host "Guid $key does not exist in the 32 bit hive on this machine. Checking next version" -ForegroundColor Yellow
+    }
+
 }
 
 
