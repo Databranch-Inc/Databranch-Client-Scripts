@@ -29,7 +29,7 @@ $Keys = @(
 
 foreach ($key in $keys){
 
-    Write-Host "64 Bit Installer Path Check" - foregroundColor Cyan
+    #64 Bit Installer Path Check
 
     $Regpath = Test-Path "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{$key}"
 
@@ -47,7 +47,7 @@ foreach ($key in $keys){
         Write-host "Guid $key does not exist in the 64 bit hive on this machine. Checking next version" -ForegroundColor Yellow
     }
     
-    Write-Host "32 Bit Installer Path Check" - foregroundColor Cyan
+    #32 Bit Installer Path Check
 
     $32Regpath = Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{$key}"
 
