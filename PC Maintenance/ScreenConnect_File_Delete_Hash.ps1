@@ -34,7 +34,7 @@ Function remove-ScreenConnectFile {
     #>
 
 #Find user accounts
-$UserFolders = get-childitem -path "C:\users"  -Exclude "Public", "Default", "Default User", "Setup", "Protected Account", "TEMP", "defaultuser0"  -Directory | Select-Object -ExpandProperty Name
+$UserFolders = get-childitem -path "C:\users"  -Exclude "Public", "Default", "Default User", "Protected Account", "TEMP", "defaultuser0"  -Directory | Select-Object -ExpandProperty Name
 
 #Search each user folder for Hash equalling a specific value
 
