@@ -32,7 +32,7 @@ Function remove-ScreenConnectFile {
 
     .NOTES
     #>
-    
+
 #Find user accounts
 $UserFolders = get-childitem -path "C:\users"  -Exclude "Public", "Default", "Default User", "Setup", "Protected Account", "TEMP", "defaultuser0"  -Directory | Select-Object -ExpandProperty Name
 
@@ -48,6 +48,12 @@ foreach ($UserFolder in $UserFolders) {
             Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
         }
     }
+}
+
+
+# Check if any files were found and deleted
+if (-not $filefound) {
+    $filefound = "False"
 }
 
 #Create Array of variables that can be pulled into CW Automate
