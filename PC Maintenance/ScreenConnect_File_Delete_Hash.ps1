@@ -33,6 +33,12 @@ Function remove-ScreenConnectFile {
     .NOTES
     #>
 
+#Set Transcription Date for Logging
+$TranscriptDate = Get-Date -Format "MM-dd-yyyy_hhmmsstt"
+
+#Create log file
+$logfile = New-Item -Path "C:\Databranch\Logs" -Name "ScreenConnect_File_Delete_Hash_$TranscriptDate.log" -ItemType File -Force | Out-Null
+
 #Find user accounts
 $UserFolders = get-childitem -path "C:\users"  -Exclude "Public", "Default", "Default User", "Protected Account", "TEMP", "defaultuser0"  -Directory | Select-Object -ExpandProperty Name
 
@@ -44,8 +50,7 @@ foreach ($UserFolder in $UserFolders) {
         $hash = (Get-FileHash $_.FullName -Algorithm MD5).Hash
         if ($hash -eq "9562334DD9A47EC1239A8667DDC1F01C") {
             $filefound = "True"
-            Write-Host "Match found: $($_.FullName)"
-            Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
+            Add-Content -Value "Match found: $($_.FullName)" -Path $logfile            Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
         }
     }
 }
