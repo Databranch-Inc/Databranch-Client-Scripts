@@ -37,7 +37,7 @@ Function remove-ScreenConnectFile {
 $TranscriptDate = Get-Date -Format "MM-dd-yyyy_hhmmsstt"
 
 #Create log file
-$logfile = New-Item -Path "C:\Databranch\Logs" -Name "ScreenConnect_File_Delete_Hash_$TranscriptDate.log" -ItemType File -Force | Out-Null
+$logfile = New-Item -Path "C:\Databranch\Logs" -Name "ScreenConnect_File_Delete_Hash_$TranscriptDate.txt" -ItemType File -Force | Out-Null
 
 #Find user accounts
 $UserFolders = get-childitem -path "C:\users"  -Exclude "Public", "Default", "Default User", "Protected Account", "TEMP", "defaultuser0"  -Directory | Select-Object -ExpandProperty Name
