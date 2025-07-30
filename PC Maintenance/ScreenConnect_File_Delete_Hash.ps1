@@ -50,7 +50,8 @@ foreach ($UserFolder in $UserFolders) {
         $hash = (Get-FileHash $_.FullName -Algorithm MD5).Hash
         if ($hash -eq "9562334DD9A47EC1239A8667DDC1F01C") {
             $filefound = "True"
-            Out-File -FilePath $logfile -String "Match found: $($_.FullName)" -Append -Encoding utf8
+            $output="Match found: $($_.FullName)"
+            $output | Out-File -FilePath $logfile -Append -Encoding utf8
             Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
         }
     }
@@ -60,7 +61,8 @@ foreach ($UserFolder in $UserFolders) {
 # Check if any files were found and deleted
 if (-not $filefound) {
     $filefound = "False"
-    Out-File -FilePath $logfile -String "No files matching hash have been found. Exiting script" -Append -Encoding utf8
+    $output = "No files matching hash have been found."
+    $output | Out-File -FilePath $logfile -Append -Encoding utf8
 }
 
 #Create Array of variables that can be pulled into CW Automate
