@@ -39,6 +39,8 @@ $TranscriptDate = Get-Date -Format "MM-dd-yyyy_hhmmsstt"
 #Create log file
 $logfile = New-Item -Path "C:\Databranch\Logs" -Name "ScreenConnect_File_Delete_Hash_$TranscriptDate.txt" -ItemType File -Force | Out-Null
 
+$path = "C:\Databranch\Logs\ScreenConnect_File_Delete_Hash_$TranscriptDate.txt"
+
 #Find user accounts
 $UserFolders = get-childitem -path "C:\users"  -Exclude "Public", "Default", "Default User", "Protected Account", "TEMP", "defaultuser0"  -Directory | Select-Object -ExpandProperty Name
 
@@ -51,7 +53,7 @@ foreach ($UserFolder in $UserFolders) {
         if ($hash -eq "9562334DD9A47EC1239A8667DDC1F01C") {
             $filefound = "True"
             $output="Match found: $($_.FullName)"
-            $output | Out-File -FilePath $logfile -Append -Force -Encoding utf8
+            $output | Out-File -FilePath $path -Append -Force -Encoding utf8
             Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
         }
     }
@@ -62,7 +64,7 @@ foreach ($UserFolder in $UserFolders) {
 if (-not $filefound) {
     $filefound = "False"
     $output = "No files matching hash have been found."
-    $output | Out-File -FilePath $logfile -Append -Force -Encoding utf8
+    $output | Out-File -FilePath $path -Append -Force -Encoding utf8
 }
 
 #Create Array of variables that can be pulled into CW Automate
