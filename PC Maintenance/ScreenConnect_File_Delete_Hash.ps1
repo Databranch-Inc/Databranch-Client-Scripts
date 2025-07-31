@@ -51,7 +51,7 @@ foreach ($UserFolder in $UserFolders) {
         if ($hash -eq "9562334DD9A47EC1239A8667DDC1F01C") {
             $filefound = "True"
             $output="Match found: $($_.FullName)"
-            $output | Out-File -FilePath $logfile -Append -Encoding utf8
+            $output | Out-File -FilePath $logfile -Append -Force -Encoding utf8
             Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue
         }
     }
@@ -62,7 +62,7 @@ foreach ($UserFolder in $UserFolders) {
 if (-not $filefound) {
     $filefound = "False"
     $output = "No files matching hash have been found."
-    $output | Out-File -FilePath $logfile -Append -Encoding utf8
+    $output | Out-File -FilePath $logfile -Append -Force -Encoding utf8
 }
 
 #Create Array of variables that can be pulled into CW Automate
