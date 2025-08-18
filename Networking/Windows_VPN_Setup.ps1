@@ -52,8 +52,7 @@ Function Enable-WindowsVPN {
         [string]$L2tpPsk
     )
    
-    
-    
+        
     # Check if the VPN connection already exists
     $vpnConnection = Get-VpnConnection -Name $VPNName -ErrorAction SilentlyContinue
     if ($vpnConnection) {
@@ -61,6 +60,14 @@ Function Enable-WindowsVPN {
     } else {
         # Create the VPN connection
         Add-VpnConnection -AllUserConnection -Name $VPNName -ServerAddress $Server_Address -TunnelType L2tp -EncryptionLevel Optional -L2tpPsk $L2tpPsk -AuthenticationMethod Pap -Force
-        Write-Host "VPN connection '$VPNName' created successfully."
+        $VPNTEST = "VPN connection '$VPNName' created successfully."
     }
+
+#Create Array of variables that can be pulled into CW Automate
+
+$obj = @{}
+$obj.VPNTEST = $VPNTEST
+$Final = [string]::Join("|",($obj.GetEnumerator() | %{$_.Name + "=" + $_.Value}))
+Write-Output $Final
+
 }
