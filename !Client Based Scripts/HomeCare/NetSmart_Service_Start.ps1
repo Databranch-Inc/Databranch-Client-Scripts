@@ -18,3 +18,28 @@ Original creation - JB
 #>  
 
 #Monitor for the NetSmart Homecare Services Service
+try {
+    $mainService = Get-Service -Name "NHC_Homecareservices" -ErrorAction Stop
+    if ($mainService.Status -ne 'Running') {
+        Write-Host "NHC_Homecareservices is not running. Attempting to start..."
+        Start-Service -Name "NHC_Homecareservices"
+        Start-Sleep -Seconds 120
+    } else {
+        Write-Host "NHC_Homecareservices is already running."
+    }
+} 
+
+catch {
+    Write-Host "Error retrieving or starting NHC_Homecareservices: $_"
+}
+
+# Check for other NHC_ services that are not running
+$otherServices = Get-Service -Name "NHC_*" | Where-Object { $_.Status -ne 'Running' -and $_.Name -ne "NHC_Homecareservices" }
+foreach ($svc in $otherServices) {
+    Write-Host "Service $($svc.Name) is not running. Attempting to start..."
+    try {
+        Start-Service -Name $svc.Name
+    } catch {
+        Write-Host "Error starting service $($svc.Name): $_"
+    }
+}
