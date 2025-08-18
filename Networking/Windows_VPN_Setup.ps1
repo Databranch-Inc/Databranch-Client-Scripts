@@ -54,7 +54,7 @@ Function Enable-WindowsVPN {
    
         
     # Check if the VPN connection already exists
-    $vpnConnection = Get-VpnConnection -Name $VPNName -ErrorAction SilentlyContinue
+    $vpnConnection = Get-VpnConnection -Name $VPNName -AllUserConnection -ErrorAction SilentlyContinue
     if ($vpnConnection) {
         $VPNTEST = "VPN connection '$VPNName' already exists. Skipping creation."
     } else {
