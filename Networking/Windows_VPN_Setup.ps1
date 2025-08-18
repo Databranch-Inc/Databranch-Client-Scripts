@@ -20,7 +20,6 @@ JB 8/18/2025
 ==========================================================================
 #>
 
-
 Function Enable-WindowsVPN {
     
     <#
@@ -51,8 +50,7 @@ Function Enable-WindowsVPN {
         [Parameter(Mandatory = $true)]
         [string]$L2tpPsk
     )
-   
-        
+           
     # Check if the VPN connection already exists
     $vpnConnection = Get-VpnConnection -Name $VPNName -AllUserConnection -ErrorAction SilentlyContinue
     if ($vpnConnection) {
@@ -69,5 +67,4 @@ $obj = @{}
 $obj.VPNTEST = $VPNTEST
 $Final = [string]::Join("|",($obj.GetEnumerator() | %{$_.Name + "=" + $_.Value}))
 Write-Output $Final
-
 }
