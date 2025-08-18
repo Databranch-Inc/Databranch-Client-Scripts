@@ -46,7 +46,7 @@ Function Enable-WindowsVPN {
         [string]$VPNName,
 
         [Parameter(Mandatory = $true)]
-        [string]$Server_Address,
+        [string]$ServerAddress,
 
         [Parameter(Mandatory = $true)]
         [string]$L2tpPsk
@@ -59,7 +59,7 @@ Function Enable-WindowsVPN {
         $VPNTEST = "VPN connection '$VPNName' already exists. Skipping creation."
     } else {
         # Create the VPN connection
-        Add-VpnConnection -AllUserConnection -Name $VPNName -ServerAddress $Server_Address -TunnelType L2tp -EncryptionLevel Optional -L2tpPsk $L2tpPsk -AuthenticationMethod Pap -Force
+        Add-VpnConnection -AllUserConnection -Name $VPNName -ServerAddress $ServerAddress -TunnelType L2tp -EncryptionLevel Optional -L2tpPsk $L2tpPsk -AuthenticationMethod Pap -Force
         $VPNTEST = "VPN connection '$VPNName' created successfully."
     }
 
