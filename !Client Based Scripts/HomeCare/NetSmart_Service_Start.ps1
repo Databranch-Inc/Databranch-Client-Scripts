@@ -18,28 +18,37 @@ Original creation - JB
 #>  
 
 #Monitor for the NetSmart Homecare Services Service
-try {
-    $mainService = Get-Service -Name "NHC_Homecareservices" -ErrorAction Stop
-    if ($mainService.Status -ne 'Running') {
-        Write-Host "NHC_Homecareservices is not running. Attempting to start..."
-        Start-Service -Name "NHC_Homecareservices"
-        Start-Sleep -Seconds 120
+do{
+    $service = Get-Service -Name "NHC_Homecareservices" -ErrorAction SilentlyContinue
+    if ($service -and $service.Status -eq 'Running') {
+        Write-Host "NHC_Homecareservices is running."
+        break
     } else {
-        Write-Host "NHC_Homecareservices is already running."
+        Write-Host "NHC_Homecareservices is not running. Waiting for it to start..."
+        Start-Service -Name "NHC_Homecareservices"
+        Start-Sleep -Seconds 30
     }
-} 
+} while ($service.Status -ne 'Running')
 
-catch {
-    Write-Host "Error retrieving or starting NHC_Homecareservices: $_"
-}
 
 # Check for other NHC_ services that are not running
-$otherServices = Get-Service -Name "NHC_*" | Where-Object { $_.Status -ne 'Running' -and $_.Name -ne "NHC_Homecareservices" }
-foreach ($svc in $otherServices) {
-    Write-Host "Service $($svc.Name) is not running. Attempting to start..."
-    try {
-        Start-Service -Name $svc.Name
-    } catch {
-        Write-Host "Error starting service $($svc.Name): $_"
+do{
+    $otherServices = Get-Service -Name "NHC_*" | Where-Object { $_.Status -ne 'Running' -and $_.Name -ne "NHC_Homecareservices" }
+    if ($otherServices.Count -eq 0) {
+        Write-Host "All NHC_* services are running."
+        break
+    } else {
+        Write-Host "Found non-running NHC_* services. Attempting to start them..."
     }
-}
+    
+    foreach ($svc in $otherServices) {
+        try {
+            Start-Service -Name $svc.Name
+            Write-Host "Started service: $($svc.Name)"
+        } catch {
+            Write-Host "Error starting service $($svc.Name): $_"
+        }
+    }
+    
+    Start-Sleep -Seconds 30
+} while ($true)
