@@ -37,7 +37,7 @@ function Scramble-String([string]$inputString){
 }
  
 #Run a special AD user export to .CSV to only gather enabled non-admin and non-service accounts
-GET-ADUSER -filter * -properties * | Where-Object {($_.Admincount -ne "1") -and ($_.enabled -eq "True") -and ($_.SAMAccountname -notcontains "floor") -and ($_.SAMAccountname -ne "iquser")} | select-object name,SAMAccountname,lastlogondate,enabled,primarygroup | Export-Csv "$Dir\userstoresetAD.csv" -NoTypeInformation -Encoding UTF8
+GET-ADUSER -filter * -properties * | Where-Object {($_.Admincount -ne "1") -and ($_.enabled -eq "True") -and ($_.SAMAccountname -notlike "*floor*") -and ($_.SAMAccountname -notlike "*iqs*")  -and ($_.SAMAccountname -notlike "*MSOL*") -and ($_.SAMAccountname -notlike "*AAD*")} | select-object name,SAMAccountname,lastlogondate,enabled,primarygroup | Export-Csv "$Dir\userstoresetAD.csv" -NoTypeInformation -Encoding UTF8
 
 #Get the users AD .csv file 
 $users = Import-Csv "$dir\userstoresetAD.csv" | Select-Object -ExpandProperty SAMAccountname
