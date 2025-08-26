@@ -17,6 +17,8 @@ Original creation - JB
 =====================================================================================
 #>  
 
+Function Start-NetSmartService {
+    
 #Monitor for the NetSmart Homecare Services Service
 do{
     $service = Get-Service -Name "NHC_Homecareservices" -ErrorAction SilentlyContinue
@@ -53,3 +55,4 @@ do{
     Start-Sleep -Seconds 30
 } while ($true)
 
+}
