@@ -44,7 +44,7 @@ do{
     foreach ($svc in $otherServices) {
         try {
             Start-Service -Name $svc.Name
-            Write-Host "Started service: $($svc.Name)"
+            Write-Host "Starting service: $($svc.Name)"
         } catch {
             Write-Host "Error starting service $($svc.Name): $_"
         }
@@ -52,3 +52,4 @@ do{
     
     Start-Sleep -Seconds 30
 } while ($true)
+
