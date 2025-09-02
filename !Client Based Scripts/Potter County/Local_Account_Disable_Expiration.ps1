@@ -30,7 +30,7 @@ Function Disable-LocalAccountPasswordExpiration {
 #>
 
 # Get all local users on the running PC
-$LocalUsers = Get-LocalUser
+$LocalUsers = Get-LocalUser | Where-Object {$_.Enabled -eq "True" -and $_.Name -ne "ProtectedAccount"}
 
 # Loop through each user and set the PasswordNeverExpires property to True
 foreach ($User in $LocalUsers) {
