@@ -22,6 +22,8 @@ function Talk-DatabranchGithub {
 
 
 
+
+    
 $Date = Get-Date
 
 Write-Log -message "Successfuly talked to GITHUB! on $Date"
