@@ -4,6 +4,9 @@ function Deploy-WirelessProfile {
         [string]$SSID,
 
         [Parameter(Mandatory = $true)]
+        [string]$SSIDHEX,
+
+        [Parameter(Mandatory = $true)]
         [string]$Authentication,
 
         [Parameter(Mandatory = $true)]
@@ -16,10 +19,10 @@ function Deploy-WirelessProfile {
     # Create the XML configuration for the wireless profile
     $profileXml = @"
 <?xml version="1.0"?>
-<WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
-    <name>$SSID</name>
+<WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">    
     <SSIDConfig>
         <SSID>
+            <hex>$SSIDHEX</hex>
             <name>$SSID</name>
         </SSID>
     </SSIDConfig>
