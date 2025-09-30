@@ -4,9 +4,6 @@ function Deploy-WirelessProfile {
         [string]$SSID,
 
         [Parameter(Mandatory = $true)]
-        [string]$SSIDHEX,
-
-        [Parameter(Mandatory = $true)]
         [string]$Authentication,
 
         [Parameter(Mandatory = $true)]
@@ -15,6 +12,23 @@ function Deploy-WirelessProfile {
         [Parameter(Mandatory = $true)]
         [string]$Password
     )
+
+function Convert-StringToHex {
+    param (
+        [Parameter(Mandatory)]
+        [string]$InputString
+    )
+
+    # Convert each character to its hex value
+    $hex = ($InputString.ToCharArray() | ForEach-Object {
+        [System.Text.Encoding]::UTF8.GetBytes($_) | ForEach-Object {
+            '{0:X2}' -f $_
+        }
+    }) -join ''
+
+    return $hex
+}
+$SSIDHEX = Convert-StringToHex -InputString $SSID
 
     # Create the XML configuration for the wireless profile
     $profileXml = @"
