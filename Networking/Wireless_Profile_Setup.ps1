@@ -28,12 +28,15 @@ function Convert-StringToHex {
 
     return $hex
 }
+#Additional Vairable creation, based on input
 $SSIDHEX = Convert-StringToHex -InputString $SSID
+$encodedPassword = $Password.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;').Replace("'", '&apos;')
 
     # Create the XML configuration for the wireless profile
     $profileXml = @"
 <?xml version="1.0"?>
-<WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">    
+<WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">  
+    <name>$SSID</name>  
     <SSIDConfig>
         <SSID>
             <hex>$SSIDHEX</hex>
@@ -52,7 +55,7 @@ $SSIDHEX = Convert-StringToHex -InputString $SSID
             <sharedKey>
                 <keyType>passPhrase</keyType>
                 <protected>false</protected>
-                <keyMaterial>$Password</keyMaterial>
+                <keyMaterial>$encodedPassword</keyMaterial>
             </sharedKey>
         </security>
     </MSM>
@@ -60,8 +63,8 @@ $SSIDHEX = Convert-StringToHex -InputString $SSID
 "@
 
     # Save the profile XML to a temporary file
-    $tempFile = [System.IO.Path]::GetTempFileName()
-    Set-Content -Path $tempFile -Value $profileXml -Force
+    $tempFile = [System.IO.Path]::GetTempFileName().Replace(".tmp", ".xml")
+    $profileXml | out-File -FilePath $tempFile -Encoding UTF8
 
     # Add the wireless profile using netsh
     try {
