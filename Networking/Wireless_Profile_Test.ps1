@@ -12,7 +12,7 @@ function Get-WirelessProfileBySSID {
 
     # Check if the provided SSID exists in the profiles
     if ($profiles -contains $SSID) {
-        Write-Output "Wireless profile for SSID '$SSID' found."
+        Write-Output "Wireless profile found."
     } else {
         Write-Warning "Wireless profile for SSID '$SSID' not found on this machine."
     }
