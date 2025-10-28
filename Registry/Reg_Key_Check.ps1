@@ -45,7 +45,7 @@ function Test-RegistryKeyExistence {
 
     try {
         if (Test-Path "Registry::$RegistryKeyPath") {
-            Write-Output "Registry key exists at path: $RegistryKeyPath"
+            Write-Output "Registry key exists"
         } else {
             Write-Output "Registry key does not exist at path: $RegistryKeyPath"
         }
