@@ -59,7 +59,7 @@ $enableDebugLogging = 0 # 0 = Unchecked, 1 = Checked (Enabled); default is 0; Th
 
 # Custom Branding Settings
 $companyName = "Databranch" # This will set the "Company Name" option in the Custom Branding settings; default is "CyberDrain".
-$companyURL = "https://www.databranch.com.com" # This will set the Company URL option in the Custom Branding settings; default is "https://cyberdrain.com"; Must include the protocol (e.g., https://).
+$companyURL = "https://www.databranch.com." # This will set the Company URL option in the Custom Branding settings; default is "https://cyberdrain.com"; Must include the protocol (e.g., https://).
 $productName = "Check - Phishing Protection Powered by Databranch" # This will set the "Product Name" option in the Custom Branding settings; default is "Check - Phishing Protection".
 $supportEmail = "support@databranch.com" # This will set the "Support Email" option in the Custom Branding settings; default is blank.
 $primaryColor = "#54c3e5" # This will set the "Primary Color" option in the Custom Branding settings; default is "#F77F00"; must be a valid hex color code (e.g., #FFFFFF).
