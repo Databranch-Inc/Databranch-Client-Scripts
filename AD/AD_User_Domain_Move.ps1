@@ -42,10 +42,6 @@ function Move-ADUsersinOU {
     )
 
 
-   
-    
-
-
 #Test for Active Directory module, import if not loaded
 if (-not (Get-Module -ListAvailable -Name ActiveDirectory)) {
 

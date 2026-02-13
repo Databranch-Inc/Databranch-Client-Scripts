@@ -13,7 +13,34 @@ https://www.gavsto.com/why-i-think-now-is-a-good-time-to-start-phasing-out-rmm-s
 
 
 Josh Britton - Saved to Github 5-28-24
+1.1 Upate - 2-13-26
+
+=================================================================================
+Version 1.1 Update - 
+
+Updating this script to be compatible with Datto RMM Script logic, Going to leave the Legacy Code in as a comment at the bottom for historical reference until we fully offboard from CW Automate
+
+=================================================================================
 #>
+
+#Gather customizeable variables from Datto RMM Component (Update these as the component tempalte is copied)
+$githubtoken = $ENV:GitHubToken
+$scripturl = $ENV:GitHubURL
+$Function = $ENV:Function
+
+#Set job variables and input from Datto RMM component/system variables. Note that the Auth token and Script URL are set by CW Automate Script Variables.
+$wc = New-Object System.Net.WebClient
+$wc.Headers.Add('Authorization','token "$githubtoken"')
+$wc.Headers.Add('Accept','application/vnd.github.v3.raw')
+$wc.DownloadString("$scripturl") | iex
+
+#SCRIPT/FUNCTION INFO HERE - UPDATE TO THE CREATED FUNCTION IN THE POWERSHELL SCRIPT ON GITHUB
+
+$Function
+
+<#
+
+NOTE - THIS COMMENT IS THE LEGACY METHOD TO CONNECT TO GITHUB WITH CW AUTOMATE'S SCRIPTING ENGINE CALLING POWERSHELL - MOVED TO THIS COMMENT WHILE WE MIGRATE FROM CW AUTOMATE TO DATTO RM - JB 2-13-26
 
 #Set Variables. Note that the Auth token and Script URL are set by CW Automate Script Variables.
 $wc = New-Object System.Net.WebClient
@@ -24,3 +51,5 @@ $wc.DownloadString('@scriptURL@') | iex
 #SCRIPT/FUNCTION INFO HERE - UPDATE TO THE CREATED FUNCTION IN THE POWERSHELL SCRIPT ON GITHUB
 
 CALL-FUNCTION
+
+#>
