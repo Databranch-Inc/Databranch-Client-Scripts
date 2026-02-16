@@ -26,7 +26,10 @@ Updating this script to be compatible with Datto RMM Script logic, Going to leav
 #Gather customizeable variables from Datto RMM Component (Update these as the component tempalte is copied)
 $githubtoken = $ENV:GitHubToken
 $scripturl = $ENV:GitHubURL
-$Function = $ENV:Function
+$Function = {$ENV:Function}
+
+
+<#
 
 #Set job variables and input from Datto RMM component/system variables. Note that the Auth token and Script URL are set by CW Automate Script Variables.
 $wc = New-Object System.Net.WebClient
@@ -34,9 +37,25 @@ $wc.Headers.Add('Authorization','token "$githubtoken"')
 $wc.Headers.Add('Accept','application/vnd.github.v3.raw')
 $wc.DownloadString("$scripturl") | iex
 
+#>
+
+# Ensure these are clean
+$githubtoken = $githubtoken.Trim()
+$scripturl   = $scripturl.Trim()
+
+# Validate/force as Uri to catch bad characters early
+$uri = [Uri]$scripturl
+
+$wc = New-Object System.Net.WebClient
+$wc.Headers['Authorization'] = "token $githubtoken"
+$wc.Headers['Accept']        = 'application/vnd.github.v3.raw'
+
+$wc.DownloadString($uri) | iex
+
+
 #SCRIPT/FUNCTION INFO HERE - UPDATE TO THE CREATED FUNCTION IN THE POWERSHELL SCRIPT ON GITHUB
 
-$Function
+& $Function
 
 <#
 
