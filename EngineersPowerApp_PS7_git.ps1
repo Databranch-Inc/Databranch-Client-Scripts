@@ -1,7 +1,7 @@
 #Requires -Version 7.0
 <#
 .SYNOPSIS
-    Engineers PowerApp - SharePoint Script Browser & Manager (PowerShell 7)
+    Engineers PowerApp - PowerShell and Batch Script Browser & Manager (PowerShell 7)
 .DESCRIPTION
     A WPF GUI application that connects to a SharePoint site, indexes all .ps1 and .bat
     files, and provides browsing, viewing, tagging, commenting, renaming, and VSCode
@@ -37,7 +37,7 @@ $script:AppConfig = @{
 # ============================================================
 # Set this to your local synced Git repository path.
 # Used by the "Open Git Repository" button — no SharePoint connection needed.
-$script:GitRepoPath = "C:\GitHubRepos\Databranch-Client-Scripts"   # <-- SET THIS TO YOUR LOCAL REPO PATH
+$script:GitRepoPath = "C:\GitHubRepos\Databranch-Client-Scripts"
 
 # ============================================================
 # SHAREPOINT CONFIGURATION
@@ -108,7 +108,7 @@ function Connect-ToSharePoint {
     param([string]$SiteUrl)
     
     # Validate app config
-    if ($script:AppConfig.ClientId -eq "YOUR-CLIENT-ID-HERE") {
+    if ([string]::IsNullOrWhiteSpace($script:AppConfig.ClientId) -or $script:AppConfig.ClientId -eq "YOUR-CLIENT-ID-HERE") {
         [System.Windows.MessageBox]::Show(
             "Please configure your Entra ID app registration first!`n`nFollow these steps:`n`n1. Run: Register-PnPEntraIDAppForInteractiveLogin -ApplicationName 'PnP.PowerShell' -Tenant 'yourtenant.onmicrosoft.com' -Interactive`n`n2. Copy the Client ID it returns`n`n3. Paste it into the `$script:AppConfig section at the top of this script",
             "Configuration Required",
@@ -417,10 +417,11 @@ function Load-Cache {
                 SizeBytes      = $f.SizeBytes
                 Extension      = $f.Extension
                 ItemId         = $f.ItemId
-                Comment        = $f.Comment
-                Tags           = @($f.Tags)
-                TagsRaw        = $f.TagsRaw
-                ContentLoaded  = $false
+                Comment        = if ($f.Comment) { $f.Comment } else { "" }
+                Tags           = if ($f.Tags) { @($f.Tags) } else { @() }
+                TagsRaw        = if ($f.TagsRaw) { $f.TagsRaw } else { "" }
+                # Mark as loaded if we have cached metadata — no need to re-read the file
+                ContentLoaded  = (-not [string]::IsNullOrEmpty($f.Comment) -or ($f.Tags -and @($f.Tags).Count -gt 0))
             }
             $files.Add($obj)
         }
@@ -486,10 +487,10 @@ function Load-GitCache {
                 SizeBytes      = $f.SizeBytes
                 Extension      = $f.Extension
                 ItemId         = $f.ItemId
-                Comment        = $f.Comment
-                Tags           = @($f.Tags)
-                TagsRaw        = $f.TagsRaw
-                ContentLoaded  = $false
+                Comment        = if ($f.Comment) { $f.Comment } else { "" }
+                Tags           = if ($f.Tags) { @($f.Tags) } else { @() }
+                TagsRaw        = if ($f.TagsRaw) { $f.TagsRaw } else { "" }
+                ContentLoaded  = (-not [string]::IsNullOrEmpty($f.Comment) -or ($f.Tags -and @($f.Tags).Count -gt 0))
             })
         }
         Write-AppLog "Git cache loaded: $($files.Count) files (cached $(([datetime]$raw.Timestamp).ToString('g')))"
@@ -518,7 +519,7 @@ $XAMLString = @'
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="Engineers PowerApp - SharePoint Script Browser"
+    Title="Engineers PowerApp - PowerShell and Batch Script Browser"
     Height="800" Width="1280" MinHeight="600" MinWidth="900"
     WindowStartupLocation="CenterScreen"
     Background="#1E1E2E">
@@ -696,7 +697,7 @@ $XAMLString = @'
                     <TextBlock Text="[*]" FontSize="20" Foreground="#7B9CFF" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <TextBlock Text="Engineers PowerApp" FontSize="16" FontWeight="Bold"
                                Foreground="#F8F8F2" VerticalAlignment="Center"/>
-                    <TextBlock Text=" - SharePoint Script Browser" FontSize="13"
+                    <TextBlock Text=" - PowerShell and Batch Script Browser" FontSize="13"
                                Foreground="#6272A4" VerticalAlignment="Center"/>
                 </StackPanel>
 
@@ -1042,7 +1043,7 @@ $XAMLString = @'
                                          VerticalScrollBarVisibility="Auto"
                                          VerticalContentAlignment="Top"
                                          Text="" FontFamily="Consolas" FontSize="12"/>
-                                <TextBlock Text="Multi-line supported (Enter for new line). Saved into the script file — load content first to see existing comments."
+                                <TextBlock Text="Multi-line supported (Enter for new line). Cached comments load automatically; click Load File Content to re-read from disk."
                                            FontSize="10" Foreground="#44446A" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Border>
@@ -1084,7 +1085,7 @@ $XAMLString = @'
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
                                             Foreground="#8BE9FD" BorderBrush="#8BE9FD"/>
                                 </StackPanel>
-                                <TextBlock Text="Comma-separated. Load file content first to see existing tags."
+                                <TextBlock Text="Comma-separated. Cached tags load automatically; click Load File Content to re-read from disk."
                                            FontSize="10" Foreground="#44446A" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Border>
@@ -1815,7 +1816,7 @@ function Add-QuickTag {
 function Start-OpenGitRepo {
     $repoPath = $script:GitRepoPath
 
-    if ([string]::IsNullOrWhiteSpace($repoPath) -or $repoPath -like "*YourRepoName*") {
+    if ([string]::IsNullOrWhiteSpace($repoPath)) {
         [System.Windows.MessageBox]::Show(
             "Please set `$script:GitRepoPath at the top of this script to your local repository path.",
             "Configuration Required",
@@ -1895,6 +1896,9 @@ function Start-OpenGitRepo {
 
         Update-FileList
         Set-Status "Git repo loaded. $($allFiles.Count) script files found." "#50FA7B"
+
+        # Kick off background metadata scan to populate tags/comments for all files
+        Start-MetadataScan
     } catch {
         Write-AppLog "Git repo scan error: $_" "ERROR"
         Set-Status "Error scanning repo: $_" "#FF5555"
@@ -1904,11 +1908,171 @@ function Start-OpenGitRepo {
 }
 
 # ============================================================
+# BACKGROUND METADATA SCAN
+# ============================================================
+# Reads every file and parses ##ENGINEERSPOWERAPP tags/comments.
+# Runs in a background runspace for SharePoint; a fast local loop for Git.
+# Updates AllFiles in-place as results arrive, then saves cache.
+function Start-MetadataScan {
+    if ($script:AllFiles.Count -eq 0) { return }
+
+    Write-AppLog "Starting metadata scan for $($script:AllFiles.Count) files (source=$($script:DataSource))"
+    Set-Status "Scanning file metadata (0 / $($script:AllFiles.Count))..." "#FFB86C"
+
+    if ($script:DataSource -eq "git") {
+        # ── Git mode: read all files synchronously on the main thread.
+        # Local disk reads for 200 files takes < 1 second — no threading needed,
+        # and threading caused silent failures writing back to PSCustomObject properties.
+        $total   = $script:AllFiles.Count
+        $indexed = 0
+        foreach ($f in $script:AllFiles) {
+            try {
+                if (Test-Path -LiteralPath $f.FileRef) {
+                    $raw     = [System.IO.File]::ReadAllText($f.FileRef, [System.Text.Encoding]::UTF8)
+                    $comment = ""
+                    $tags    = @()
+                    $tagsRaw = ""
+                    foreach ($line in ($raw -split "`r?`n")) {
+                        $line = $line.TrimEnd()
+                        if ($line.StartsWith("##ENGINEERSPOWERAPP#COMMENT#")) {
+                            $comment = $line.Substring(28).Trim() -replace [regex]::Escape("||"), "`n"
+                        } elseif ($line.StartsWith("##ENGINEERSPOWERAPP#TAGS#")) {
+                            $tagsRaw = $line.Substring(25).Trim()
+                            $tags    = @($tagsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" })
+                        }
+                    }
+                    # Always write what we found — if the file has markers, use them;
+                    # if it genuinely has no markers the fields stay blank which is correct.
+                    $f.Comment       = $comment
+                    $f.Tags          = $tags
+                    $f.TagsRaw       = $tagsRaw
+                    $f.ContentLoaded = ($comment -ne "" -or $tags.Count -gt 0)
+                    if ($comment -or $tags.Count -gt 0) {
+                        $indexed++
+                        Write-AppLog "  [META] $($f.Name): comment=$($comment -ne '') tags=$($tags -join ',')"
+                    }
+                }
+            } catch {
+                Write-AppLog "Metadata scan error on $($f.Name): $_" "WARN"
+            }
+        }
+        Write-AppLog "Git metadata scan complete. $indexed / $total files had metadata."
+        Save-GitCache $script:AllFiles
+        Update-FileList
+        Set-Status "Metadata scan complete. $indexed files with tags/comments." "#50FA7B"
+
+    } else {
+        # ── SharePoint mode: download each file via PnP in a runspace ───────
+        $Config    = $script:Config
+        $AppConfig = $script:AppConfig
+        # Pass file refs as plain strings — PSObjects don't cross runspace cleanly
+        $fileRefs  = $script:AllFiles | ForEach-Object { $_.FileRef }
+
+        $runspace                = [System.Management.Automation.Runspaces.RunspaceFactory]::CreateRunspace()
+        $runspace.ApartmentState = "STA"
+        $runspace.Open()
+        $ps          = [System.Management.Automation.PowerShell]::Create()
+        $ps.Runspace = $runspace
+
+        $ps.AddScript({
+            param($Config, $AppConfig, $FileRefs)
+
+            function RS-Log {
+                param([string]$Msg, [string]$Level = "INFO")
+                $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+                Add-Content -Path $Config.LogFile -Value "[$ts] [$Level] [META] $Msg" -ErrorAction SilentlyContinue
+            }
+
+            try {
+                Import-Module PnP.PowerShell -ErrorAction Stop
+                Connect-PnPOnline -Url $Config.SiteUrl -Interactive `
+                                  -ClientId $AppConfig.ClientId -ErrorAction Stop
+
+                $results = [System.Collections.ArrayList]::new()
+                $i = 0
+                foreach ($ref in $FileRefs) {
+                    $i++
+                    try {
+                        $stream  = Get-PnPFile -Url $ref -AsMemoryStream -ErrorAction Stop
+                        $raw     = [System.Text.Encoding]::UTF8.GetString($stream.ToArray())
+                        $comment = ""; $tags = @(); $tagsRaw = ""
+                        foreach ($line in $raw -split "`r?`n") {
+                            $line = $line.TrimEnd()
+                            if ($line.StartsWith("##ENGINEERSPOWERAPP#COMMENT#")) {
+                                $comment = ($line.Substring(28).Trim()) -replace '\|\|', "`n"
+                            } elseif ($line.StartsWith("##ENGINEERSPOWERAPP#TAGS#")) {
+                                $tagsRaw = $line.Substring(25).Trim()
+                                $tags    = $tagsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+                            }
+                        }
+                        [void]$results.Add(@{ FileRef = $ref; Comment = $comment; Tags = $tags; TagsRaw = $tagsRaw })
+                    } catch {
+                        RS-Log "Could not read $ref : $_" "WARN"
+                    }
+                }
+                RS-Log "Metadata scan complete: $($results.Count) / $($FileRefs.Count) files read"
+                return @{ Success = $true; Results = $results.ToArray(); Total = $FileRefs.Count }
+            } catch {
+                RS-Log "Metadata scan fatal error: $_" "ERROR"
+                return @{ Success = $false; Error = $_.ToString() }
+            }
+        }).AddArgument($Config).AddArgument($AppConfig).AddArgument($fileRefs) | Out-Null
+
+        $async = $ps.BeginInvoke()
+
+        $scanTimer          = [System.Windows.Threading.DispatcherTimer]::new()
+        $scanTimer.Interval = [TimeSpan]::FromMilliseconds(500)
+        $scanTimer.Tag      = @{ Async = $async; PS = $ps; Runspace = $runspace }
+        $scanTimer.Add_Tick({
+            param($s, $e)
+            $ctx = $s.Tag
+            if ($ctx.Async.IsCompleted) {
+                $s.Stop()
+                try {
+                    $result = $ctx.PS.EndInvoke($ctx.Async)
+                    if ($result.Success) {
+                        # Build a lookup and update AllFiles in place
+                        $map = @{}
+                        foreach ($r in $result.Results) { $map[$r.FileRef] = $r }
+                        foreach ($f in $script:AllFiles) {
+                            if ($map.ContainsKey($f.FileRef)) {
+                                $r = $map[$f.FileRef]
+                                # Only overwrite if scan actually found metadata in the file
+                                if ($r.Comment -or @($r.Tags).Count -gt 0) {
+                                    $f.Comment = $r.Comment
+                                    $f.Tags    = $r.Tags
+                                    $f.TagsRaw = $r.TagsRaw
+                                }
+                                $f.ContentLoaded = $true
+                            }
+                        }
+                        Save-Cache $script:AllFiles
+                        Update-FileList
+                        Set-Status "Metadata scan complete. $($result.Total) files indexed." "#50FA7B"
+                        Write-AppLog "SP metadata scan complete."
+                    } else {
+                        Set-Status "Metadata scan failed: $($result.Error)" "#FF5555"
+                    }
+                } catch {
+                    Write-AppLog "Metadata scan callback error: $_" "ERROR"
+                    Set-Status "Metadata scan error: $_" "#FF5555"
+                } finally {
+                    $ctx.PS.Dispose()
+                    $ctx.Runspace.Close()
+                }
+            }
+        })
+        $scanTimer.Start()
+    }
+}
+
+# ============================================================
 # CONNECT & REFRESH
 # ============================================================
 function Start-ConnectAndLoad {
     if ([string]::IsNullOrWhiteSpace($script:Config.SiteUrl) -or
-        $script:Config.SiteUrl -like "*YOURCOMPANY*") {
+        $script:Config.SiteUrl -like "*YOURCOMPANY*" -or
+        $script:Config.SiteUrl -eq "https://YOURSITE.sharepoint.com/") {
         [System.Windows.MessageBox]::Show(
             "Please edit the `$script:Config.SiteUrl value at the top of this script with your SharePoint site URL before connecting.",
             "Configuration Required",
@@ -2096,6 +2260,9 @@ function Start-ConnectAndLoad {
 
                     Update-FileList
                     Set-Status "Connected. $($script:AllFiles.Count) script files found." "#50FA7B"
+
+                    # Kick off background metadata scan to populate tags/comments for all files
+                    Start-MetadataScan
                 } else {
                     Set-Status "Connection failed: $($result.Error)" "#FF5555"
                     [System.Windows.MessageBox]::Show(
@@ -2121,27 +2288,7 @@ function Start-ConnectAndLoad {
 # ============================================================
 # LOAD FROM CACHE (offline / fast startup)
 # ============================================================
-
 function Load-FromCache {
-    # Prefer the Git cache if present and populated
-    if (Test-Path $script:Config.GitCacheFile) {
-        $gitCache = Load-GitCache
-        if ($null -ne $gitCache -and $gitCache.Files.Count -gt 0) {
-            $script:AllFiles   = $gitCache.Files
-            $script:DataSource = "git"
-
-            $TxtConnectionStatus.Text       = "[G] Git Repo (cached)"
-            $TxtConnectionStatus.Foreground = "#FFB86C"
-            $BtnRefresh.IsEnabled           = $true
-            $TxtCacheInfo.Text              = "Cached: $($gitCache.Timestamp.ToString('g'))"
-
-            Update-FileList
-            Write-AppLog "Startup: loaded git cache ($($gitCache.Files.Count) files)"
-            return
-        }
-    }
-
-    # Fallback to SharePoint cache
     $cache = Load-Cache
     if ($null -eq $cache) {
         Set-Status "No cache found. Connect to SharePoint to load files." "#6272A4"
@@ -2150,7 +2297,6 @@ function Load-FromCache {
 
     $script:AllFiles   = $cache.Files
     $script:DataSource = "sharepoint"
-
     $cacheAge = [datetime]::Now - $cache.Timestamp
     $ageStr   = if ($cacheAge.TotalHours -lt 1) {
         "$([int]$cacheAge.TotalMinutes)m ago"
@@ -2160,15 +2306,10 @@ function Load-FromCache {
         "$([int]$cacheAge.TotalDays)d ago"
     }
 
-    $TxtConnectionStatus.Text       = "[OK] Cached (SharePoint)"
-    $TxtConnectionStatus.Foreground = "#FFB86C"
-    $BtnRefresh.IsEnabled           = $true
-    $TxtCacheInfo.Text              = "Cached: $ageStr"
-
+    $TxtCacheInfo.Text = "Cached: $ageStr"
     Update-FileList
     Set-Status "Loaded $($cache.Files.Count) files from cache ($ageStr). Connect to refresh." "#FFB86C"
 }
-
 
 # ============================================================
 # EVENT HANDLERS
@@ -2253,7 +2394,25 @@ if (-not (Test-PnPModule)) {
     exit 1
 }
 
-Load-FromCache
+# Load whichever cache exists — git takes priority if both are present.
+# The user can switch modes manually via the Connect / Open Git Repo buttons.
+if (Test-Path $script:Config.GitCacheFile) {
+    $gitCache = Load-GitCache
+    if ($null -ne $gitCache -and $gitCache.Files.Count -gt 0) {
+        $script:AllFiles   = $gitCache.Files
+        $script:DataSource = "git"
+        $TxtConnectionStatus.Text       = "[G] Git Repo (cached)"
+        $TxtConnectionStatus.Foreground = "#FFB86C"
+        $BtnRefresh.IsEnabled           = $true
+        $TxtCacheInfo.Text              = "Cached: $($gitCache.Timestamp.ToString('g'))"
+        Update-FileList
+        Write-AppLog "Startup: loaded git cache ($($gitCache.Files.Count) files)"
+    } else {
+        Load-FromCache
+    }
+} else {
+    Load-FromCache
+}
 
 # ============================================================
 # SHOW WINDOW
