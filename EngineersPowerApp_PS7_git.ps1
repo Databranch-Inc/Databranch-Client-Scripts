@@ -1,4 +1,6 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
+##ENGINEERSPOWERAPP#COMMENT#Engineers PowerApp is a WPF desktop tool for browsing, tagging, commenting on, and launching the PowerShell and batch scripts stored in your Git repository (or SharePoint). It gives every engineer on the team a consistent, searchable interface into the shared script library without needing to navigate Windows Explorer or remember folder structures.
+##ENGINEERSPOWERAPP#TAGS#isApp,PowerShell 7,utility
 <#
 .SYNOPSIS
     Engineers PowerApp - PowerShell and Batch Script Browser & Manager (PowerShell 7)
@@ -13,52 +15,227 @@
     Auth:     Uses custom Entra ID app registration (interactive login)
 
     Comment syntax used in managed files:
-        ##ENGINEERSPOWERAPP#COMMENT#<your comment here>
-        ##ENGINEERSPOWERAPP#TAGS#<tag1,tag2,tag3>
 #>
 
 # ============================================================
-# APP REGISTRATION CONFIGURATION
+# STATIC APP INTERNALS  (never user-configurable)
 # ============================================================
-# IMPORTANT: Register your own Entra ID app first:
-#
-# Run this command in PowerShell 7:
-#   Register-PnPEntraIDAppForInteractiveLogin -ApplicationName "PnP.PowerShell" -Tenant "yourtenant.onmicrosoft.com" -Interactive
-#
-# Then paste the Client ID it returns below:
+$script:AppDataDir   = "$env:APPDATA\EngineersPowerApp"
+$script:ConfigFile   = "$env:APPDATA\EngineersPowerApp\config.json"
 
-$script:AppConfig = @{
-    ClientId      = "7f52b5b7-3b41-44b2-b332-118d6824b23d"  # <-- PASTE YOUR CLIENT ID HERE
-    TenantDomain  = "databranch.onmicrosoft.com"  # <-- YOUR TENANT (e.g., contoso.onmicrosoft.com)
-}
-
-# ============================================================
-# GIT REPOSITORY CONFIGURATION
-# ============================================================
-# Set this to your local synced Git repository path.
-# Used by the "Open Git Repository" button — no SharePoint connection needed.
-$script:GitRepoPath = "C:\GitHubRepos\Databranch-Client-Scripts"
-
-# ============================================================
-# SHAREPOINT CONFIGURATION
-# ============================================================
 $script:Config = @{
-    SiteUrl       = "https://databranch.sharepoint.com/"  # <-- Set this
     CacheFile     = "$env:APPDATA\EngineersPowerApp\cache.json"
     GitCacheFile  = "$env:APPDATA\EngineersPowerApp\git-cache.json"
     LogFile       = "$env:APPDATA\EngineersPowerApp\app.log"
     AppDataDir    = "$env:APPDATA\EngineersPowerApp"
-    FileTypes     = @("*.ps1", "*.bat")
+    AppVersion    = "2.0.0-PS7"
+    # These three are overwritten by Load-AppConfig from config.json:
+    SiteUrl       = ""
     CommentPrefix = "##ENGINEERSPOWERAPP#COMMENT#"
     TagPrefix     = "##ENGINEERSPOWERAPP#TAGS#"
-    AppVersion    = "2.0.0-PS7"
+    FileTypes     = @("*.ps1", "*.bat")
 }
+$script:AppConfig = @{ ClientId = ""; TenantDomain = "" }
+$script:GitRepoPath = ""
 
 # ============================================================
 # BOOTSTRAP -- Ensure app data directory exists
 # ============================================================
-if (-not (Test-Path $script:Config.AppDataDir)) {
-    New-Item -ItemType Directory -Path $script:Config.AppDataDir -Force | Out-Null
+if (-not (Test-Path $script:AppDataDir)) {
+    New-Item -ItemType Directory -Path $script:AppDataDir -Force | Out-Null
+}
+
+# ============================================================
+# CONFIG FILE -- Load-AppConfig / Show-FirstRunWizard
+# ============================================================
+function Load-AppConfig {
+    if (-not (Test-Path $script:ConfigFile)) { return $false }
+    try {
+        $json = Get-Content -Path $script:ConfigFile -Raw -Encoding UTF8 | ConvertFrom-Json
+
+        $script:AppConfig.ClientId     = $json.ClientId
+        $script:AppConfig.TenantDomain = $json.TenantDomain
+        $script:GitRepoPath            = $json.GitRepoPath
+
+        $script:Config.SiteUrl         = $json.SiteUrl
+        $script:Config.CommentPrefix   = if ($json.CommentPrefix) { $json.CommentPrefix } else { "##ENGINEERSPOWERAPP#COMMENT#" }
+        $script:Config.TagPrefix       = if ($json.TagPrefix)     { $json.TagPrefix     } else { "##ENGINEERSPOWERAPP#TAGS#"    }
+        $script:Config.FileTypes       = if ($json.FileTypes)     { @($json.FileTypes)  } else { @("*.ps1", "*.bat")            }
+
+        return $true
+    } catch {
+        [System.Windows.MessageBox]::Show(
+            "Failed to read config.json:`n$_`n`nPath: $($script:ConfigFile)",
+            "Config Error", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error
+        )
+        return $false
+    }
+}
+
+function Save-AppConfig {
+    param(
+        [string]$ClientId, [string]$TenantDomain, [string]$GitRepoPath,
+        [string]$SiteUrl,  [string]$CommentPrefix, [string]$TagPrefix,
+        [string[]]$FileTypes
+    )
+    $obj = [ordered]@{
+        "_comment"      = "Engineers PowerApp configuration — edit this file or delete it to re-run the setup wizard."
+        "ClientId"      = $ClientId
+        "TenantDomain"  = $TenantDomain
+        "GitRepoPath"   = $GitRepoPath
+        "SiteUrl"       = $SiteUrl
+        "CommentPrefix" = $CommentPrefix
+        "TagPrefix"     = $TagPrefix
+        "FileTypes"     = $FileTypes
+    }
+    $obj | ConvertTo-Json -Depth 5 | Set-Content -Path $script:ConfigFile -Encoding UTF8
+}
+
+function Show-FirstRunWizard {
+    # ── Build the dialog window ───────────────────────────────────────────
+    Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
+    $wizXaml = @'
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Engineers PowerApp — First Run Setup"
+        Width="560" Height="580" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="#1E1E2E" Foreground="#F8F8F2" FontFamily="Segoe UI" FontSize="13">
+  <Window.Resources>
+    <Style x:Key="Lbl" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="#A0A0C0"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Margin" Value="0,10,0,3"/>
+    </Style>
+    <Style x:Key="Hint" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="#44446A"/>
+      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="Margin" Value="0,2,0,0"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style x:Key="TB" TargetType="TextBox">
+      <Setter Property="Background" Value="#252537"/>
+      <Setter Property="Foreground" Value="#F8F8F2"/>
+      <Setter Property="BorderBrush" Value="#44446A"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Padding" Value="8,5"/>
+      <Setter Property="FontFamily" Value="Consolas"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+  </Window.Resources>
+  <Grid Margin="24">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- Header -->
+    <StackPanel Grid.Row="0" Margin="0,0,0,16">
+      <TextBlock Text="Welcome to Engineers PowerApp" FontSize="18" FontWeight="Bold"
+                 Foreground="#7B9CFF"/>
+      <TextBlock Margin="0,4,0,0" Foreground="#6272A4" TextWrapping="Wrap"
+                 Text="No config.json was found. Fill in your settings below — this file will be saved to your AppData folder. Delete it at any time to re-run this wizard."/>
+    </StackPanel>
+
+    <!-- Fields -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+
+        <TextBlock Style="{StaticResource Lbl}" Text="Git Repository Path  *"/>
+        <TextBox x:Name="TbGitRepo" Style="{StaticResource TB}"
+                 Text="C:\GitHubRepos\YourRepoName"/>
+        <TextBlock Style="{StaticResource Hint}"
+                   Text="Full path to your local Git repository root. Used by Open Git Repo. Required for Git mode."/>
+
+        <TextBlock Style="{StaticResource Lbl}" Text="SharePoint Site URL"/>
+        <TextBox x:Name="TbSiteUrl" Style="{StaticResource TB}"
+                 Text="https://YOURTENANT.sharepoint.com/sites/YOURSITE"/>
+        <TextBlock Style="{StaticResource Hint}"
+                   Text="Your SharePoint site URL. Only needed if you use SharePoint mode — leave as-is if using Git only."/>
+
+        <TextBlock Style="{StaticResource Lbl}" Text="Entra ID Client ID"/>
+        <TextBox x:Name="TbClientId" Style="{StaticResource TB}"
+                 Text="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+        <TextBlock Style="{StaticResource Hint}"
+                   Text="App registration Client ID for PnP.PowerShell interactive login. Run: Register-PnPEntraIDAppForInteractiveLogin -ApplicationName 'PnP.PowerShell' -Tenant 'yourtenant.onmicrosoft.com' -Interactive"/>
+
+        <TextBlock Style="{StaticResource Lbl}" Text="Tenant Domain"/>
+        <TextBox x:Name="TbTenant" Style="{StaticResource TB}"
+                 Text="yourtenant.onmicrosoft.com"/>
+        <TextBlock Style="{StaticResource Hint}"
+                   Text="Your Microsoft 365 tenant domain (e.g. contoso.onmicrosoft.com). Used with Entra ID auth."/>
+
+        <TextBlock Style="{StaticResource Lbl}" Text="File Types  (comma-separated globs)"/>
+        <TextBox x:Name="TbFileTypes" Style="{StaticResource TB}"
+                 Text="*.ps1, *.bat"/>
+        <TextBlock Style="{StaticResource Hint}"
+                   Text="File extensions to index. Default: *.ps1, *.bat"/>
+
+        <TextBlock Style="{StaticResource Lbl}" Text="Comment Prefix"/>
+        <TextBox x:Name="TbCommentPrefix" Style="{StaticResource TB}"
+                 Text="##ENGINEERSPOWERAPP#COMMENT#"/>
+        <TextBlock Style="{StaticResource Hint}"
+                   Text="Prefix used when writing comments into script files. Do not change unless you know what you're doing."/>
+
+        <TextBlock Style="{StaticResource Lbl}" Text="Tag Prefix"/>
+        <TextBox x:Name="TbTagPrefix" Style="{StaticResource TB}"
+                 Text="##ENGINEERSPOWERAPP#TAGS#"/>
+        <TextBlock Style="{StaticResource Hint}"
+                   Text="Prefix used when writing tags into script files. Do not change unless you know what you're doing."/>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Buttons -->
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+      <Button x:Name="BtnWizardSkip" Content="Skip (use defaults)" Width="140" Height="34"
+              Background="#3A3A55" Foreground="#A0A0C0" Margin="0,0,10,0"
+              BorderBrush="#44446A" BorderThickness="1"/>
+      <Button x:Name="BtnWizardSave" Content="Save and Continue" Width="150" Height="34"
+              Background="#7B9CFF" Foreground="#1E1E2E" FontWeight="SemiBold"
+              BorderThickness="0"/>
+    </StackPanel>
+  </Grid>
+</Window>
+'@
+
+    $wiz = [System.Windows.Markup.XamlReader]::Parse($wizXaml)
+    $tbGit    = $wiz.FindName("TbGitRepo")
+    $tbSite   = $wiz.FindName("TbSiteUrl")
+    $tbClient = $wiz.FindName("TbClientId")
+    $tbTenant = $wiz.FindName("TbTenant")
+    $tbTypes  = $wiz.FindName("TbFileTypes")
+    $tbCmtPfx = $wiz.FindName("TbCommentPrefix")
+    $tbTagPfx = $wiz.FindName("TbTagPrefix")
+    $btnSave  = $wiz.FindName("BtnWizardSave")
+    $btnSkip  = $wiz.FindName("BtnWizardSkip")
+
+    $btnSave.Add_Click({
+        $ftRaw = $tbTypes.Text -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+        Save-AppConfig `
+            -ClientId      $tbClient.Text.Trim() `
+            -TenantDomain  $tbTenant.Text.Trim() `
+            -GitRepoPath   $tbGit.Text.Trim() `
+            -SiteUrl       $tbSite.Text.Trim() `
+            -CommentPrefix $tbCmtPfx.Text.Trim() `
+            -TagPrefix     $tbTagPfx.Text.Trim() `
+            -FileTypes     $ftRaw
+        $wiz.DialogResult = $true
+        $wiz.Close()
+    })
+    $btnSkip.Add_Click({
+        $wiz.DialogResult = $false
+        $wiz.Close()
+    })
+
+    $result = $wiz.ShowDialog()
+
+    if ($result -eq $true) {
+        # Reload from the file we just wrote
+        Load-AppConfig | Out-Null
+    }
+    # If skipped, defaults already set in $script:Config — app continues with blanks
 }
 
 # ============================================================
@@ -110,7 +287,7 @@ function Connect-ToSharePoint {
     # Validate app config
     if ([string]::IsNullOrWhiteSpace($script:AppConfig.ClientId) -or $script:AppConfig.ClientId -eq "YOUR-CLIENT-ID-HERE") {
         [System.Windows.MessageBox]::Show(
-            "Please configure your Entra ID app registration first!`n`nFollow these steps:`n`n1. Run: Register-PnPEntraIDAppForInteractiveLogin -ApplicationName 'PnP.PowerShell' -Tenant 'yourtenant.onmicrosoft.com' -Interactive`n`n2. Copy the Client ID it returns`n`n3. Paste it into the `$script:AppConfig section at the top of this script",
+            "Entra ID Client ID is not configured.`n`nEdit config.json in:`n$($script:AppDataDir)`n`nOr delete config.json to re-run the setup wizard.`n`nTo get a Client ID, run:`nRegister-PnPEntraIDAppForInteractiveLogin -ApplicationName 'PnP.PowerShell' -Tenant 'yourtenant.onmicrosoft.com' -Interactive",
             "Configuration Required",
             [System.Windows.MessageBoxButton]::OK,
             [System.Windows.MessageBoxImage]::Warning
@@ -1090,7 +1267,16 @@ $XAMLString = @'
                                             Foreground="#FF5555" BorderBrush="#FF5555" Margin="0,0,6,0"/>
                                     <Button x:Name="BtnTagUtil" Content="utility"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
-                                            Foreground="#8BE9FD" BorderBrush="#8BE9FD"/>
+                                            Foreground="#8BE9FD" BorderBrush="#8BE9FD" Margin="0,0,6,0"/>
+                                    <Button x:Name="BtnTagIsFunction" Content="isFunction"
+                                            Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
+                                            Foreground="#FFCF7A" BorderBrush="#FFCF7A" Margin="0,0,6,0"/>
+                                    <Button x:Name="BtnTagIsApp" Content="isApp"
+                                            Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
+                                            Foreground="#FFCF7A" BorderBrush="#FFCF7A" Margin="0,0,6,0"/>
+                                    <Button x:Name="BtnTagPS7" Content="PowerShell 7"
+                                            Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
+                                            Foreground="#BD93F9" BorderBrush="#BD93F9"/>
                                 </StackPanel>
                                 <TextBlock Text="Comma-separated. Cached tags load automatically; click Load File Content to re-read from disk."
                                            FontSize="10" Foreground="#44446A" Margin="0,6,0,0"/>
@@ -1232,6 +1418,9 @@ $BtnTagDeploy        = Get-Control "BtnTagDeploy"
 $BtnTagMonitor       = Get-Control "BtnTagMonitor"
 $BtnTagSecurity      = Get-Control "BtnTagSecurity"
 $BtnTagUtil          = Get-Control "BtnTagUtil"
+$BtnTagIsFunction    = Get-Control "BtnTagIsFunction"
+$BtnTagIsApp         = Get-Control "BtnTagIsApp"
+$BtnTagPS7           = Get-Control "BtnTagPS7"
 $TxtFileContent      = Get-Control "TxtFileContent"
 $TxtPreviewNote      = Get-Control "TxtPreviewNote"
 $BtnSaveMetadata     = Get-Control "BtnSaveMetadata"
@@ -1424,17 +1613,43 @@ function Populate-TagView {
         }
     }
 
-    foreach ($tag in ($tagMap.Keys | Sort-Object)) {
+    # Pinned tags always appear at the top in amber, even with 0 files
+    $pinnedTags = @("isFunction", "isApp")
+    $amberBrush = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xFF, 0xCF, 0x7A)
+    $normalBrush = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xBD, 0x93, 0xF9)
+
+    foreach ($tag in $pinnedTags) {
+        $files = if ($tagMap.ContainsKey($tag)) { $tagMap[$tag] } else { @() }
+        $header            = New-Object System.Windows.Controls.TreeViewItem
+        $header.Header     = "[#] $tag ($($files.Count))"
+        $header.Foreground = $amberBrush
+        $header.IsExpanded = $true
+        foreach ($f in ($files | Sort-Object Name)) {
+            $item    = New-Object System.Windows.Controls.TreeViewItem
+            $vm      = New-FileViewModel $f
+            $nameLbl = New-Object System.Windows.Controls.TextBlock
+            $nameLbl.Text       = "  $($vm.ExtIcon)  $($f.Name)"
+            $nameLbl.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xF8, 0xF8, 0xF2)
+            $item.Header = $nameLbl
+            $item.Tag    = $f
+            $item.Add_Selected({ param($s,$e) Select-File $s.Tag })
+            $header.Items.Add($item)
+        }
+        $FileTreeView.Items.Add($header)
+    }
+
+    # Remaining tags sorted alphabetically, skipping the pinned ones
+    foreach ($tag in ($tagMap.Keys | Where-Object { $pinnedTags -notcontains $_ } | Sort-Object)) {
         $header            = New-Object System.Windows.Controls.TreeViewItem
         $header.Header     = "[#] $tag ($($tagMap[$tag].Count))"
-        $header.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xBD, 0x93, 0xF9)
+        $header.Foreground = $normalBrush
         $header.IsExpanded = $true
 
         foreach ($f in ($tagMap[$tag] | Sort-Object Name)) {
             $item    = New-Object System.Windows.Controls.TreeViewItem
             $vm      = New-FileViewModel $f
             $nameLbl = New-Object System.Windows.Controls.TextBlock
-            $nameLbl.Text      = "  $($vm.ExtIcon)  $($f.Name)"
+            $nameLbl.Text       = "  $($vm.ExtIcon)  $($f.Name)"
             $nameLbl.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xF8, 0xF8, 0xF2)
             $item.Header = $nameLbl
             $item.Tag    = $f
@@ -1854,9 +2069,9 @@ function Add-QuickTag {
 function Start-OpenGitRepo {
     $repoPath = $script:GitRepoPath
 
-    if ([string]::IsNullOrWhiteSpace($repoPath)) {
+    if ([string]::IsNullOrWhiteSpace($repoPath) -or $repoPath -like "*YourRepoName*") {
         [System.Windows.MessageBox]::Show(
-            "Please set `$script:GitRepoPath at the top of this script to your local repository path.",
+            "Git repository path is not configured.`n`nDelete config.json from:`n$($script:AppDataDir)`n`nto re-run the setup wizard, or edit config.json directly.",
             "Configuration Required",
             [System.Windows.MessageBoxButton]::OK,
             [System.Windows.MessageBoxImage]::Warning
@@ -1866,7 +2081,7 @@ function Start-OpenGitRepo {
 
     if (-not (Test-Path $repoPath -PathType Container)) {
         [System.Windows.MessageBox]::Show(
-            "Path not found or not a folder:`n$repoPath`n`nCheck the `$script:GitRepoPath variable.",
+            "Path not found or not a folder:`n$repoPath`n`nCheck GitRepoPath in config.json",
             "Folder Not Found",
             [System.Windows.MessageBoxButton]::OK,
             [System.Windows.MessageBoxImage]::Error
@@ -2111,7 +2326,8 @@ function Start-MetadataScan {
 function Start-ConnectAndLoad {
     if ([string]::IsNullOrWhiteSpace($script:Config.SiteUrl) -or
         $script:Config.SiteUrl -like "*YOURCOMPANY*" -or
-        $script:Config.SiteUrl -eq "https://YOURSITE.sharepoint.com/") {
+        $script:Config.SiteUrl -like "*YOURSITE*" -or
+        $script:Config.SiteUrl -eq "https://YOURTENANT.sharepoint.com/sites/YOURSITE") {
         [System.Windows.MessageBox]::Show(
             "Please edit the `$script:Config.SiteUrl value at the top of this script with your SharePoint site URL before connecting.",
             "Configuration Required",
@@ -2413,6 +2629,9 @@ $BtnTagAutomation.Add_Click({ Add-QuickTag "automation" })
 $BtnTagMaintenance.Add_Click({ Add-QuickTag "maintenance" })
 $BtnTagDeploy.Add_Click({ Add-QuickTag "deployment" })
 $BtnTagMonitor.Add_Click({ Add-QuickTag "monitoring" })
+$BtnTagIsFunction.Add_Click({ Add-QuickTag "isFunction" })
+$BtnTagIsApp.Add_Click({ Add-QuickTag "isApp" })
+$BtnTagPS7.Add_Click({ Add-QuickTag "PowerShell 7" })
 $BtnTagSecurity.Add_Click({ Add-QuickTag "security" })
 $BtnTagUtil.Add_Click({ Add-QuickTag "utility" })
 
@@ -2428,6 +2647,12 @@ $Window.Add_Closing({
 # STARTUP
 # ============================================================
 Write-AppLog "Engineers PowerApp v$($script:Config.AppVersion) starting"
+
+# Config file check — show first-run wizard if config.json is missing
+if (-not (Load-AppConfig)) {
+    Write-AppLog "No config.json found — launching first-run wizard."
+    Show-FirstRunWizard
+}
 
 if (-not (Test-PnPModule)) {
     Write-AppLog "PnP.PowerShell module not available. Exiting." "ERROR"
