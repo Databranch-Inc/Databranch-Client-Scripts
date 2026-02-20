@@ -298,6 +298,11 @@ function Set-AppMetadata {
         }
     }
 
+    # Detect whether the original content already had metadata lines
+    # (if not, we need to add a blank separator line after the new block)
+    $hadMetadata = ($Content -match [regex]::Escape($script:Config.CommentPrefix)) -or
+                   ($Content -match [regex]::Escape($script:Config.TagPrefix))
+
     # Prepend metadata to file (after shebang/requires line if present)
     $finalLines = [System.Collections.Generic.List[string]]::new()
     $insertedMeta = $false
@@ -306,6 +311,8 @@ function Set-AppMetadata {
         if (-not $insertedMeta -and -not $line.TrimStart().StartsWith("#!") -and
             -not $line.TrimStart().StartsWith("#Requires")) {
             foreach ($ml in $newLines) { $finalLines.Add($ml) }
+            # Add a blank separator line when injecting metadata for the first time
+            if (-not $hadMetadata -and $newLines.Count -gt 0) { $finalLines.Add("") }
             $insertedMeta = $true
         }
         $finalLines.Add($line)
@@ -1460,6 +1467,26 @@ function Populate-TagView {
 # ============================================================
 # FILE SELECTION & DETAIL VIEW
 # ============================================================
+function Update-ModeButtons {
+    # Grey out buttons that don't apply to the current data source
+    if ($script:DataSource -eq "git") {
+        $BtnCopyUrl.IsEnabled  = $false
+        $BtnCopyUrl.Opacity    = 0.35
+        $BtnCopyPath.IsEnabled = $true
+        $BtnCopyPath.Opacity   = 1.0
+    } elseif ($script:DataSource -eq "sharepoint") {
+        $BtnCopyUrl.IsEnabled  = $true
+        $BtnCopyUrl.Opacity    = 1.0
+        $BtnCopyPath.IsEnabled = $false
+        $BtnCopyPath.Opacity   = 0.35
+    } else {
+        $BtnCopyUrl.IsEnabled  = $false
+        $BtnCopyUrl.Opacity    = 0.35
+        $BtnCopyPath.IsEnabled = $false
+        $BtnCopyPath.Opacity   = 0.35
+    }
+}
+
 function Select-File {
     param([PSCustomObject]$File)
     $script:SelectedFile = $File
@@ -1492,12 +1519,22 @@ function Select-File {
     $TxtComment.Text = $File.Comment
     $TxtTags.Text    = ($File.Tags -join ", ")
 
-    $TxtFileContent.Text = "(Click 'Load File Content' to preview and enable metadata editing)"
-    $TxtPreviewNote.Text = " - click 'Load File Content' above"
+    $TxtFileContent.Text = "(Loading file content...)"
+    $TxtPreviewNote.Text = ""
     $TxtSaveStatus.Text  = ""
 
     Set-Status "Selected: $($File.Name)"
     Write-AppLog "File selected: $($File.FileRef)"
+
+    # Grey out buttons irrelevant to current mode
+    Update-ModeButtons
+
+    # Auto-load file content on every selection so metadata is always
+    # in sync with disk and editing is immediately available.
+    # The Load File Content button remains for manual re-reads after editing in VSCode.
+    if ($script:DataSource -ne "none") {
+        Load-SelectedFileContent
+    }
 }
 
 # ============================================================
@@ -1557,14 +1594,9 @@ function Save-SelectedFileMetadata {
         Set-Status "Not connected to any source." "#FF5555"
         return
     }
+    # Content is auto-loaded on file selection, but guard in case somehow it's missing
     if ($null -eq $script:FileContent) {
-        $result = [System.Windows.MessageBox]::Show(
-            "File content hasn't been loaded yet.`nLoad the file first so existing content is preserved?",
-            "Load Required",
-            [System.Windows.MessageBoxButton]::YesNo,
-            [System.Windows.MessageBoxImage]::Question
-        )
-        if ($result -eq [System.Windows.MessageBoxResult]::Yes) { Load-SelectedFileContent }
+        Load-SelectedFileContent
         if ($null -eq $script:FileContent) { return }
     }
 
@@ -1591,6 +1623,9 @@ function Save-SelectedFileMetadata {
         Write-AppLog "Metadata saved: $($script:SelectedFile.FileRef)"
 
         if ($script:DataSource -eq "git") { Save-GitCache $script:AllFiles } else { Save-Cache $script:AllFiles }
+
+        # Refresh the file list so the tag view updates immediately without needing a full refresh
+        Update-FileList
     } catch {
         $TxtSaveStatus.Text           = "[X] Save failed"
         $TxtSaveStatus.Foreground     = "#FF5555"
@@ -1660,9 +1695,10 @@ function Rename-SelectedFile {
     $sp.Children.Add($btnPanel)
     $dialog.Content = $sp
 
-    $newName = $null
+    # Store result via dialog.Tag to avoid PS7 closure scoping issues
+    $dialog.Tag = $null
     $btnOk.Add_Click({
-        $newName = $tb.Text.Trim()
+        $dialog.Tag = $tb.Text.Trim()
         $dialog.DialogResult = $true
         $dialog.Close()
     })
@@ -1670,13 +1706,14 @@ function Rename-SelectedFile {
     $tb.Add_KeyDown({
         param($s, $e)
         if ($e.Key -eq "Return") {
-            $newName = $tb.Text.Trim()
+            $dialog.Tag = $tb.Text.Trim()
             $dialog.DialogResult = $true
             $dialog.Close()
         }
     })
 
     $result = $dialog.ShowDialog()
+    $newName = $dialog.Tag
 
     if ($result -and -not [string]::IsNullOrWhiteSpace($newName) -and $newName -ne $script:SelectedFile.Name) {
         try {
@@ -1698,9 +1735,10 @@ function Rename-SelectedFile {
 
             $TxtDetailName.Text = $newName
             $TxtDetailPath.Text = $script:SelectedFile.FileRef
-            Update-FileList
             if ($script:DataSource -eq "git") { Save-GitCache $script:AllFiles } else { Save-Cache $script:AllFiles }
-
+            Update-FileList
+            # Re-select so detail panel and ItemId stay in sync
+            Select-File $script:SelectedFile
             Set-Status "Renamed to: $newName" "#50FA7B"
             Write-AppLog "Renamed '$oldName' -> '$newName'"
         } catch {
@@ -1896,6 +1934,7 @@ function Start-OpenGitRepo {
 
         Update-FileList
         Set-Status "Git repo loaded. $($allFiles.Count) script files found." "#50FA7B"
+        Update-ModeButtons
 
         # Kick off background metadata scan to populate tags/comments for all files
         Start-MetadataScan
@@ -2259,6 +2298,7 @@ function Start-ConnectAndLoad {
                     $TxtCacheInfo.Text              = "Last scan: $(Get-Date -Format 'h:mmtt')"
 
                     Update-FileList
+                    Update-ModeButtons
                     Set-Status "Connected. $($script:AllFiles.Count) script files found." "#50FA7B"
 
                     # Kick off background metadata scan to populate tags/comments for all files
