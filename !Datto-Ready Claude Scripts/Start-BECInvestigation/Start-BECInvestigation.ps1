@@ -65,7 +65,7 @@
 
 .NOTES
     File Name      : Start-BECInvestigation.ps1
-    Version        : 3.0.0.0
+    Version        : 3.0.1.0
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -83,6 +83,21 @@
         1  - General failure (folder creation, XML generation, or script generation failed)
 
 .CHANGELOG
+    v3.0.1.0 - 2026-02-20 - Sam Kirsch
+        - Fixed Add-XmlElement type check: changed [hashtable] to [IDictionary]
+          so [ordered]@{} sections (OrderedDictionary) are written as nested XML
+          elements rather than collapsed to flat string values. This was causing
+          all path variables and victim fields to read back as null from the XML.
+        - Added null-guard validation in all three generated scripts after XML read;
+          scripts now exit cleanly with a clear error if critical XML fields are missing
+        - Fixed Get-ConnectionInformation call for NotifyAddress: now filters to
+          State='Connected', sorts by ConnectedAt descending, takes first result
+          to avoid picking up stale or unintended sessions
+        - Made NotifyAddress optional in Start-HistoricalSearch calls using
+          splatting so traces submit successfully even if UPN cannot be resolved
+        - Moved Start-Transcript calls in all generated scripts to after XML
+          validation so transcript failures don't mask the real root cause
+
     v3.0.0.0 - 2026-02-20 - Sam Kirsch
         - Renamed from Start-Investigation.ps1 to Start-BECInvestigation.ps1
         - Wrapped all logic in master function Start-BECInvestigation per project spec
@@ -160,7 +175,7 @@ function Start-BECInvestigation {
     # CONFIGURATION
     # ==========================================================================
     $ScriptName    = "Start-BECInvestigation"
-    $ScriptVersion = "3.0.0.0"
+    $ScriptVersion = "3.0.1.0"
     $LogRoot       = "C:\Databranch\ScriptLogs"
     $LogFolder     = Join-Path -Path $LogRoot -ChildPath $ScriptName
     $LogDate       = Get-Date -Format "yyyy-MM-dd"
@@ -232,19 +247,18 @@ function Start-BECInvestigation {
 
     # ==========================================================================
     # XML HELPER FUNCTION
-    # Recursively builds XML elements from a hashtable.
-    # NOTE: Hashtables do not guarantee key ordering. If element order in the
-    # XML output matters for readability, define sections as ordered hashtables
-    # using [ordered]@{} or restructure into explicit XmlElement calls.
+    # Recursively builds XML elements from a dictionary.
+    # Accepts both [hashtable] and [ordered]@{} (OrderedDictionary).
+    # Uses IDictionary interface check so both types are handled correctly.
     # ==========================================================================
     function Add-XmlElement {
         param (
             [System.Xml.XmlElement]$Parent,
-            [hashtable]$Data
+            [System.Collections.IDictionary]$Data
         )
         foreach ($Key in $Data.Keys) {
             $Element = $XmlDoc.CreateElement($Key)
-            if ($Data[$Key] -is [hashtable]) {
+            if ($Data[$Key] -is [System.Collections.IDictionary]) {
                 Add-XmlElement -Parent $Element -Data $Data[$Key]
             }
             else {
@@ -487,6 +501,20 @@ function Invoke-BECDataCollection {
     $LogsPath         = $Config.BECInvestigation.Paths.LogsPath
     $ReportsPath      = $Config.BECInvestigation.Paths.ReportsPath
     $DaysToSearch     = [int]$Config.BECInvestigation.DataCollection.DaysSearched
+
+    # Validate critical values loaded from XML before proceeding.
+    # If these are null/empty the XML structure is wrong (re-run Start-BECInvestigation.ps1).
+    $XmlValidationErrors = @()
+    if (-not $VictimEmail)  { $XmlValidationErrors += "Victim.Email" }
+    if (-not $UserAlias)    { $XmlValidationErrors += "Victim.UserAlias" }
+    if (-not $RawDataPath)  { $XmlValidationErrors += "Paths.RawDataPath" }
+    if (-not $LogsPath)     { $XmlValidationErrors += "Paths.LogsPath" }
+    if (-not $ReportsPath)  { $XmlValidationErrors += "Paths.ReportsPath" }
+    if ($XmlValidationErrors.Count -gt 0) {
+        Write-Host "[ERROR] Investigation.xml is missing required fields: $($XmlValidationErrors -join ', ')" -ForegroundColor Red
+        Write-Host "[ERROR] The XML may be corrupted. Re-run Start-BECInvestigation.ps1 to regenerate the workspace." -ForegroundColor Red
+        exit 1
+    }
 
     # ==========================================================================
     # LOGGING
@@ -803,20 +831,42 @@ function Invoke-BECDataCollection {
         Write-Log "--- Initiating Historical Message Traces (last $DaysToSearch days) ---" -Severity INFO
         Write-Log "Historical searches complete in 15-30 minutes. Run Invoke-BECMessageTraceRetrieval.ps1 to download when done." -Severity INFO
         try {
-            $NotifyAddress   = (Get-ConnectionInformation).UserPrincipalName
+            # Get the UPN of the currently authenticated technician to receive trace completion notifications.
+            # Filter to the active connection and take the most recently established one.
+            $ConnectionInfo = Get-ConnectionInformation |
+                              Where-Object { $_.State -eq 'Connected' } |
+                              Sort-Object -Property ConnectedAt -Descending |
+                              Select-Object -First 1
+            $NotifyAddress  = $ConnectionInfo.UserPrincipalName
+
+            if (-not $NotifyAddress) {
+                Write-Log "Could not determine technician UPN from connection info. Trace notifications will not be sent." -Severity WARN
+                Write-Log "  Tip: Check Get-ConnectionInformation to see active sessions." -Severity DEBUG
+            }
+            else {
+                Write-Log "Trace completion notifications will be sent to: $NotifyAddress" -Severity DEBUG
+            }
             $SentTraceName   = "BEC-Sent-${UserAlias}-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-            $SentTrace       = Start-HistoricalSearch -ReportType MessageTrace `
-                                   -StartDate $StartDate -EndDate $EndDate `
-                                   -ReportTitle $SentTraceName `
-                                   -SenderAddress $VictimEmail `
-                                   -NotifyAddress $NotifyAddress
+            $SentSearchParams = @{
+                ReportType   = "MessageTrace"
+                StartDate    = $StartDate
+                EndDate      = $EndDate
+                ReportTitle  = $SentTraceName
+                SenderAddress = $VictimEmail
+            }
+            if ($NotifyAddress) { $SentSearchParams['NotifyAddress'] = $NotifyAddress }
+            $SentTrace = Start-HistoricalSearch @SentSearchParams
 
             $ReceivedTraceName = "BEC-Received-${UserAlias}-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-            $ReceivedTrace     = Start-HistoricalSearch -ReportType MessageTrace `
-                                   -StartDate $StartDate -EndDate $EndDate `
-                                   -ReportTitle $ReceivedTraceName `
-                                   -RecipientAddress $VictimEmail `
-                                   -NotifyAddress $NotifyAddress
+            $ReceivedSearchParams = @{
+                ReportType        = "MessageTrace"
+                StartDate         = $StartDate
+                EndDate           = $EndDate
+                ReportTitle       = $ReceivedTraceName
+                RecipientAddress  = $VictimEmail
+            }
+            if ($NotifyAddress) { $ReceivedSearchParams['NotifyAddress'] = $NotifyAddress }
+            $ReceivedTrace = Start-HistoricalSearch @ReceivedSearchParams
 
             if ($SentTrace -and $ReceivedTrace) {
                 Write-Log "Historical message traces submitted successfully." -Severity SUCCESS
@@ -975,6 +1025,18 @@ function Invoke-BECLogAnalysis {
     $AnalysisPath   = $Config.BECInvestigation.Paths.AnalysisPath
     $ReportsPath    = $Config.BECInvestigation.Paths.ReportsPath
     $LogsPath       = $Config.BECInvestigation.Paths.LogsPath
+
+    # Validate critical values loaded from XML before proceeding.
+    $XmlValidationErrors = @()
+    if (-not $VictimEmail)  { $XmlValidationErrors += "Victim.Email" }
+    if (-not $RawDataPath)  { $XmlValidationErrors += "Paths.RawDataPath" }
+    if (-not $AnalysisPath) { $XmlValidationErrors += "Paths.AnalysisPath" }
+    if (-not $LogsPath)     { $XmlValidationErrors += "Paths.LogsPath" }
+    if ($XmlValidationErrors.Count -gt 0) {
+        Write-Host "[ERROR] Investigation.xml is missing required fields: $($XmlValidationErrors -join ', ')" -ForegroundColor Red
+        Write-Host "[ERROR] The XML may be corrupted. Re-run Start-BECInvestigation.ps1 to regenerate the workspace." -ForegroundColor Red
+        exit 1
+    }
 
     # ==========================================================================
     # LOGGING (transcript + structured Write-Log)
@@ -1353,6 +1415,17 @@ function Invoke-BECMessageTraceRetrieval {
     $RawDataPath    = $Config.BECInvestigation.Paths.RawDataPath
     $LogsPath       = $Config.BECInvestigation.Paths.LogsPath
     $UserAlias      = $Config.BECInvestigation.Victim.UserAlias
+
+    # Validate critical values loaded from XML before proceeding.
+    $XmlValidationErrors = @()
+    if (-not $RawDataPath) { $XmlValidationErrors += "Paths.RawDataPath" }
+    if (-not $LogsPath)    { $XmlValidationErrors += "Paths.LogsPath" }
+    if (-not $UserAlias)   { $XmlValidationErrors += "Victim.UserAlias" }
+    if ($XmlValidationErrors.Count -gt 0) {
+        Write-Host "[ERROR] Investigation.xml is missing required fields: $($XmlValidationErrors -join ', ')" -ForegroundColor Red
+        Write-Host "[ERROR] The XML may be corrupted. Re-run Start-BECInvestigation.ps1 to regenerate the workspace." -ForegroundColor Red
+        exit 1
+    }
 
     # ==========================================================================
     # LOGGING (transcript + structured Write-Log)
