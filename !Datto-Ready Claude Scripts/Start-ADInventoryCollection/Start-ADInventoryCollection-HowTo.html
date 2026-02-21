@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Start-ADInventoryCollection — How-To Guide | Databranch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --navy:           #0f1e35;
+    --navy-mid:       #1a3154;
+    --navy-light:     #1e4a7a;
+    --accent:         #2e8bff;
+    --accent-dim:     #1a5fbd;
+    --teal:           #00c9b1;
+    --white:          #f4f7fb;
+    --text:           #d0dce8;
+    --text-muted:     #8a9bb5;
+    --text-dim:       #5a6f8a;
+    --border:         #1e3a5a;
+    --border-mid:     #2a4f72;
+    --code-bg:        #0a1624;
+    --row-alt:        #0d1e30;
+    --success-bg:     #0a2418;
+    --success-border: #1a6640;
+    --warn-bg:        #1e1a08;
+    --warn-border:    #7a6010;
+    --note-bg:        #0a1a2e;
+    --note-border:    #1a4a7a;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--white); }
+
+  /* ── LAYOUT ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: #080f1a;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .company {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-variant: small-caps;
+  }
+  .sidebar-logo .script-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--white);
+    margin-top: 6px;
+    word-break: break-all;
+  }
+  .sidebar-logo .doc-type {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  nav { padding: 16px 0 32px; }
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    padding: 12px 20px 6px;
+  }
+  .nav-link {
+    display: block;
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 6px 20px;
+    border-left: 3px solid transparent;
+    transition: all .15s;
+  }
+  .nav-link:hover { color: var(--white); background: rgba(46,139,255,.07); }
+  .nav-link.active {
+    color: var(--accent);
+    background: rgba(30,74,122,.35);
+    border-left-color: var(--accent);
+  }
+  .nav-link.sub { padding-left: 36px; font-size: 12px; }
+
+  /* ── MAIN ── */
+  .main { margin-left: 260px; flex: 1; }
+
+  /* ── COVER ── */
+  .cover {
+    position: relative;
+    background: linear-gradient(145deg, #0a1828 0%, #0f2544 40%, #0a1e3a 100%);
+    padding: 64px 80px 56px;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(46,139,255,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -60px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(0,201,177,.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    margin-bottom: 16px;
+  }
+  .cover-title {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .cover-script {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .cover-doctype {
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 32px;
+  }
+  .cover-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    position: relative;
+    z-index: 1;
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .meta-label { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: .1em; }
+  .meta-value { font-size: 13px; color: var(--text); }
+  .meta-value.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 860px;
+    padding: 56px 80px 80px;
+  }
+  .section { margin-bottom: 64px; }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--white);
+    border-bottom: 2px solid var(--navy-light);
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+  }
+  h1::before {
+    content: '// ';
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+  }
+  h2 { font-size: 18px; font-weight: 600; color: var(--accent); margin: 28px 0 12px; }
+  h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin: 20px 0 8px;
+  }
+  p { margin-bottom: 14px; }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: var(--navy-mid);
+    color: var(--text-muted);
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-mid);
+  }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: rgba(46,139,255,.05); }
+  td { padding: 10px 14px; border-bottom: 1px solid rgba(30,58,90,.5); vertical-align: top; }
+  td.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 16px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    overflow-x: auto;
+    margin: 14px 0;
+    white-space: pre;
+  }
+  code.inline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 6px;
+    color: var(--accent);
+  }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 18px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .callout.note  { background: var(--note-bg);    border-left: 3px solid var(--note-border);    }
+  .callout.tip   { background: var(--success-bg); border-left: 3px solid var(--success-border); }
+  .callout.warn  { background: var(--warn-bg);    border-left: 3px solid var(--warn-border);    }
+  .callout-icon  { font-size: 16px; margin-top: 2px; }
+  .callout-body  { flex: 1; }
+  .callout-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+  .callout.note  .callout-label { color: var(--accent); }
+  .callout.tip   .callout-label { color: #22c55e; }
+  .callout.warn  .callout-label { color: #eab308; }
+
+  /* ── BADGES ── */
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 2px 8px; }
+  .badge-blue  { background: rgba(46,139,255,.15); color: #60a5fa; }
+  .badge-teal  { background: rgba(0,201,177,.12);  color: var(--teal); }
+  .badge-green { background: rgba(34,197,94,.12);  color: #22c55e; }
+  .badge-amber { background: rgba(234,179,8,.12);  color: #eab308; }
+  .badge-red   { background: rgba(239,68,68,.12);  color: #ef4444; }
+
+  /* ── STYLED LISTS ── */
+  ul.styled { list-style: none; padding: 0; margin: 10px 0; }
+  ul.styled li { padding: 5px 0 5px 20px; position: relative; }
+  ul.styled li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-size: 12px; top: 7px; }
+  ol.styled { list-style: none; counter-reset: ol-counter; padding: 0; margin: 10px 0; }
+  ol.styled li { counter-increment: ol-counter; padding: 5px 0 5px 36px; position: relative; }
+  ol.styled li::before {
+    content: counter(ol-counter);
+    position: absolute; left: 0; top: 4px;
+    width: 24px; height: 24px;
+    background: var(--navy-light);
+    color: var(--accent);
+    border-radius: 50%;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── STEP BLOCKS ── */
+  .step-block { border: 1px solid var(--border); border-radius: 8px; margin: 20px 0; overflow: hidden; }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--navy-mid);
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .step-num {
+    width: 28px; height: 28px;
+    background: var(--navy-light);
+    color: var(--accent);
+    border-radius: 50%;
+    font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-title { font-size: 14px; font-weight: 600; color: var(--white); }
+  .step-body { padding: 16px 18px; }
+
+  /* ── MODE CARDS ── */
+  .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .mode-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .mode-card-title { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 8px; }
+  .mode-card-desc { font-size: 13px; color: var(--text-muted); }
+
+  /* ── CONSOLE PREFIX LEGEND ── */
+  .prefix-legend {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 16px 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+  }
+  .prefix-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(30,58,90,.5);
+  }
+  .prefix-row:last-child { border-bottom: none; }
+  .prefix-row:nth-child(even) { background: var(--row-alt); }
+  .prefix-tag { min-width: 80px; font-weight: 600; }
+  .prefix-desc { color: var(--text-muted); font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; }
+
+  /* ── EXIT CODE PILLS ── */
+  .exit-codes { display: flex; gap: 14px; flex-wrap: wrap; margin: 16px 0; }
+  .exit-pill { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; min-width: 140px; }
+  .exit-num { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .exit-label { font-size: 12px; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+  .exit-desc { font-size: 12px; color: var(--text-muted); }
+  .exit-green .exit-num { color: #22c55e; }
+  .exit-red   .exit-num { color: #ef4444; }
+  .exit-amber .exit-num { color: #eab308; }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .doc-footer .right { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── PRINT ── */
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ══════════════════════════ SIDEBAR ══════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="company">Databranch</div>
+      <div class="script-name">Start-ADInventoryCollection.ps1</div>
+      <div class="doc-type">Operator How-To Guide</div>
+    </div>
+    <nav>
+      <div class="nav-section-label">Sections</div>
+      <a class="nav-link" href="#overview">Overview</a>
+      <a class="nav-link" href="#what-it-does">What the Script Does</a>
+      <a class="nav-link" href="#prerequisites">Prerequisites</a>
+      <a class="nav-link sub" href="#prerequisites">Permissions</a>
+      <a class="nav-link sub" href="#software">Software Requirements</a>
+      <a class="nav-link" href="#running">Running the Script</a>
+      <a class="nav-link sub" href="#running">Run Modes</a>
+      <a class="nav-link sub" href="#parameters">Parameters</a>
+      <a class="nav-link sub" href="#examples">Example Commands</a>
+      <a class="nav-link" href="#output">Reading the Output</a>
+      <a class="nav-link sub" href="#output">Output Files</a>
+      <a class="nav-link sub" href="#columns">Column Reference</a>
+      <a class="nav-link" href="#console">Console Output</a>
+      <a class="nav-link" href="#troubleshooting">Troubleshooting</a>
+      <a class="nav-link" href="#dattormm">Running via DattoRMM</a>
+    </nav>
+  </aside>
+
+  <!-- ══════════════════════════ MAIN ══════════════════════════ -->
+  <div class="main">
+
+    <!-- COVER -->
+    <div class="cover">
+      <div class="cover-eyebrow">Databranch Script Library</div>
+      <div class="cover-title">AD Inventory Collection</div>
+      <div class="cover-script">Start-ADInventoryCollection.ps1</div>
+      <div class="cover-doctype">Operator How-To Guide</div>
+      <div class="cover-meta">
+        <div class="meta-item">
+          <span class="meta-label">Version</span>
+          <span class="meta-value mono">1.0.0.0</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Date</span>
+          <span class="meta-value">February 21, 2026</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Author</span>
+          <span class="meta-value">Josh Britton / Sam Kirsch</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Company</span>
+          <span class="meta-value">Databranch</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Audience</span>
+          <span class="meta-value">Engineers / Operators</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ═══ OVERVIEW ═══ -->
+      <div class="section" id="overview">
+        <h1>Overview</h1>
+        <p>
+          <code class="inline">Start-ADInventoryCollection.ps1</code> is Databranch's primary Active Directory
+          inventory automation script. It collects a full snapshot of every user account, server, and desktop
+          computer in the domain — then goes further by waking offline desktops via Wake-on-LAN and remotely
+          gathering detailed hardware information (manufacturer, model, serial number, RAM, OS, last boot time)
+          from each machine. Results are written to a set of structured CSV files for use in ITGlue, reporting,
+          or client-facing documentation.
+        </p>
+        <p>
+          The script uses smart hardware caching: any desktop that was online during a previous run retains its
+          hardware data even if it is offline today. This means your inventory file always represents the full
+          fleet, not just the machines that happened to be powered on.
+        </p>
+
+        <div class="callout note">
+          <div class="callout-icon">ℹ️</div>
+          <div class="callout-body">
+            <div class="callout-label">Audience</div>
+            This guide is written for Databranch engineers and technicians. It assumes familiarity with
+            running PowerShell scripts from an elevated prompt but does not require scripting knowledge.
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body">
+            <div class="callout-label">Runtime Warning</div>
+            This script can take <strong>10–30 minutes</strong> on larger environments. The default 3-minute
+            WOL wait alone accounts for part of that. Plan accordingly and do not close the PowerShell window
+            mid-run.
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ WHAT IT DOES ═══ -->
+      <div class="section" id="what-it-does">
+        <h1>What the Script Does</h1>
+        <p>On each run, the script performs the following steps in order:</p>
+        <ul class="styled">
+          <li>Loads hardware data cached from the previous run (<code class="inline">desktopsFINAL.csv</code>)</li>
+          <li>Queries Active Directory for all user accounts, servers, and desktop computers</li>
+          <li>Detects computers that appear in the cache but no longer exist in AD (decommissioned machines)</li>
+          <li>Cleans up stale CSV files from the previous run</li>
+          <li>Discovers all Domain Controllers in the domain</li>
+          <li>Collects MAC addresses from DHCP leases and ARP tables across all reachable DCs</li>
+          <li>Deduplicates collected MAC addresses</li>
+          <li>Sends Wake-on-LAN magic packets to all matched desktop MACs (locally + from each DC for cross-subnet reach)</li>
+          <li>Waits a configurable number of minutes for desktops to wake (default: 3 minutes)</li>
+          <li>Pings all desktops in parallel to identify which are online</li>
+          <li>Collects hardware inventory from online desktops in parallel (WinRM first, DCOM fallback)</li>
+          <li>Merges fresh hardware with cached data — offline machines keep their last known hardware record</li>
+          <li>Exports all results to CSV files and logs any errors or skips to the error report</li>
+        </ul>
+      </div>
+
+      <!-- ═══ PREREQUISITES ═══ -->
+      <div class="section" id="prerequisites">
+        <h1>Prerequisites</h1>
+
+        <h2>Permissions</h2>
+        <p>The account running this script needs the following access:</p>
+        <ul class="styled">
+          <li><strong>Domain Admin</strong> (or delegated equivalent) — required to query AD, reach DCs, and collect remote hardware</li>
+          <li><strong>WinRM access</strong> to target desktops — used for hardware collection (DCOM fallback if WinRM fails)</li>
+          <li><strong>DHCP read access</strong> on Domain Controllers — needed for DHCP lease MAC collection</li>
+          <li><strong>Local administrator</strong> on the machine running the script — needed for WOL UDP socket</li>
+        </ul>
+
+        <div class="callout tip">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">
+            <div class="callout-label">Tip</div>
+            Running from a Domain Controller itself (or from a dedicated admin workstation with Domain Admin
+            credentials) is the most reliable configuration. Avoid running as a service account that lacks
+            DHCP or WMI rights.
+          </div>
+        </div>
+
+        <h2 id="software">Software Requirements</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Requirement</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">PowerShell 5.1+</td>
+                <td>Built into Windows 10 / Server 2016 and later</td>
+              </tr>
+              <tr>
+                <td class="mono">ActiveDirectory module</td>
+                <td>Part of RSAT (Remote Server Administration Tools). Required. Script will exit with code 2 if missing.</td>
+              </tr>
+              <tr>
+                <td class="mono">DhcpServer module</td>
+                <td>Also part of RSAT. Required for DHCP MAC collection. Script will still run without it but DHCP-sourced MACs will be missing.</td>
+              </tr>
+              <tr>
+                <td>WinRM enabled on desktops</td>
+                <td>Preferred transport for hardware collection. Configure via GPO or <code class="inline">winrm quickconfig</code>. DCOM is used as fallback.</td>
+              </tr>
+              <tr>
+                <td>Domain-joined machine</td>
+                <td>The script must be run from within the domain it is inventorying.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ RUNNING ═══ -->
+      <div class="section" id="running">
+        <h1>Running the Script</h1>
+
+        <h2>Run Modes</h2>
+        <div class="mode-cards">
+          <div class="mode-card">
+            <div class="mode-card-title"><span class="badge badge-blue">Manual</span> Interactive Run</div>
+            <div class="mode-card-desc">
+              Run directly from an elevated PowerShell prompt on a domain-joined machine. Full colored
+              console output is displayed. Best for initial setup and troubleshooting.
+            </div>
+          </div>
+          <div class="mode-card">
+            <div class="mode-card-title"><span class="badge badge-teal">DattoRMM</span> Scheduled / Automated</div>
+            <div class="mode-card-desc">
+              Deployed as a DattoRMM component on a DC or admin server. Parameters are passed via
+              environment variables. Console color output is suppressed; structured log output goes
+              to the DattoRMM job log.
+            </div>
+          </div>
+        </div>
+
+        <div class="step-block">
+          <div class="step-header">
+            <div class="step-num">1</div>
+            <div class="step-title">Open an Elevated PowerShell Prompt</div>
+          </div>
+          <div class="step-body">
+            <p>Right-click <strong>Windows PowerShell</strong> and select <strong>Run as Administrator</strong>.
+            Alternatively, open it from the Start menu with your Domain Admin credentials if running on a
+            non-admin workstation.</p>
+          </div>
+        </div>
+
+        <div class="step-block">
+          <div class="step-header">
+            <div class="step-num">2</div>
+            <div class="step-title">Allow Script Execution (if needed)</div>
+          </div>
+          <div class="step-body">
+            <p>If you receive an execution policy error, run the following once per machine:</p>
+            <div class="code-block">Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser</div>
+          </div>
+        </div>
+
+        <div class="step-block">
+          <div class="step-header">
+            <div class="step-num">3</div>
+            <div class="step-title">Run the Script</div>
+          </div>
+          <div class="step-body">
+            <p>Navigate to the folder containing the script and run it. With no parameters it uses all defaults:</p>
+            <div class="code-block">cd "C:\Scripts"
+.\Start-ADInventoryCollection.ps1</div>
+            <p>Or pass parameters explicitly:</p>
+            <div class="code-block">.\Start-ADInventoryCollection.ps1 -DataFolder "D:\Inventory" -WaitTimeMinutes 5</div>
+          </div>
+        </div>
+
+        <div class="step-block">
+          <div class="step-header">
+            <div class="step-num">4</div>
+            <div class="step-title">Wait for Completion</div>
+          </div>
+          <div class="step-body">
+            <p>The script will display progress through each phase. The WOL wait is the longest pause — it
+            will display a message and then resume automatically. Do not close the window until you see the
+            <strong>INVENTORY COLLECTION COMPLETE</strong> banner.</p>
+          </div>
+        </div>
+
+        <h2 id="parameters">Parameters</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">-DataFolder</td>
+                <td>String</td>
+                <td class="mono">C:\Databranch_Inventory</td>
+                <td>Path to the folder where all CSV output files are written. Created automatically if it does not exist.</td>
+              </tr>
+              <tr>
+                <td class="mono">-WaitTimeMinutes</td>
+                <td>Integer</td>
+                <td class="mono">3</td>
+                <td>Minutes to wait after sending WOL packets before pinging desktops. Set to <code class="inline">0</code> to skip the wait entirely (useful if machines are known to be on).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="examples">Example Commands</h2>
+        <div class="code-block"># Default run — outputs to C:\Databranch_Inventory, 3-minute WOL wait
+.\Start-ADInventoryCollection.ps1
+
+# Custom output folder
+.\Start-ADInventoryCollection.ps1 -DataFolder "D:\ClientInventory"
+
+# Longer WOL wait for slow-to-wake hardware
+.\Start-ADInventoryCollection.ps1 -WaitTimeMinutes 5
+
+# Skip WOL wait — desktops are already online
+.\Start-ADInventoryCollection.ps1 -WaitTimeMinutes 0
+
+# All options
+.\Start-ADInventoryCollection.ps1 -DataFolder "D:\Inventory" -WaitTimeMinutes 5</div>
+      </div>
+
+      <!-- ═══ OUTPUT ═══ -->
+      <div class="section" id="output">
+        <h1>Reading the Output</h1>
+
+        <h2>Output File Location</h2>
+        <div class="code-block">C:\Databranch_Inventory\        ← default location
+  usersAD.csv
+  serversAD.csv
+  desktopsAD.csv
+  desktopsMODELS.csv
+  desktopsFINAL.csv
+  ADCollectionErrorReport.csv
+  RemovedFromAD.csv           ← only created if removed machines detected</div>
+
+        <p>A timestamped script log is also written to:</p>
+        <div class="code-block">C:\Databranch\ScriptLogs\Start-ADInventoryCollection\
+  Start-ADInventoryCollection_yyyy-MM-dd.log</div>
+
+        <h2>Output Files</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>File</th><th>Contents</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">usersAD.csv</td>
+                <td>All Active Directory user accounts</td>
+                <td>Name, enabled status, last logon, description, OU path</td>
+              </tr>
+              <tr>
+                <td class="mono">serversAD.csv</td>
+                <td>All server-class computers from AD</td>
+                <td>Filtered by OS containing "server"</td>
+              </tr>
+              <tr>
+                <td class="mono">desktopsAD.csv</td>
+                <td>All desktop/workstation computers from AD</td>
+                <td>Filtered by OS not containing "server"</td>
+              </tr>
+              <tr>
+                <td class="mono">desktopsMODELS.csv</td>
+                <td>Raw hardware data collected this run</td>
+                <td>Only includes machines that were online and successfully queried</td>
+              </tr>
+              <tr>
+                <td class="mono">desktopsFINAL.csv</td>
+                <td>Complete desktop inventory — all desktops with hardware data</td>
+                <td>The primary output file. Fresh data + cached data for offline machines. Import this to ITGlue.</td>
+              </tr>
+              <tr>
+                <td class="mono">ADCollectionErrorReport.csv</td>
+                <td>All machines that were skipped or had collection failures</td>
+                <td>Includes reason, ping status, and whether cached data is available</td>
+              </tr>
+              <tr>
+                <td class="mono">RemovedFromAD.csv</td>
+                <td>Machines in the hardware cache but no longer in AD</td>
+                <td>Only created when removed machines are detected. Useful for tracking decommissions.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 id="columns">Key Columns — desktopsFINAL.csv</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Column</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">Name</td><td>Computer name (NetBIOS)</td></tr>
+              <tr><td class="mono">OperatingSystem</td><td>Windows version string from AD</td></tr>
+              <tr><td class="mono">LastLogonDate</td><td>Last time the machine authenticated to the domain</td></tr>
+              <tr><td class="mono">Enabled</td><td>Whether the AD computer account is enabled</td></tr>
+              <tr><td class="mono">IPv4Address</td><td>IP address from AD (may be stale if DHCP)</td></tr>
+              <tr><td class="mono">Manufacturer</td><td>Hardware manufacturer (e.g. Dell, HP, Lenovo)</td></tr>
+              <tr><td class="mono">Model</td><td>Hardware model string</td></tr>
+              <tr><td class="mono">SerialNumber</td><td>BIOS serial number</td></tr>
+              <tr><td class="mono">TotalRAM_GB</td><td>Total physical RAM in gigabytes (rounded to 2 decimal places)</td></tr>
+              <tr><td class="mono">OS</td><td>Full OS caption collected directly from the machine (more accurate than AD)</td></tr>
+              <tr><td class="mono">LastBootTime</td><td>Last time the machine was rebooted</td></tr>
+              <tr><td class="mono">LastInventoried</td><td>Timestamp of when hardware data was last collected. Blank = never collected. Shows the date cached data was originally gathered for offline machines.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ CONSOLE OUTPUT ═══ -->
+      <div class="section" id="console">
+        <h1>Console Output</h1>
+        <p>When running manually, each log line is prefixed with a severity tag and displayed in the matching color:</p>
+        <div class="prefix-legend">
+          <div class="prefix-row">
+            <div class="prefix-tag" style="color:#60a5fa;">[INFO]</div>
+            <div class="prefix-desc">General progress messages — phases starting, counts, normal status</div>
+          </div>
+          <div class="prefix-row">
+            <div class="prefix-tag" style="color:#22c55e;">[SUCCESS]</div>
+            <div class="prefix-desc">A key step completed successfully (e.g. hardware collected, CSV exported)</div>
+          </div>
+          <div class="prefix-row">
+            <div class="prefix-tag" style="color:#eab308;">[WARN]</div>
+            <div class="prefix-desc">Non-fatal issue — a machine was unreachable, skipped, or had partial data</div>
+          </div>
+          <div class="prefix-row">
+            <div class="prefix-tag" style="color:#ef4444;">[ERROR]</div>
+            <div class="prefix-desc">A failure occurred — check the log file for the full stack trace</div>
+          </div>
+          <div class="prefix-row">
+            <div class="prefix-tag" style="color:#a78bfa;">[DEBUG]</div>
+            <div class="prefix-desc">Detailed sub-step information (indented, lower volume)</div>
+          </div>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-icon">ℹ️</div>
+          <div class="callout-body">
+            <div class="callout-label">DattoRMM Note</div>
+            When running via DattoRMM, colored console output is automatically suppressed. All log entries
+            appear in the DattoRMM job output in plain text with <code class="inline">[timestamp][SEVERITY]</code>
+            formatting.
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ TROUBLESHOOTING ═══ -->
+      <div class="section" id="troubleshooting">
+        <h1>Troubleshooting</h1>
+
+        <h2>Script exits immediately with exit code 2</h2>
+        <p>The <strong>ActiveDirectory PowerShell module</strong> is not installed. Install RSAT on the machine
+        running the script:</p>
+        <div class="code-block"># Windows 10 / 11
+Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0
+
+# Windows Server (if not already installed via Server Manager)
+Install-WindowsFeature RSAT-AD-PowerShell</div>
+
+        <h2>No DHCP data from any DC</h2>
+        <p>The DHCP Server module may not be installed, or the running account may lack DHCP read access.
+        Verify by running <code class="inline">Get-DhcpServerv4Scope -ComputerName &lt;DC&gt;</code> manually.
+        If DHCP collection fails on all DCs, WOL will still attempt using ARP-sourced MACs.</p>
+
+        <h2>Low fresh hardware collection rate</h2>
+        <p>If many online desktops show no fresh hardware data, WinRM and DCOM both failed. Common causes:</p>
+        <ul class="styled">
+          <li>WinRM not enabled on endpoints — check via GPO or <code class="inline">Test-WSMan -ComputerName &lt;pc&gt;</code></li>
+          <li>Firewall blocking WMI/DCOM (TCP 135 + dynamic ports)</li>
+          <li>TrustedHosts not configured if machines are on a different subnet</li>
+          <li>Script running as an account without local admin on the target machines</li>
+        </ul>
+
+        <h2>Desktops show as offline after WOL wait</h2>
+        <p>Possible causes:</p>
+        <ul class="styled">
+          <li>Wake-on-LAN is not enabled in BIOS/UEFI on the target machines</li>
+          <li>WOL is not passing through managed switches (DHCP relay helper required for directed broadcast)</li>
+          <li>The ARP/DHCP MAC lookup did not match the correct machine — verify naming conventions</li>
+          <li>The 3-minute wait is too short for some hardware — increase <code class="inline">-WaitTimeMinutes</code></li>
+        </ul>
+
+        <h2>ADCollectionErrorReport.csv has many entries</h2>
+        <p>This is normal for any environment where some machines are reliably offline. Review the
+        <code class="inline">CollectionStatus</code> and <code class="inline">FailureReason</code> columns
+        to prioritize investigation. Machines with <code class="inline">HasCachedData = Yes</code> are still
+        represented in <code class="inline">desktopsFINAL.csv</code> with their last known hardware data.</p>
+
+        <h2>Script fails with "unhandled exception" and exits with code 1</h2>
+        <p>Check the structured log file at <code class="inline">C:\Databranch\ScriptLogs\Start-ADInventoryCollection\</code>
+        for the full exception message and stack trace. The most common causes are AD query failures (domain
+        connectivity issues) or insufficient permissions to create the output directory.</p>
+      </div>
+
+      <!-- ═══ DATTORMM ═══ -->
+      <div class="section" id="dattormm">
+        <h1>Running via DattoRMM</h1>
+        <p>The script fully supports DattoRMM automated deployment. Parameters are passed through component
+        environment variables. Both DattoRMM built-in variables and custom variables are supported.</p>
+
+        <h2>Environment Variables</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Variable</th><th>Maps To</th><th>Source</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">DataFolder</td>
+                <td class="mono">-DataFolder</td>
+                <td>Component variable (custom)</td>
+                <td class="mono">C:\Databranch_Inventory</td>
+              </tr>
+              <tr>
+                <td class="mono">WaitTimeMinutes</td>
+                <td class="mono">-WaitTimeMinutes</td>
+                <td>Component variable (custom)</td>
+                <td class="mono">3</td>
+              </tr>
+              <tr>
+                <td class="mono">CS_PROFILE_NAME</td>
+                <td class="mono">-SiteName</td>
+                <td>DattoRMM built-in (auto)</td>
+                <td class="mono">AcmeCorp</td>
+              </tr>
+              <tr>
+                <td class="mono">CS_HOSTNAME</td>
+                <td class="mono">-Hostname</td>
+                <td>DattoRMM built-in (auto)</td>
+                <td class="mono">DC01</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout tip">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">
+            <div class="callout-label">Deployment Recommendation</div>
+            Deploy this script on a Domain Controller or a dedicated admin server — not on individual
+            workstations. The script needs to reach all DCs, the AD database, and all desktops on the network.
+            A domain-joined server with Domain Admin credentials running on a nightly or weekly schedule
+            is the recommended configuration.
+          </div>
+        </div>
+
+        <h2>Exit Codes</h2>
+        <div class="exit-codes">
+          <div class="exit-pill exit-green">
+            <div class="exit-num">0</div>
+            <div class="exit-label">Success</div>
+            <div class="exit-desc">All phases completed. CSVs exported to output folder.</div>
+          </div>
+          <div class="exit-pill exit-red">
+            <div class="exit-num">1</div>
+            <div class="exit-label">General Failure</div>
+            <div class="exit-desc">Unhandled exception. Check log file for stack trace.</div>
+          </div>
+          <div class="exit-pill exit-amber">
+            <div class="exit-num">2</div>
+            <div class="exit-label">Module Missing</div>
+            <div class="exit-desc">ActiveDirectory module not installed. Install RSAT and retry.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <!-- FOOTER -->
+    <div class="doc-footer">
+      <span>Databranch — Confidential</span>
+      <span class="right">Start-ADInventoryCollection.ps1 | v1.0.0.0 | February 2026</span>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
