@@ -99,6 +99,73 @@ Log File : <full log file path>
 
 ---
 
+## Console Output Standards (Dual-Output Pattern)
+
+Scripts use a **two-layer output model** that separates structured logging from human-friendly presentation. Both layers always run — they write to completely independent streams and do not interfere with each other.
+
+| Function          | Stream          | Captured By                      | Purpose                                          |
+|-------------------|-----------------|----------------------------------|--------------------------------------------------|
+| `Write-Log`       | stdout / stderr | DattoRMM, pipeline, log file     | Structured `[timestamp][SEVERITY]` entries       |
+| `Write-Console`   | Display stream  | Terminal only                    | Colored, formatted output for interactive runs   |
+| `Write-Banner`    | Display stream  | Terminal only                    | Script start/end banners                         |
+| `Write-Section`   | Display stream  | Terminal only                    | Section headers within a run                     |
+| `Write-Separator` | Display stream  | Terminal only                    | Divider lines between logical groups             |
+
+### Why `Write-Host` for console output?
+`Write-Host` writes to PowerShell's display stream (stream 6), which is separate from stdout (stream 1). DattoRMM agents capture stdout — not the display stream — so `Write-Host` output is automatically suppressed in automated runs. No conditional logic or environment detection needed.
+
+### Severity Color Scheme (`Write-Console`)
+| Severity  | Color    | Notes                                      |
+|-----------|----------|--------------------------------------------|
+| `INFO`    | Cyan     |                                            |
+| `SUCCESS` | Green    |                                            |
+| `WARN`    | Yellow   |                                            |
+| `ERROR`   | Red      |                                            |
+| `DEBUG`   | Magenta  |                                            |
+| `PLAIN`   | Gray     | No severity prefix — use for labels/metadata |
+
+### Console Structure Convention
+```
+============================================================   <- Write-Banner (script open)
+  SCRIPT-NAME v1.0.0.0
+============================================================
+
+Site     : ClientName
+Hostname : MACHINENAME
+Run As   : DOMAIN\user
+Log File : C:\Databranch\ScriptLogs\...
+------------------------------------------------------------   <- Write-Separator
+
+---- Section Name ------------------------------------------   <- Write-Section
+[INFO] Starting phase...
+[SUCCESS] Step completed.
+  [DEBUG] Sub-detail here                                       <- Write-Console -Indent 1
+
+---- Next Section ------------------------------------------
+...
+
+============================================================   <- Write-Banner (script end)
+  COMPLETED SUCCESSFULLY  -or-  SCRIPT FAILED
+============================================================
+```
+
+### Usage Pattern
+Every significant log entry should have a paired console call:
+```powershell
+Write-Section "Collecting User Data"
+Write-Log     "Collecting user data..."  -Severity INFO
+Write-Console "Collecting user data..."  -Severity INFO
+
+Write-Log     "Found 42 users."          -Severity SUCCESS
+Write-Console "Found 42 users."          -Severity SUCCESS
+
+# Sub-items use -Indent on console side only
+Write-Log     "  Skipped: $user"         -Severity WARN
+Write-Console "Skipped: $user"           -Severity WARN   -Indent 1
+```
+
+---
+
 ## Script Header Block Standard
 
 Every script must include a full comment-based help block containing:
