@@ -159,6 +159,34 @@ Format: `Major.Minor.Revision.Build` — e.g. `1.0.0.0`, `1.2.3.456`
 
 ---
 
+## Documentation Standards
+
+Each script may have up to two companion HTML documentation files. Full design and content specifications are defined in `Databranch_DocumentationSpec.md`, which is included alongside this spec and the script template.
+
+### Key Rules
+
+**Do not auto-generate documentation.** Documentation is produced only when explicitly requested during a script conversation.
+
+**Once documentation exists, keep it in sync.** Every script version increment that changes behavior, parameters, output, or error handling must include updated documentation files.
+
+**Two document types:**
+
+| Type                    | File Naming                      | Audience                          |
+|-------------------------|----------------------------------|-----------------------------------|
+| Operator How-To Guide   | `<ScriptName>-HowTo.html`        | Engineers / Technicians           |
+| Technical Specification | `<ScriptName>-TechSpec.html`     | Script authors / Senior engineers |
+
+**Design system:** IBM Plex Sans + IBM Plex Mono fonts. Dark navy color scheme. Fixed left sidebar with scroll-spy navigation. Shared CSS variables, components, and print styles across both document types. Full design token and component reference is in `Databranch_DocumentationSpec.md`.
+
+**Versioning in docs:** Version number and date in both the cover block meta and the document footer must always match the current script version. The TechSpec contains a Version History section with `.version-entry` blocks (newest first). The HowTo surfaces version only in the cover and footer.
+
+**To request documentation** during a script conversation, say something like:
+> *"Please generate documentation for this script."*
+
+Both files will be produced together. From that point forward, doc updates accompany every code iteration automatically.
+
+---
+
 ## Script Template
 
 The standard template file `Invoke-ScriptTemplate.ps1` is the baseline for all scripts.
@@ -185,7 +213,7 @@ Paste the following at the start of each new script chat:
 ---
 > **Project:** Databranch Script Library Modernization
 >
-> **Instructions:** Please review the attached project spec (`Databranch_ScriptLibrary_ProjectSpec.md`) and the standard script template (`Invoke-ScriptTemplate.ps1`) before we begin. All standards defined in the spec apply to this script. You can also reference prior conversations in the Databranch Script Library Claude Project for additional context.
+> **Instructions:** Please review the attached project spec (`Databranch_ScriptLibrary_ProjectSpec.md`), the documentation standard (`Databranch_DocumentationSpec.md`), and the standard script template (`Invoke-ScriptTemplate.ps1`) before we begin. All standards defined in these files apply to this script. You can also reference prior conversations in the Databranch Script Library Claude Project for additional context.
 >
 > Here is the script we will be working on today:
 >
