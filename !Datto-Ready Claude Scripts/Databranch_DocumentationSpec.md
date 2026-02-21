@@ -179,6 +179,17 @@ const observer = new IntersectionObserver(entries => {
 sections.forEach(s => observer.observe(s));
 ```
 
+### Console Output — Dual-Output Pattern Documentation
+When documenting the logging architecture section of the TechSpec, the console output pattern must be explained alongside the structured log output. Include:
+
+- A table showing the two output layers (`Write-Log` vs `Write-Console`/helpers), what stream each uses, what captures it, and its purpose
+- The severity color table for `Write-Console` (INFO=Cyan, SUCCESS=Green, WARN=Yellow, ERROR=Red, DEBUG=Magenta, PLAIN=Gray)
+- Description of `Write-Banner`, `Write-Section`, `Write-Separator` and when each is used
+- A note explaining why `Write-Host` (display stream 6) is used — it is not captured by DattoRMM stdout, making it naturally suppressed in automated runs with no conditional logic needed
+- A code example or prose description of the paired call pattern
+
+In the HowTo, the Console Output section should show the severity prefix legend using the correct colors and explain that the formatted console output is only visible during interactive/manual runs, while DattoRMM job output shows the structured log format.
+
 ### Print Styles
 Both documents include `@media print`:
 - White background, dark text, 12px font
@@ -269,7 +280,7 @@ Bordered block with alternating row backgrounds, `.prefix-tag` in severity color
 | `precheck`    | 5. Connectivity Pre-Check      | Multi-stage check table (stage, method, timeout, purpose). (Omit if not applicable.)           |
 | `parallel`    | 6. Parallel Collection Engine  | PS version detection logic. One h2 per engine (5.1 runspaces, 7+ parallel). (Adapt to script.) |
 | `collection`  | 7. [Core Logic Section]        | Implementation details of the script's primary work. Sub-sections as needed with code examples.|
-| `logging`     | 8. Logging Architecture        | Severity grid (`.sev-grid`). Log file location and rotation. Summary file if applicable.       |
+| `logging`     | 8. Logging Architecture        | Severity grid (`.sev-grid`). Log file location and rotation. **Console output section**: dual-output pattern explanation, `Write-Console` color table, `Write-Banner`/`Write-Section`/`Write-Separator` descriptions. Summary file if applicable. |
 | `errors`      | 9. Error Handling              | Global error policy. Per-target isolation if applicable. Exit codes table.                     |
 | `limitations` | 10. Known Limitations          | Table of known constraints, edge cases, or design trade-offs.                                  |
 | `changelog`   | 11. Version History            | `.version-entry` blocks (newest first). Each entry: version number, date, author, bullet list of changes. |
