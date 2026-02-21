@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start-BECInvestigation — Operator How-To Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:           #0f1e35;
+    --navy-mid:       #1a3154;
+    --navy-light:     #1e4a7a;
+    --accent:         #2e8bff;
+    --accent-dim:     #1a5fbd;
+    --teal:           #00c9b1;
+    --white:          #f4f7fb;
+    --text:           #d0dce8;
+    --text-muted:     #8a9bb5;
+    --text-dim:       #5a6f8a;
+    --border:         #1e3a5a;
+    --border-mid:     #2a4f72;
+    --code-bg:        #0a1624;
+    --row-alt:        #0d1e30;
+    --success-bg:     #0a2418;
+    --success-border: #1a6640;
+    --warn-bg:        #1e1a08;
+    --warn-border:    #7a6010;
+    --note-bg:        #0a1a2e;
+    --note-border:    #1a4a7a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--navy); color: var(--text); font-size: 14px; line-height: 1.7; }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 260px; min-height: 100vh; background: #080f1a; position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+  .main { margin-left: 260px; flex: 1; }
+
+  /* ── Sidebar ── */
+  .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo .company { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: var(--teal); text-transform: uppercase; letter-spacing: 0.15em; font-variant: small-caps; }
+  .sidebar-logo .script-name { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--white); margin-top: 6px; word-break: break-all; }
+  .sidebar-logo .doc-type { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  nav { padding: 16px 0; }
+  .nav-section-label { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; padding: 12px 20px 4px; }
+  .nav-link { display: block; font-size: 13px; color: var(--text-muted); text-decoration: none; padding: 6px 20px; transition: all 0.15s; border-left: 3px solid transparent; }
+  .nav-link:hover { color: var(--white); background: rgba(46,139,255,0.06); }
+  .nav-link.active { color: var(--accent); background: var(--navy-light); border-left-color: var(--accent); }
+  .nav-link.sub { padding-left: 36px; font-size: 12px; }
+
+  /* ── Cover ── */
+  .cover { position: relative; padding: 64px 80px 56px; background: linear-gradient(145deg, #0a1828 0%, #0f2544 40%, #0a1e3a 100%); overflow: hidden; border-bottom: 1px solid var(--border); }
+  .cover::before { content: ''; position: absolute; top: -80px; right: -80px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(46,139,255,0.12) 0%, transparent 70%); pointer-events: none; }
+  .cover::after  { content: ''; position: absolute; bottom: -60px; left: -60px; width: 320px; height: 320px; background: radial-gradient(circle, rgba(0,201,177,0.08) 0%, transparent 70%); pointer-events: none; }
+  .cover-eyebrow { font-size: 11px; font-weight: 600; color: var(--teal); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 16px; }
+  .cover-title { font-size: 42px; font-weight: 700; color: var(--white); line-height: 1.15; margin-bottom: 10px; }
+  .cover-script { font-family: 'IBM Plex Mono', monospace; font-size: 16px; color: var(--accent); margin-bottom: 6px; }
+  .cover-doctype { font-style: italic; font-size: 15px; color: var(--text-muted); margin-bottom: 32px; }
+  .cover-meta { display: flex; flex-wrap: wrap; gap: 28px; }
+  .cover-meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .cover-meta-label { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+  .cover-meta-value { font-size: 13px; color: var(--white); }
+  .cover-meta-value.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+
+  /* ── Content ── */
+  .content { max-width: 860px; padding: 56px 80px 80px; }
+  .section { margin-bottom: 64px; }
+  h1 { font-size: 26px; font-weight: 700; color: var(--white); border-bottom: 2px solid var(--navy-light); padding-bottom: 12px; margin-bottom: 24px; }
+  h1::before { content: '//  '; font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+  h2 { font-size: 18px; font-weight: 600; color: var(--accent); margin: 28px 0 12px; }
+  h3 { font-size: 12px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 8px; }
+  p { color: var(--text); font-size: 14px; line-height: 1.7; margin-bottom: 14px; }
+  strong { color: var(--white); }
+
+  /* ── Code ── */
+  .code-block { background: var(--code-bg); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 16px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--text); overflow-x: auto; margin: 16px 0; white-space: pre; }
+  code.inline { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 3px; padding: 1px 6px; color: var(--accent); }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--navy-mid); color: var(--text-muted); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-mid); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: rgba(46,139,255,0.05); }
+  td { padding: 10px 14px; font-size: 13px; vertical-align: top; }
+  td.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); white-space: nowrap; }
+  td.num  { font-family: 'IBM Plex Mono', monospace; font-size: 18px; text-align: center; }
+
+  /* ── Callouts ── */
+  .callout { display: flex; gap: 14px; padding: 16px 18px; border-radius: 6px; margin: 18px 0; border-left: 3px solid; }
+  .callout .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .callout .callout-body { flex: 1; }
+  .callout .callout-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .callout.note  { background: var(--note-bg);    border-color: var(--note-border);    } .callout.note  .callout-label { color: var(--accent); }
+  .callout.tip   { background: var(--success-bg); border-color: var(--success-border); } .callout.tip   .callout-label { color: #22c55e; }
+  .callout.warn  { background: var(--warn-bg);    border-color: var(--warn-border);    } .callout.warn  .callout-label { color: #eab308; }
+
+  /* ── Badges ── */
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; }
+  .badge-blue  { background: rgba(46,139,255,0.15);  color: var(--accent); }
+  .badge-teal  { background: rgba(0,201,177,0.15);   color: var(--teal); }
+  .badge-green { background: rgba(34,197,94,0.15);   color: #22c55e; }
+  .badge-amber { background: rgba(234,179,8,0.15);   color: #eab308; }
+  .badge-red   { background: rgba(239,68,68,0.15);   color: #ef4444; }
+
+  /* ── Styled Lists ── */
+  ul.styled { list-style: none; padding: 0; margin: 12px 0; }
+  ul.styled li { padding: 5px 0 5px 20px; position: relative; color: var(--text); }
+  ul.styled li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-size: 12px; top: 7px; }
+  ol.styled { list-style: none; counter-reset: ol-counter; padding: 0; margin: 12px 0; }
+  ol.styled li { counter-increment: ol-counter; padding: 6px 0 6px 40px; position: relative; color: var(--text); }
+  ol.styled li::before { content: counter(ol-counter); position: absolute; left: 0; top: 4px; width: 26px; height: 26px; background: var(--navy-light); color: var(--accent); border-radius: 50%; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+
+  /* ── Step Blocks ── */
+  .step-block { border: 1px solid var(--border); border-radius: 8px; margin: 16px 0; overflow: hidden; }
+  .step-header { display: flex; align-items: center; gap: 14px; background: var(--navy-mid); padding: 14px 18px; }
+  .step-num { width: 32px; height: 32px; background: var(--navy-light); border-radius: 50%; color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-title { font-weight: 600; color: var(--white); font-size: 15px; }
+  .step-body { padding: 18px 20px; }
+
+  /* ── Mode Cards ── */
+  .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .mode-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+  .mode-card-title { font-weight: 600; color: var(--white); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .mode-card-desc { font-size: 13px; color: var(--text-muted); }
+
+  /* ── Console Prefix Legend ── */
+  .prefix-legend { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0; }
+  .prefix-row { display: flex; align-items: flex-start; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+  .prefix-row:last-child { border-bottom: none; }
+  .prefix-row:nth-child(even) { background: var(--row-alt); }
+  .prefix-tag { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; white-space: nowrap; min-width: 80px; padding: 2px 0; }
+  .prefix-desc { font-size: 13px; color: var(--text-muted); }
+
+  /* ── Exit Code Pills ── */
+  .exit-codes { display: flex; gap: 14px; flex-wrap: wrap; margin: 16px 0; }
+  .exit-pill { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; min-width: 140px; text-align: center; }
+  .exit-pill .exit-num { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 600; margin-bottom: 4px; }
+  .exit-pill .exit-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 4px; }
+  .exit-pill .exit-desc { font-size: 12px; color: var(--text-muted); }
+  .exit-pill.success .exit-num { color: #22c55e; }
+  .exit-pill.fail    .exit-num { color: #ef4444; }
+
+  /* ── Footer ── */
+  .doc-footer { border-top: 1px solid var(--border); padding: 20px 80px; display: flex; justify-content: space-between; align-items: center; color: var(--text-dim); font-size: 12px; }
+  .doc-footer .footer-right { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── Print ── */
+  @media print {
+    body { background: #fff; color: #111; font-size: 12px; }
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ══════════════════════════════════════════════════════════════ SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="company">Databranch</div>
+    <div class="script-name">Start-BECInvestigation.ps1</div>
+    <div class="doc-type">Operator How-To Guide</div>
+  </div>
+  <nav>
+    <div class="nav-section-label">Getting Started</div>
+    <a href="#overview"       class="nav-link">Overview</a>
+    <a href="#what-it-does"   class="nav-link">What the Script Does</a>
+    <a href="#prerequisites"  class="nav-link">Prerequisites</a>
+
+    <div class="nav-section-label">Usage</div>
+    <a href="#running"        class="nav-link">Running the Script</a>
+    <a href="#running"        class="nav-link sub">Step 1 — Initialize</a>
+    <a href="#running"        class="nav-link sub">Step 2 — Collect Data</a>
+    <a href="#running"        class="nav-link sub">Step 3 — Immediate Analysis</a>
+    <a href="#running"        class="nav-link sub">Step 4 — Retrieve Traces</a>
+    <a href="#running"        class="nav-link sub">Step 5 — Full Analysis</a>
+
+    <div class="nav-section-label">Output</div>
+    <a href="#output"         class="nav-link">Reading the Output</a>
+    <a href="#console"        class="nav-link">Console Output</a>
+
+    <div class="nav-section-label">Reference</div>
+    <a href="#troubleshooting" class="nav-link">Troubleshooting</a>
+    <a href="#dattormm"        class="nav-link">Running via DattoRMM</a>
+  </nav>
+</aside>
+
+<!-- ════════════════════════════════════════════════════════════════ MAIN -->
+<main class="main">
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-eyebrow">Databranch Script Library</div>
+    <div class="cover-title">BEC Investigation Toolkit</div>
+    <div class="cover-script">Start-BECInvestigation.ps1</div>
+    <div class="cover-doctype">Operator How-To Guide</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Version</div>
+        <div class="cover-meta-value mono">3.0.2.0</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Date</div>
+        <div class="cover-meta-value">February 21, 2026</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Author</div>
+        <div class="cover-meta-value">Sam Kirsch</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Company</div>
+        <div class="cover-meta-value">Databranch</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Audience</div>
+        <div class="cover-meta-value">Engineers / Operators</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══════════════════════════════════════════════ OVERVIEW -->
+    <div class="section" id="overview">
+      <h1>Overview</h1>
+      <p>The BEC Investigation Toolkit is a PowerShell-based incident response tool for Business Email Compromise (BEC) events affecting Microsoft 365 users. When a technician suspects an account has been compromised, <code class="inline">Start-BECInvestigation.ps1</code> is the single file they need. It creates a complete, timestamped investigation workspace in under five seconds — folder structure, XML configuration, and three pre-configured forensic scripts — then hands off to the technician to execute the investigation in sequence.</p>
+      <p>All investigation state is managed automatically through <code class="inline">Investigation.xml</code>. No parameters need to be passed between scripts. Each generated script reads the victim's email, folder paths, and job IDs directly from that file.</p>
+      <div class="callout note">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-body">
+          <div class="callout-label">Audience</div>
+          <p>This guide is written for Databranch engineers and technicians who will run this toolkit during a live BEC incident. No PowerShell authoring knowledge is required. You need an Exchange Administrator or Global Administrator role on the affected tenant, and a workstation with PowerShell 5.1 or later.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ WHAT IT DOES -->
+    <div class="section" id="what-it-does">
+      <h1>What the Script Does</h1>
+      <p><code class="inline">Start-BECInvestigation.ps1</code> is the workspace initializer. Run it once per incident. It does the following:</p>
+      <ul class="styled">
+        <li>Creates a timestamped investigation folder under <code class="inline">C:\Databranch_BEC\</code> (or your chosen path), with <code class="inline">Scripts\</code>, <code class="inline">RawData\</code>, <code class="inline">Reports\</code>, <code class="inline">Analysis\</code>, and <code class="inline">Logs\</code> subfolders.</li>
+        <li>Generates <code class="inline">Investigation.xml</code> — the central configuration file that stores the victim's details, all folder paths, and tracks progress as each phase of the investigation completes.</li>
+        <li>Generates three investigation scripts pre-configured for the victim, written to the <code class="inline">Scripts\</code> folder: <code class="inline">Invoke-BECDataCollection.ps1</code>, <code class="inline">Invoke-BECLogAnalysis.ps1</code>, and <code class="inline">Invoke-BECMessageTraceRetrieval.ps1</code>.</li>
+        <li>Creates a plain-text <code class="inline">Investigation-README.txt</code> inside the workspace as a per-investigation quick reference.</li>
+        <li>Opens the investigation folder in Windows Explorer automatically when done.</li>
+        <li>Logs its own execution to <code class="inline">C:\Databranch\ScriptLogs\Start-BECInvestigation\</code> on the technician's workstation, retaining the last 10 log files.</li>
+      </ul>
+      <p>The three generated scripts do the actual Exchange work. They are run in sequence from the <code class="inline">Scripts\</code> subfolder:</p>
+      <ul class="styled">
+        <li><strong>Invoke-BECDataCollection.ps1</strong> — Connects to Exchange Online and collects inbox rules, forwarding settings, mailbox permissions, mobile devices, unified audit logs, and message traces.</li>
+        <li><strong>Invoke-BECLogAnalysis.ps1</strong> — Analyzes all collected CSV files and produces a severity-ranked <code class="inline">ANALYSIS-REPORT.txt</code>.</li>
+        <li><strong>Invoke-BECMessageTraceRetrieval.ps1</strong> — Downloads completed 30-day historical message trace jobs initiated during data collection.</li>
+      </ul>
+    </div>
+
+    <!-- ══════════════════════════════════════════ PREREQUISITES -->
+    <div class="section" id="prerequisites">
+      <h1>Prerequisites</h1>
+
+      <h2>Permissions</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Role</th><th>Required For</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">Exchange Administrator</td><td>Running the three generated scripts</td><td>Minimum required role</td></tr>
+            <tr><td class="mono">Global Administrator</td><td>Running the three generated scripts</td><td>Satisfies all Exchange requirements</td></tr>
+            <tr><td>Local User (any)</td><td>Running <code class="inline">Start-BECInvestigation.ps1</code></td><td>Only creates local folders and files — no cloud connection</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout warn">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-body">
+          <div class="callout-label">Admin Role Required</div>
+          <p>The data collection and trace retrieval scripts must be run with an account that has <strong>Exchange Administrator</strong> or <strong>Global Administrator</strong> privileges on the target tenant. Using a standard user account will result in a connection error or incomplete data collection.</p>
+        </div>
+      </div>
+
+      <h2>Software Requirements</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Requirement</th><th>Minimum Version</th><th>Install Command</th></tr></thead>
+          <tbody>
+            <tr><td>PowerShell</td><td class="mono">5.1</td><td>Pre-installed on Windows 10/11 and Server 2016+</td></tr>
+            <tr><td>ExchangeOnlineManagement module</td><td class="mono">3.x</td><td class="mono">Install-Module ExchangeOnlineManagement -Scope CurrentUser</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body">
+          <div class="callout-label">Module Auto-Install</div>
+          <p>If the ExchangeOnlineManagement module is not detected when <code class="inline">Invoke-BECDataCollection.ps1</code> runs, it will attempt to install it automatically for the current user. If your workstation blocks module installation, install it manually before starting the investigation.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ RUNNING -->
+    <div class="section" id="running">
+      <h1>Running the Script</h1>
+      <p>The investigation follows a five-step workflow. Always lock the compromised account first, then run these steps in order from your technician workstation.</p>
+
+      <div class="callout warn">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-body">
+          <div class="callout-label">Lock the Account First</div>
+          <p>Before initializing the investigation, block the compromised user's sign-in in the Azure portal: <strong>Azure AD → Users → [User] → Block sign-in</strong>. Do not wait until after data collection — the attacker may still have an active session.</p>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div class="step-title">Initialize the Investigation Workspace</div>
+        </div>
+        <div class="step-body">
+          <p>Run <code class="inline">Start-BECInvestigation.ps1</code> from any directory on your workstation. Pass the victim's full email address. The workspace folder is created in under five seconds.</p>
+          <div class="code-block">.\Start-BECInvestigation.ps1 -VictimEmail "john.doe@clientdomain.com"</div>
+          <p>With all optional parameters:</p>
+          <div class="code-block">.\Start-BECInvestigation.ps1 -VictimEmail "john.doe@clientdomain.com" `
+    -WorkingDirectory "D:\Investigations" `
+    -IncidentTicket "INC-20458" `
+    -Technician "Sam Kirsch"</div>
+          <p>The investigation folder opens in Explorer automatically. Navigate into the <code class="inline">Scripts</code> subfolder before proceeding.</p>
+          <div class="code-block">cd "C:\Databranch_BEC\BEC-Investigation_jdoe_TIMESTAMP\Scripts"</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div class="step-title">Collect Forensic Data (2–5 min)</div>
+        </div>
+        <div class="step-body">
+          <p>Run the data collection script from the <code class="inline">Scripts</code> folder. You will be prompted to authenticate to Exchange Online interactively. Your MFA device must be available.</p>
+          <div class="code-block">.\Invoke-BECDataCollection.ps1</div>
+          <p>This collects inbox rules, forwarding settings, mailbox permissions, mobile devices, unified audit logs (chunked 7-day windows), quick 10-day message traces, and submits 30-day historical message trace jobs that run in the background.</p>
+          <p>If you are re-running data collection on an existing investigation and a file already exists, you will be prompted for each one:</p>
+          <div class="mode-cards">
+            <div class="mode-card">
+              <div class="mode-card-title"><span class="badge badge-blue">[O] Overwrite</span></div>
+              <div class="mode-card-desc">Replaces the existing file with fresh data. Use when you want the latest snapshot.</div>
+            </div>
+            <div class="mode-card">
+              <div class="mode-card-title"><span class="badge badge-teal">[D] Duplicate</span></div>
+              <div class="mode-card-desc">Saves a versioned copy (<code class="inline">_v2.csv</code>, <code class="inline">_v3.csv</code>…). Both versions are analyzed. Use when you want to preserve previous data.</div>
+            </div>
+            <div class="mode-card">
+              <div class="mode-card-title"><span class="badge badge-amber">[S] Skip</span></div>
+              <div class="mode-card-desc">Skips collection for this data type. Use to save time when only specific data has changed.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div class="step-title">Immediate Analysis — Don't Wait (1–2 min)</div>
+        </div>
+        <div class="step-body">
+          <p>Run analysis immediately after data collection. The <code class="inline">-SkipMessageTraces</code> switch skips the 30-day trace files (which aren't ready yet) and analyzes everything else.</p>
+          <div class="code-block">.\Invoke-BECLogAnalysis.ps1 -SkipMessageTraces</div>
+          <p>Open the report and address any CRITICAL or HIGH findings before continuing:</p>
+          <div class="code-block">notepad "..\Analysis\ANALYSIS-REPORT.txt"</div>
+          <p>Immediate remediation actions if CRITICAL findings are present:</p>
+          <ul class="styled">
+            <li>Remove malicious inbox rules</li>
+            <li>Disable SMTP mail forwarding if enabled</li>
+            <li>Revoke all active sessions: <strong>Azure AD → Users → [User] → Revoke sessions</strong></li>
+            <li>Reset the user's password and force MFA re-registration</li>
+            <li>Remove unrecognized mobile devices</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num">4</div>
+          <div class="step-title">Retrieve Historical Message Traces (~30 min wait)</div>
+        </div>
+        <div class="step-body">
+          <p>Historical trace jobs submitted in Step 2 typically complete in 15–30 minutes. Check status, then run the retrieval script. It is safe to run multiple times if traces are not ready yet.</p>
+          <div class="code-block"># Check trace status manually
+Connect-ExchangeOnline
+Get-HistoricalSearch | Where-Object {$_.ReportTitle -like "*jdoe*"} | Format-Table ReportTitle, Status
+
+# Download completed traces
+.\Invoke-BECMessageTraceRetrieval.ps1</div>
+          <p>When both traces are downloaded, <code class="inline">Investigation.xml</code> is updated with <code class="inline">TracesCompleted=true</code>.</p>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num">5</div>
+          <div class="step-title">Full Analysis with 30-Day Trace Data (2–3 min)</div>
+        </div>
+        <div class="step-body">
+          <p>Re-run the analysis without the <code class="inline">-SkipMessageTraces</code> switch to include the full 30-day message history. This provides volume spike detection, external send ratio analysis, and a complete timeline.</p>
+          <div class="code-block">.\Invoke-BECLogAnalysis.ps1</div>
+          <p><code class="inline">ANALYSIS-REPORT.txt</code> is updated in place. The analysis folder opens automatically when complete.</p>
+        </div>
+      </div>
+
+      <h2>Parameters — Start-BECInvestigation.ps1</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">-VictimEmail</td><td>String</td><td>Yes</td><td>—</td><td>Full email address (UPN) of the compromised user. Must be in <code class="inline">user@domain.com</code> format.</td></tr>
+            <tr><td class="mono">-WorkingDirectory</td><td>String</td><td>No</td><td class="mono">C:\Databranch_BEC</td><td>Root directory where the investigation workspace folder is created. Created if it does not exist.</td></tr>
+            <tr><td class="mono">-IncidentTicket</td><td>String</td><td>No</td><td>—</td><td>ConnectWise Manage ticket number. Stored in <code class="inline">Investigation.xml</code> and the per-investigation README for reference.</td></tr>
+            <tr><td class="mono">-Technician</td><td>String</td><td>No</td><td class="mono">$env:USERNAME</td><td>Name of the technician running the investigation. Defaults to the current Windows username.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Parameters — Generated Scripts</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Script</th><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>Invoke-BECDataCollection</td><td class="mono">-SkipHistoricalTraces</td><td>Switch</td><td>Skip submission of 30-day async trace jobs. Useful when re-running collection and traces are already in progress.</td></tr>
+            <tr><td>Invoke-BECLogAnalysis</td><td class="mono">-SkipMessageTraces</td><td>Switch</td><td>Skip message trace CSV analysis. Use for immediate triage while historical traces are still processing.</td></tr>
+            <tr><td>Invoke-BECMessageTraceRetrieval</td><td>—</td><td>—</td><td>No parameters. All configuration read from <code class="inline">Investigation.xml</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ OUTPUT -->
+    <div class="section" id="output">
+      <h1>Reading the Output</h1>
+
+      <h2>Workspace Folder Path</h2>
+      <div class="code-block">C:\Databranch_BEC\BEC-Investigation_&lt;alias&gt;_&lt;yyyyMMdd-HHmmss&gt;\</div>
+
+      <h2>Output Files</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Folder</th><th>Created By</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">Investigation.xml</td><td>Root</td><td>Start-BECInvestigation</td><td>Central config. Tracks victim info, all paths, trace job IDs, and investigation progress flags.</td></tr>
+            <tr><td class="mono">Investigation-README.txt</td><td>Root</td><td>Start-BECInvestigation</td><td>Per-investigation quick reference with workflow steps and next actions.</td></tr>
+            <tr><td class="mono">InboxRules_&lt;alias&gt;.csv</td><td>RawData</td><td>Invoke-BECDataCollection</td><td>All inbox rules. Columns: Name, Description, Enabled, ForwardTo, DeleteMessage, MoveToFolder, etc.</td></tr>
+            <tr><td class="mono">SUSPICIOUS-Rules_&lt;alias&gt;.csv</td><td>Reports</td><td>Invoke-BECDataCollection</td><td>Filtered subset: only rules with forwarding, deletion, move, or mark-as-read actions.</td></tr>
+            <tr><td class="mono">MailForwarding_&lt;alias&gt;.csv</td><td>RawData</td><td>Invoke-BECDataCollection</td><td>Mailbox forwarding state. Key column: <code class="inline">ForwardingEnabled</code> (True/False).</td></tr>
+            <tr><td class="mono">MailboxPermissions_&lt;alias&gt;.csv</td><td>RawData</td><td>Invoke-BECDataCollection</td><td>Delegated, non-inherited permissions on the victim mailbox.</td></tr>
+            <tr><td class="mono">MobileDevices_&lt;alias&gt;.csv</td><td>RawData</td><td>Invoke-BECDataCollection</td><td>All mobile devices registered to the victim mailbox.</td></tr>
+            <tr><td class="mono">UnifiedAuditLogs_&lt;alias&gt;.csv</td><td>RawData</td><td>Invoke-BECDataCollection</td><td>Exchange item operation audit events for the search period. Collected in 7-day chunks.</td></tr>
+            <tr><td class="mono">QuickTrace-Sent_&lt;alias&gt;.csv</td><td>RawData</td><td>Invoke-BECDataCollection</td><td>Sent message trace — last 10 days, immediate results.</td></tr>
+            <tr><td class="mono">QuickTrace-Received_&lt;alias&gt;.csv</td><td>RawData</td><td>Invoke-BECDataCollection</td><td>Received message trace — last 10 days, immediate results.</td></tr>
+            <tr><td class="mono">MessageTrace-Sent_&lt;alias&gt;.csv</td><td>RawData</td><td>Invoke-BECMessageTraceRetrieval</td><td>Full 30-day sent message trace. Available after historical job completes.</td></tr>
+            <tr><td class="mono">MessageTrace-Received_&lt;alias&gt;.csv</td><td>RawData</td><td>Invoke-BECMessageTraceRetrieval</td><td>Full 30-day received message trace. Available after historical job completes.</td></tr>
+            <tr><td class="mono">ANALYSIS-REPORT.txt</td><td>Analysis</td><td>Invoke-BECLogAnalysis</td><td>Human-readable ranked findings. Start here. Updated each time analysis runs.</td></tr>
+            <tr><td class="mono">All-Findings.csv</td><td>Analysis</td><td>Invoke-BECLogAnalysis</td><td>Machine-readable findings with severity, category, evidence, and recommendation columns.</td></tr>
+            <tr><td class="mono">DataCollection_*.log</td><td>Logs</td><td>Invoke-BECDataCollection</td><td>Full PowerShell transcript of each data collection session.</td></tr>
+            <tr><td class="mono">Analysis_*.log</td><td>Logs</td><td>Invoke-BECLogAnalysis</td><td>Full PowerShell transcript of each analysis session.</td></tr>
+            <tr><td class="mono">TraceRetrieval_*.log</td><td>Logs</td><td>Invoke-BECMessageTraceRetrieval</td><td>Full PowerShell transcript of each retrieval session.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body">
+          <div class="callout-label">Re-Run Versioning</div>
+          <p>If you re-run data collection and choose <strong>Duplicate</strong> when prompted, files are versioned as <code class="inline">InboxRules_jdoe_v2.csv</code>, <code class="inline">_v3.csv</code>, etc. The analysis script automatically picks up all versions and includes results from each in the report.</p>
+        </div>
+      </div>
+
+      <h2>Checking Investigation Status</h2>
+      <p>Read progress flags from <code class="inline">Investigation.xml</code> at any time:</p>
+      <div class="code-block">[xml]$c = Get-Content "..\Investigation.xml"
+$c.BECInvestigation.DataCollection.Completed          # true/false
+$c.BECInvestigation.MessageTraces.TracesCompleted      # true/false
+$c.BECInvestigation.Analysis.CriticalFindingsCount     # count
+$c.BECInvestigation.Analysis.HighFindingsCount         # count</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ CONSOLE -->
+    <div class="section" id="console">
+      <h1>Console Output</h1>
+      <p>When running the scripts manually, the console displays formatted, colorized output to make the session easy to follow. Section headers use an <code class="inline">========</code> banner style. Individual log lines are prefixed with a timestamp and severity tag in the corresponding color.</p>
+      <p>This formatted output is captured in the session transcript (the <code class="inline">.log</code> files in the <code class="inline">Logs\</code> folder). When scripts run in DattoRMM or other automated contexts, the colorized output is suppressed automatically — no configuration needed.</p>
+
+      <div class="prefix-legend">
+        <div class="prefix-row">
+          <div class="prefix-tag" style="color:#60a5fa;">[INFO]</div>
+          <div class="prefix-desc">General progress information — connecting, reading config, starting a collection phase.</div>
+        </div>
+        <div class="prefix-row">
+          <div class="prefix-tag" style="color:#22c55e;">[SUCCESS]</div>
+          <div class="prefix-desc">A collection or operation completed successfully — file written, connection established, user verified.</div>
+        </div>
+        <div class="prefix-row">
+          <div class="prefix-tag" style="color:#eab308;">[WARN]</div>
+          <div class="prefix-desc">Something unexpected but non-fatal — existing file detected, forwarding enabled, delegated permissions found.</div>
+        </div>
+        <div class="prefix-row">
+          <div class="prefix-tag" style="color:#ef4444;">[ERROR]</div>
+          <div class="prefix-desc">A collection step failed — connection error, victim not found, export failure. Check the Logs folder for detail.</div>
+        </div>
+        <div class="prefix-row">
+          <div class="prefix-tag" style="color:#a78bfa;">[DEBUG]</div>
+          <div class="prefix-desc">Low-level detail — chunk numbers, job IDs, file version names. Useful when investigating a failure.</div>
+        </div>
+      </div>
+
+      <p>Script start and end are marked with banner blocks:</p>
+      <div class="code-block">========================================
+  BEC DATA COLLECTION
+========================================
+
+  Investigation : BEC-Investigation_jdoe_20260220-143022
+  Victim        : john.doe@clientdomain.com
+  Search Period : Last 30 days</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ TROUBLESHOOT -->
+    <div class="section" id="troubleshooting">
+      <h1>Troubleshooting</h1>
+
+      <h2>Investigation.xml not found</h2>
+      <p>You are not running the generated script from the correct directory. It must be run from inside the <code class="inline">Scripts\</code> subfolder of the specific investigation workspace.</p>
+      <div class="code-block">cd "C:\Databranch_BEC\BEC-Investigation_jdoe_TIMESTAMP\Scripts"
+.\Invoke-BECDataCollection.ps1</div>
+
+      <h2>Investigation.xml is missing required fields</h2>
+      <p>The XML was generated by an older version of the toolkit or became corrupted. Delete the workspace folder and re-run <code class="inline">Start-BECInvestigation.ps1</code> to create a fresh one.</p>
+
+      <h2>Failed to connect to Exchange Online</h2>
+      <p>Verify you have the Exchange Administrator or Global Administrator role on the target tenant. Ensure your MFA device is available. Try connecting manually first to confirm credentials work:</p>
+      <div class="code-block">Connect-ExchangeOnline -ShowBanner:$false</div>
+
+      <h2>Unified audit log error or no results</h2>
+      <p>The <code class="inline">Search-UnifiedAuditLog</code> cmdlet can return a server-side error when querying large date ranges. The toolkit now collects in 7-day chunks with up to 3 retry attempts per chunk. If results are still empty, verify that Unified Audit Logging is enabled for the tenant in the Microsoft Purview compliance portal.</p>
+      <div class="code-block"># Check if audit logging is enabled
+Get-AdminAuditLogConfig | Select-Object UnifiedAuditLogIngestionEnabled</div>
+
+      <h2>Historical traces not ready</h2>
+      <p>Normal. Historical searches take 15–30 minutes. Re-run <code class="inline">Invoke-BECMessageTraceRetrieval.ps1</code> after waiting. The script is idempotent — running it multiple times is safe and will only download jobs that are marked <code class="inline">Done</code>.</p>
+
+      <h2>No findings in the analysis report</h2>
+      <p>Check the <code class="inline">Logs\</code> folder for any collection errors that may have prevented data from being written to <code class="inline">RawData\</code>. If the RawData folder contains CSV files and the report is still clean, the account may not have been compromised — this is a valid outcome.</p>
+
+      <h2>ExchangeOnlineManagement module fails to install</h2>
+      <p>Your workstation may have a policy blocking <code class="inline">Install-Module</code>. Install manually with elevated permissions:</p>
+      <div class="code-block">Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser -Force -AllowClobber</div>
+
+      <h2>Get-MessageTrace deprecation warning</h2>
+      <p>The toolkit detects whether <code class="inline">Get-MessageTraceV2</code> is available and prefers it. The warning about <code class="inline">Get-MessageTrace</code> deprecation is expected if your Exchange session does not yet expose the V2 cmdlet and can be safely ignored — collection will still succeed using the V1 cmdlet.</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ DATTORMM -->
+    <div class="section" id="dattormm">
+      <h1>Running via DattoRMM</h1>
+      <div class="callout note">
+        <div class="callout-icon">🔧</div>
+        <div class="callout-body">
+          <div class="callout-label">Interactive Use Only</div>
+          <p><code class="inline">Start-BECInvestigation.ps1</code> and all three generated investigation scripts are designed exclusively for interactive technician use. They require interactive authentication to Exchange Online, console prompts for file conflict resolution, and a local workspace directory. <strong>These scripts are not intended for DattoRMM deployment.</strong></p>
+          <p>No DattoRMM environment variables, component variables, or exit code handling is implemented. If DattoRMM deployment of BEC-related tooling is needed in the future, a separate non-interactive script should be developed for that purpose.</p>
+        </div>
+      </div>
+
+      <h2>Exit Codes</h2>
+      <p>Exit codes apply when scripts are called from other automation contexts.</p>
+      <div class="exit-codes">
+        <div class="exit-pill success">
+          <div class="exit-num">0</div>
+          <div class="exit-label">Success</div>
+          <div class="exit-desc">Script completed without fatal errors</div>
+        </div>
+        <div class="exit-pill fail">
+          <div class="exit-num">1</div>
+          <div class="exit-label">Failure</div>
+          <div class="exit-desc">Fatal error — workspace creation failed, XML corrupted, Exchange connection failed, or victim not found</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <div class="doc-footer">
+    <span>Databranch — Confidential</span>
+    <span class="footer-right">Start-BECInvestigation.ps1 | v3.0.2.0 | February 2026</span>
+  </div>
+
+</main>
+</div>
+
+<script>
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
