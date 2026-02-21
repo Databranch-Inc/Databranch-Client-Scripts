@@ -1,0 +1,342 @@
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║         BEC INVESTIGATION QUICK REFERENCE v3.0.0.0                              ║
+║                  Databranch — Incident Response Workflow                         ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════════════
+  SETUP (ONE-TIME)
+═══════════════════════════════════════════════════════════════════════════════════
+
+Download ONLY this file:
+□ Start-BECInvestigation.ps1
+
+Install PowerShell module (if not already installed):
+PS> Install-Module ExchangeOnlineManagement -Scope CurrentUser
+
+Permissions required:
+□ Exchange Administrator role (or Global Administrator)
+
+═══════════════════════════════════════════════════════════════════════════════════
+  IMMEDIATE RESPONSE (0-5 MINUTES)
+═══════════════════════════════════════════════════════════════════════════════════
+
+1. LOCK THE ACCOUNT (Manual - do this FIRST)
+   portal.azure.com → Azure AD → Users → [User] → Block sign-in
+
+2. INITIALIZE INVESTIGATION (< 5 seconds)
+   PS> .\Start-BECInvestigation.ps1 -VictimEmail "victim@company.com"
+
+   What happens:
+   • Creates timestamped investigation workspace folder
+   • Generates all three investigation scripts
+   • Creates Investigation.xml config file
+   • Opens investigation folder in Explorer
+
+   Optional parameters:
+   -WorkingDirectory "D:\Investigations"   (default: C:\Databranch_BEC)
+   -IncidentTicket "INC-12345"
+   -Technician "Your Name"
+
+3. NAVIGATE TO SCRIPTS FOLDER
+   PS> cd BEC-Investigation_victim_TIMESTAMP\Scripts
+
+═══════════════════════════════════════════════════════════════════════════════════
+  DATA COLLECTION (5-10 MINUTES)
+═══════════════════════════════════════════════════════════════════════════════════
+
+PS> .\Invoke-BECDataCollection.ps1
+
+What it does:
+• Reads victim email and paths from Investigation.xml (no parameters needed)
+• Connects to Exchange Online (interactive auth)
+• Collects inbox rules, forwarding, permissions, audit logs, mobile devices
+• Runs quick 10-day message traces (immediate results)
+• Initiates 30-day historical message traces (takes 15-30 min to complete)
+• Updates Investigation.xml with trace job IDs
+• Expected time: 2-5 minutes
+
+Optional: Skip historical trace submission on re-runs:
+PS> .\Invoke-BECDataCollection.ps1 -SkipHistoricalTraces
+
+If prompted about existing files (re-run scenario):
+  [O] Overwrite   - replace existing file
+  [D] Duplicate   - create versioned copy (_v2, _v3...)
+  [S] Skip        - skip this collection type
+
+═══════════════════════════════════════════════════════════════════════════════════
+  IMMEDIATE ANALYSIS (10-15 MINUTES)
+═══════════════════════════════════════════════════════════════════════════════════
+
+Run immediate analysis (don't wait for 30-day traces):
+PS> .\Invoke-BECLogAnalysis.ps1 -SkipMessageTraces
+
+What it does:
+• Analyzes rules, forwarding, permissions, audit data
+• Identifies CRITICAL and HIGH threats
+• Generates Analysis\ANALYSIS-REPORT.txt
+• Updates Investigation.xml with findings counts
+• Opens Analysis folder in Explorer
+• Expected time: 1-2 minutes
+
+REVIEW IMMEDIATELY:
+1. ..\Analysis\ANALYSIS-REPORT.txt
+   → Focus on CRITICAL and HIGH findings
+
+2. ..\Reports\SUSPICIOUS-Rules_username.csv
+   → Forwarding and deletion rules
+
+3. ..\RawData\MailForwarding_username.csv
+   → Verify ForwardingEnabled = False
+
+TAKE IMMEDIATE ACTION IF CRITICAL FINDINGS:
+□ Remove malicious inbox rules
+□ Disable SMTP mail forwarding if enabled
+□ Remove unrecognized mobile devices
+□ Revoke unauthorized mailbox permissions
+□ Reset password + force MFA re-registration
+□ Revoke all active sessions (Azure AD > Users > Revoke Sessions)
+
+═══════════════════════════════════════════════════════════════════════════════════
+  WAITING PERIOD (15-45 MINUTES)
+═══════════════════════════════════════════════════════════════════════════════════
+
+While waiting for 30-day message traces to complete:
+
+MANUAL COLLECTION (if Business Premium):
+1. Collect sign-in logs from Azure Portal
+   → Azure AD → Users → [User] → Sign-in logs
+   → Download last 30 days
+   → Save to ..\RawData\ folder
+
+COMPLETE REMEDIATION:
+□ Password reset completed
+□ MFA re-registered on verified device
+□ All active sessions revoked
+□ Suspicious emails deleted from mailbox
+□ User notified and educated
+
+CHECK TRACE STATUS:
+PS> Connect-ExchangeOnline
+PS> Get-HistoricalSearch | Where-Object {$_.ReportTitle -like "*victim*"} |
+    Format-Table ReportTitle, Status, SubmitDate
+
+Status values:
+• Running = Still processing (wait longer)
+• Done    = Ready to download (proceed to next step)
+
+═══════════════════════════════════════════════════════════════════════════════════
+  RETRIEVE MESSAGE TRACES (45-50 MINUTES)
+═══════════════════════════════════════════════════════════════════════════════════
+
+PS> .\Invoke-BECMessageTraceRetrieval.ps1
+
+What it does:
+• Reads trace job IDs from Investigation.xml (no parameters needed)
+• Checks status of both traces (sent + received)
+• Downloads completed traces to RawData folder
+• Updates Investigation.xml (TracesCompleted=true when both done)
+• Expected time: < 1 minute
+
+Safe to re-run if traces are not ready yet.
+
+═══════════════════════════════════════════════════════════════════════════════════
+  COMPLETE ANALYSIS (50-55 MINUTES)
+═══════════════════════════════════════════════════════════════════════════════════
+
+PS> .\Invoke-BECLogAnalysis.ps1
+
+What it does:
+• Analyzes full 30-day message trace data
+• Identifies breach origin (likely phishing emails)
+• Detects email volume spikes and external send ratio anomalies
+• Updates ANALYSIS-REPORT.txt with complete findings
+• Updates finding counts in Investigation.xml
+• Expected time: 2-3 minutes
+
+═══════════════════════════════════════════════════════════════════════════════════
+  FINDINGS SEVERITY REFERENCE
+═══════════════════════════════════════════════════════════════════════════════════
+
+🔴 CRITICAL - IMMEDIATE ACTION:
+   • SMTP mail forwarding enabled to external address
+   • Inbox rule forwarding/redirecting to external address
+
+🟠 HIGH - URGENT INVESTIGATION:
+   • Inbox rules automatically deleting messages
+   • Outbound email volume spike (>50 emails in a single day)
+
+🟡 MEDIUM - INVESTIGATE FURTHER:
+   • Rules moving emails to non-standard folders
+   • Delegated mailbox permissions
+   • High external send ratio (>70% of sent mail external)
+
+🟢 LOW - DOCUMENT AND MONITOR:
+   • Rules automatically marking emails as read
+
+═══════════════════════════════════════════════════════════════════════════════════
+  FOLDER STRUCTURE
+═══════════════════════════════════════════════════════════════════════════════════
+
+BEC-Investigation_username_TIMESTAMP/
+├── Investigation.xml                         ← Config file (auto-managed)
+├── Investigation-README.txt                  ← Per-investigation quick reference
+├── Scripts/
+│   ├── Invoke-BECDataCollection.ps1         ← Step 1: Collect data
+│   ├── Invoke-BECLogAnalysis.ps1            ← Step 2 & 4: Analyze
+│   └── Invoke-BECMessageTraceRetrieval.ps1  ← Step 3: Retrieve traces
+├── RawData/                                  ← Collected CSV files
+├── Reports/                                  ← Flagged suspicious items
+├── Analysis/                                 ← Reports and findings
+└── Logs/                                     ← Script execution transcripts
+
+Script logs (this workstation): C:\Databranch\ScriptLogs\Start-BECInvestigation\
+
+═══════════════════════════════════════════════════════════════════════════════════
+  INVESTIGATION.XML — STATUS CHECKS
+═══════════════════════════════════════════════════════════════════════════════════
+
+Check status at any time:
+PS> [xml]$c = Get-Content ..\Investigation.xml
+PS> $c.BECInvestigation.DataCollection.Completed
+PS> $c.BECInvestigation.MessageTraces.TracesCompleted
+PS> $c.BECInvestigation.Analysis.CriticalFindingsCount
+PS> $c.BECInvestigation.Analysis.HighFindingsCount
+
+DO NOT EDIT Investigation.xml MANUALLY — scripts update it automatically.
+
+═══════════════════════════════════════════════════════════════════════════════════
+  TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════════
+
+ERROR: "Investigation.xml not found"
+FIX:   You are not in the Scripts folder
+       cd BEC-Investigation_victim_TIMESTAMP\Scripts
+
+ERROR: "Failed to connect to Exchange Online"
+FIX:   Verify Exchange Administrator or Global Admin role
+       Check MFA device is available
+       Try: Connect-ExchangeOnline manually first
+
+"Traces not ready" message
+NORMAL: Historical searches take 15-30 minutes
+        Re-run Invoke-BECMessageTraceRetrieval.ps1 after waiting
+
+"No findings in analysis"
+CHECK:  Review Logs\DataCollection_*.log for errors
+        Confirm RawData\ folder contains CSV files
+        May be a false alarm — account may not be compromised
+
+Module not installed:
+FIX:   Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser -Force
+
+═══════════════════════════════════════════════════════════════════════════════════
+  COMMON ATTACK PATTERNS
+═══════════════════════════════════════════════════════════════════════════════════
+
+PATTERN 1: Phishing → Credential Harvest → Internal Spreading
+  Day 0:   User clicks phishing link, credentials captured
+  Day 0-1: Attacker reads email, creates forwarding/deletion rules
+  Day 1-3: Sends phishing to contacts from victim account
+  Indicators: Forwarding rules, high outbound volume spike
+
+PATTERN 2: Invoice Fraud Setup
+  Day 0:   Compromise
+  Day 1-3: Attacker studies payment patterns and contacts
+  Day 3-7: Creates keyword-based forwarding for invoice-related emails
+  Indicators: Forwarding rules with keyword filters
+
+PATTERN 3: Executive Impersonation
+  Day 0:   Compromise of lower-level account
+  Day 1-2: Searches for executive email patterns
+  Day 2-3: Impersonates executive to target finance/HR
+  Indicators: Unusual external recipients, abnormal send patterns
+
+═══════════════════════════════════════════════════════════════════════════════════
+  COMMUNICATION TEMPLATES
+═══════════════════════════════════════════════════════════════════════════════════
+
+INTERNAL ALERT:
+Subject: SECURITY INCIDENT — [User] Email Account Compromised
+
+Investigation ID : [from Investigation.xml]
+Victim           : [user@domain.com]
+Detected         : [timestamp]
+Status           : [from ANALYSIS-REPORT.txt]
+Ticket           : [INC-XXXXX]
+
+CRITICAL FINDINGS:
+[List from ANALYSIS-REPORT.txt]
+
+ACTIONS TAKEN:
+□ Account locked
+□ Password reset
+□ MFA re-enrolled
+□ Malicious rules removed
+□ [Other items from findings]
+
+
+EXTERNAL NOTIFICATION (if needed):
+Subject: SECURITY ALERT — Compromised Email Account
+
+[Company Name] identified compromise of [user@domain.com] between [dates].
+
+DO NOT open emails or links from this address during the compromise period.
+If you clicked links or provided credentials, change your password immediately.
+
+═══════════════════════════════════════════════════════════════════════════════════
+  POST-INCIDENT CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════════
+
+□ All CRITICAL findings addressed
+□ All HIGH findings addressed
+□ ANALYSIS-REPORT.txt fully reviewed
+□ Investigation.xml shows DataCollection.Completed = true
+□ Investigation.xml shows MessageTraces.TracesCompleted = true
+□ Investigation.xml shows Analysis.CompleteAnalysisCompleted = true
+□ Internal users notified (if applicable)
+□ External contacts notified (if applicable)
+□ Management briefed with findings summary
+□ Incident ticket documented with investigation ID and findings
+□ Investigation folder archived (minimum 1 year retention)
+□ User educated on phishing indicators
+□ 2-week follow-up monitoring scheduled
+□ Lessons learned documented in runbook
+
+═══════════════════════════════════════════════════════════════════════════════════
+  QUICK COMMAND REFERENCE
+═══════════════════════════════════════════════════════════════════════════════════
+
+Initialize investigation:
+PS> .\Start-BECInvestigation.ps1 -VictimEmail "user@domain.com"
+
+Navigate to scripts:
+PS> cd BEC-Investigation_*\Scripts
+
+Collect data:
+PS> .\Invoke-BECDataCollection.ps1
+
+Immediate analysis (no traces):
+PS> .\Invoke-BECLogAnalysis.ps1 -SkipMessageTraces
+
+Check historical trace status:
+PS> Get-HistoricalSearch | Where-Object {$_.ReportTitle -like "*user*"} | Format-Table ReportTitle, Status
+
+Retrieve traces:
+PS> .\Invoke-BECMessageTraceRetrieval.ps1
+
+Complete analysis (with traces):
+PS> .\Invoke-BECLogAnalysis.ps1
+
+Check findings count:
+PS> [xml]$c = Get-Content ..\Investigation.xml
+PS> $c.BECInvestigation.Analysis.CriticalFindingsCount
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+For full documentation : README.md
+For Business Standard  : BUSINESS-STANDARD-NOTES.md
+For support            : Contact Databranch MSP Team Lead
+
+v3.0.0.0 | February 2026 | Databranch
+
+═══════════════════════════════════════════════════════════════════════════════════
