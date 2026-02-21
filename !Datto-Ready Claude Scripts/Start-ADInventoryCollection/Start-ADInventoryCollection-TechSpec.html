@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Start-ADInventoryCollection — Technical Specification | Databranch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --navy:           #0f1e35;
+    --navy-mid:       #1a3154;
+    --navy-light:     #1e4a7a;
+    --accent:         #2e8bff;
+    --accent-dim:     #1a5fbd;
+    --teal:           #00c9b1;
+    --white:          #f4f7fb;
+    --text:           #d0dce8;
+    --text-muted:     #8a9bb5;
+    --text-dim:       #5a6f8a;
+    --border:         #1e3a5a;
+    --border-mid:     #2a4f72;
+    --code-bg:        #0a1624;
+    --row-alt:        #0d1e30;
+    --success-bg:     #0a2418;
+    --success-border: #1a6640;
+    --warn-bg:        #1e1a08;
+    --warn-border:    #7a6010;
+    --note-bg:        #0a1a2e;
+    --note-border:    #1a4a7a;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--white); }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 260px; min-width: 260px;
+    background: #080f1a;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    z-index: 100;
+  }
+  .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo .company { font-size: 11px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: .12em; font-variant: small-caps; }
+  .sidebar-logo .script-name { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--white); margin-top: 6px; word-break: break-all; }
+  .sidebar-logo .doc-type { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  nav { padding: 16px 0 32px; }
+  .nav-section-label { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: .12em; padding: 12px 20px 6px; }
+  .nav-link { display: block; font-size: 13px; color: var(--text-muted); padding: 6px 20px; border-left: 3px solid transparent; transition: all .15s; }
+  .nav-link:hover { color: var(--white); background: rgba(46,139,255,.07); }
+  .nav-link.active { color: var(--accent); background: rgba(30,74,122,.35); border-left-color: var(--accent); }
+  .nav-link.sub { padding-left: 36px; font-size: 12px; }
+
+  /* ── MAIN ── */
+  .main { margin-left: 260px; flex: 1; }
+
+  /* ── COVER ── */
+  .cover {
+    position: relative;
+    background: linear-gradient(145deg, #0a1828 0%, #0f2544 40%, #0a1e3a 100%);
+    padding: 64px 80px 56px;
+    overflow: hidden;
+  }
+  .cover::before { content: ''; position: absolute; top: -80px; right: -80px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(46,139,255,.12) 0%, transparent 70%); pointer-events: none; }
+  .cover::after  { content: ''; position: absolute; bottom: -60px; left: -60px; width: 320px; height: 320px; background: radial-gradient(circle, rgba(0,201,177,.08) 0%, transparent 70%); pointer-events: none; }
+  .cover-eyebrow { font-size: 11px; font-weight: 600; color: var(--teal); text-transform: uppercase; letter-spacing: .14em; margin-bottom: 16px; }
+  .cover-title { font-size: 42px; font-weight: 700; color: var(--white); line-height: 1.15; margin-bottom: 12px; }
+  .cover-script { font-family: 'IBM Plex Mono', monospace; font-size: 16px; color: var(--accent); margin-bottom: 8px; }
+  .cover-doctype { font-style: italic; color: var(--text-muted); font-size: 15px; margin-bottom: 32px; }
+  .cover-meta { display: flex; flex-wrap: wrap; gap: 28px; position: relative; z-index: 1; }
+  .meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .meta-label { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: .1em; }
+  .meta-value { font-size: 13px; color: var(--text); }
+  .meta-value.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+
+  /* ── CONTENT ── */
+  .content { max-width: 900px; padding: 56px 80px 80px; }
+  .section { margin-bottom: 64px; }
+
+  h1 { font-size: 26px; font-weight: 700; color: var(--white); border-bottom: 2px solid var(--navy-light); padding-bottom: 12px; margin-bottom: 24px; }
+  h1::before { content: '// '; font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+  h2 { font-size: 18px; font-weight: 600; color: var(--accent); margin: 28px 0 12px; }
+  h3 { font-size: 12px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: .1em; margin: 20px 0 8px; }
+  p { margin-bottom: 14px; }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: var(--navy-mid); color: var(--text-muted); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-mid); }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: rgba(46,139,255,.05); }
+  td { padding: 10px 14px; border-bottom: 1px solid rgba(30,58,90,.5); vertical-align: top; }
+  td.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); white-space: nowrap; }
+  td.num { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 700; text-align: center; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ── CODE ── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 16px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    overflow-x: auto;
+    margin: 14px 0;
+    white-space: pre;
+  }
+  code.inline { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 3px; padding: 1px 6px; color: var(--accent); }
+  .comment { color: #4a7a5a; }
+  .keyword { color: #c084fc; }
+  .string  { color: #86efac; }
+  .var     { color: #fde68a; }
+
+  /* ── CALLOUTS ── */
+  .callout { border-radius: 6px; padding: 14px 18px; margin: 18px 0; display: flex; gap: 14px; align-items: flex-start; }
+  .callout.note  { background: var(--note-bg);    border-left: 3px solid var(--note-border);    }
+  .callout.tip   { background: var(--success-bg); border-left: 3px solid var(--success-border); }
+  .callout.warn  { background: var(--warn-bg);    border-left: 3px solid var(--warn-border);    }
+  .callout-icon { font-size: 16px; margin-top: 2px; }
+  .callout-body { flex: 1; }
+  .callout-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+  .callout.note  .callout-label { color: var(--accent); }
+  .callout.tip   .callout-label { color: #22c55e; }
+  .callout.warn  .callout-label { color: #eab308; }
+
+  /* ── BADGES ── */
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 2px 8px; }
+  .badge-blue  { background: rgba(46,139,255,.15); color: #60a5fa; }
+  .badge-teal  { background: rgba(0,201,177,.12);  color: var(--teal); }
+  .badge-green { background: rgba(34,197,94,.12);  color: #22c55e; }
+  .badge-amber { background: rgba(234,179,8,.12);  color: #eab308; }
+  .badge-red   { background: rgba(239,68,68,.12);  color: #ef4444; }
+
+  /* ── STYLED LISTS ── */
+  ul.styled { list-style: none; padding: 0; margin: 10px 0; }
+  ul.styled li { padding: 5px 0 5px 20px; position: relative; }
+  ul.styled li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-size: 12px; top: 7px; }
+
+  /* ── ARCH GRID ── */
+  .arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .arch-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .arch-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; }
+  .arch-fn { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--white); font-weight: 500; }
+  .arch-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+  .arch-tag.discovery { background: rgba(0,201,177,.12); color: var(--teal); }
+  .arch-tag.collection { background: rgba(46,139,255,.15); color: #60a5fa; }
+  .arch-tag.infra { background: rgba(138,155,181,.12); color: var(--text-muted); }
+  .arch-tag.output { background: rgba(34,197,94,.12); color: #22c55e; }
+  .arch-desc { font-size: 12.5px; color: var(--text-muted); }
+
+  /* ── FLOW ── */
+  .flow { margin: 16px 0; }
+  .flow-step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 10px; }
+  .flow-num { width: 28px; height: 28px; background: var(--navy-light); color: var(--accent); border-radius: 50%; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .flow-content { flex: 1; border-bottom: 1px solid rgba(30,58,90,.4); padding-bottom: 10px; }
+  .flow-step:last-child .flow-content { border-bottom: none; }
+  .flow-title { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 3px; }
+  .flow-badge { font-size: 10px; font-weight: 600; background: rgba(46,139,255,.15); color: #60a5fa; border-radius: 4px; padding: 1px 6px; margin-left: 8px; }
+  .flow-badge.warn { background: rgba(234,179,8,.12); color: #eab308; }
+  .flow-badge.success { background: rgba(34,197,94,.12); color: #22c55e; }
+  .flow-desc { font-size: 12.5px; color: var(--text-muted); }
+
+  /* ── SEV GRID ── */
+  .sev-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 16px 0; }
+  .sev-cell { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 6px; padding: 12px; }
+  .sev-level { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .sev-stream { font-size: 10.5px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; margin-bottom: 6px; }
+  .sev-desc { font-size: 11.5px; color: var(--text-muted); }
+
+  /* ── EXIT PILLS ── */
+  .exit-codes { display: flex; gap: 14px; flex-wrap: wrap; margin: 16px 0; }
+  .exit-pill { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; min-width: 140px; }
+  .exit-num { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .exit-label { font-size: 12px; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+  .exit-desc { font-size: 12px; color: var(--text-muted); }
+  .exit-green .exit-num { color: #22c55e; }
+  .exit-red   .exit-num { color: #ef4444; }
+  .exit-amber .exit-num { color: #eab308; }
+
+  /* ── VERSION HISTORY ── */
+  .version-entry { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+  .version-header { display: flex; align-items: center; gap: 20px; background: var(--navy-mid); padding: 12px 18px; border-bottom: 1px solid var(--border); }
+  .version-num { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: var(--accent); }
+  .version-meta { font-size: 12px; color: var(--text-muted); }
+  .version-author { font-size: 12px; color: var(--teal); margin-left: auto; }
+  .version-body { padding: 14px 18px; }
+  .version-body ul { list-style: disc; padding-left: 20px; }
+  .version-body li { margin-bottom: 4px; font-size: 13px; color: var(--text-muted); }
+
+  /* ── CONSOLE COLOR TABLE ── */
+  .console-color-table { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 14px 0; font-size: 13px; }
+  .ccrow { display: flex; align-items: center; gap: 14px; padding: 9px 16px; border-bottom: 1px solid rgba(30,58,90,.5); }
+  .ccrow:last-child { border-bottom: none; }
+  .ccrow:nth-child(even) { background: var(--row-alt); }
+  .ccsev { font-family: 'IBM Plex Mono', monospace; font-weight: 600; min-width: 72px; }
+  .cccolor { min-width: 80px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--text-muted); }
+  .cchost { font-size: 11px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; min-width: 80px; }
+  .ccdesc { color: var(--text-muted); font-size: 12.5px; }
+
+  /* ── FOOTER ── */
+  .doc-footer { border-top: 1px solid var(--border); padding: 20px 80px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-dim); }
+  .doc-footer .right { font-family: 'IBM Plex Mono', monospace; }
+
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="company">Databranch</div>
+      <div class="script-name">Start-ADInventoryCollection.ps1</div>
+      <div class="doc-type">Technical Specification</div>
+    </div>
+    <nav>
+      <div class="nav-section-label">Sections</div>
+      <a class="nav-link" href="#purpose">1. Purpose and Scope</a>
+      <a class="nav-link" href="#architecture">2. Script Architecture</a>
+      <a class="nav-link" href="#parameters">3. Parameters</a>
+      <a class="nav-link" href="#modes">4. Operating Modes</a>
+      <a class="nav-link" href="#flow">5. Execution Flow</a>
+      <a class="nav-link" href="#parallel">6. Parallel Collection Engine</a>
+      <a class="nav-link" href="#collection">7. Hardware Collection Logic</a>
+      <a class="nav-link" href="#caching">8. Smart Caching System</a>
+      <a class="nav-link" href="#logging">9. Logging Architecture</a>
+      <a class="nav-link" href="#errors">10. Error Handling</a>
+      <a class="nav-link" href="#limitations">11. Known Limitations</a>
+      <a class="nav-link" href="#changelog">12. Version History</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- COVER -->
+    <div class="cover">
+      <div class="cover-eyebrow">Databranch Script Library</div>
+      <div class="cover-title">AD Inventory Collection</div>
+      <div class="cover-script">Start-ADInventoryCollection.ps1</div>
+      <div class="cover-doctype">Technical Specification</div>
+      <div class="cover-meta">
+        <div class="meta-item">
+          <span class="meta-label">Version</span>
+          <span class="meta-value mono">1.0.0.0</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Date</span>
+          <span class="meta-value">February 21, 2026</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Author</span>
+          <span class="meta-value">Josh Britton / Sam Kirsch</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">PS Minimum</span>
+          <span class="meta-value mono">5.1</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Run Context</span>
+          <span class="meta-value">Domain Admin</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ═══ 1. PURPOSE ═══ -->
+      <div class="section" id="purpose">
+        <h1>1. Purpose and Scope</h1>
+        <p>
+          <code class="inline">Start-ADInventoryCollection.ps1</code> is the Databranch primary AD environment
+          inventory tool. It replaces an earlier flat, unstructured script (<code class="inline">FINAL_2026Q1v1_0_InventoryScript.ps1</code>)
+          with a fully standardized, DattoRMM-compatible implementation following the Databranch Script Library conventions.
+        </p>
+        <p>
+          The script collects a complete snapshot of the Active Directory environment — users, servers, and
+          desktops — then attempts to gather physical hardware data from every desktop computer by combining
+          Wake-on-LAN, parallel ping verification, and remote WMI/WinRM queries. A smart caching system
+          retains hardware data from previous runs so that offline machines are still represented in the
+          final output.
+        </p>
+        <ul class="styled">
+          <li>Targets on-premises Windows Active Directory domains</li>
+          <li>Collects user accounts, server computers, and desktop computers from AD</li>
+          <li>Performs MAC address collection via DHCP leases and ARP tables from all DCs</li>
+          <li>Sends Wake-on-LAN across all DC subnets for cross-subnet desktop coverage</li>
+          <li>Collects hardware inventory from online desktops via parallel runspaces (WinRM → DCOM)</li>
+          <li>Persists hardware data across runs via CSV-based smart cache</li>
+          <li>Exports seven structured CSV files per run</li>
+          <li>Produces a structured script log with 10-file rotation</li>
+        </ul>
+      </div>
+
+      <!-- ═══ 2. ARCHITECTURE ═══ -->
+      <div class="section" id="architecture">
+        <h1>2. Script Architecture</h1>
+        <p>The script follows the Databranch standard: a flat <code class="inline">.ps1</code> file with a
+        single master function wrapping all logic. Helper functions are defined inside the master function scope.
+        The entry point at the bottom splats parameters into the master function.</p>
+        <ul class="styled">
+          <li>No external module dependencies beyond <code class="inline">ActiveDirectory</code> and <code class="inline">DhcpServer</code> (both RSAT)</li>
+          <li>All helper functions defined inside <code class="inline">Start-ADInventoryCollection</code> — no global scope pollution</li>
+          <li>Parallel operations use runspace pools (PS 5.1 compatible)</li>
+          <li>Dual-output logging: structured <code class="inline">Write-Log</code> + presentation <code class="inline">Write-Console</code></li>
+        </ul>
+
+        <h2>Sub-Function Map</h2>
+        <div class="arch-grid">
+          <div class="arch-card">
+            <div class="arch-card-header">
+              <div class="arch-fn">Initialize-Logging</div>
+              <div class="arch-tag infra">Infra</div>
+            </div>
+            <div class="arch-desc">Creates the log folder if absent and rotates old log files, keeping the 10 most recent.</div>
+          </div>
+          <div class="arch-card">
+            <div class="arch-card-header">
+              <div class="arch-fn">Write-Log</div>
+              <div class="arch-tag infra">Infra</div>
+            </div>
+            <div class="arch-desc">Writes timestamped, severity-tagged entries to stdout (DattoRMM capture) and the log file. Uses Write-Output/Write-Warning — never Write-Host.</div>
+          </div>
+          <div class="arch-card">
+            <div class="arch-card-header">
+              <div class="arch-fn">Write-Console</div>
+              <div class="arch-tag infra">Infra</div>
+            </div>
+            <div class="arch-desc">Writes severity-colored output to the PowerShell display stream via Write-Host. Invisible to DattoRMM. Accepts -Indent for visual hierarchy.</div>
+          </div>
+          <div class="arch-card">
+            <div class="arch-card-header">
+              <div class="arch-fn">Write-Banner / Write-Section / Write-Separator</div>
+              <div class="arch-tag infra">Infra</div>
+            </div>
+            <div class="arch-desc">Console-only presentation helpers. Banner for script open/close, Section for phase headers, Separator for dividers. All use Write-Host.</div>
+          </div>
+          <div class="arch-card">
+            <div class="arch-card-header">
+              <div class="arch-fn">Get-DhcpMacs</div>
+              <div class="arch-tag discovery">Discovery</div>
+            </div>
+            <div class="arch-desc">Queries all DHCP scopes on a specified DC and returns hostname/MAC/IP tuples for each active lease. Silent on failure; caller handles reporting.</div>
+          </div>
+          <div class="arch-card">
+            <div class="arch-card-header">
+              <div class="arch-fn">Get-ARPmacs</div>
+              <div class="arch-tag discovery">Discovery</div>
+            </div>
+            <div class="arch-desc">Retrieves ARP table from a DC via WinRM (arp -a), then resolves IPs to hostnames in parallel via DNS using a runspace pool (up to 20 concurrent).</div>
+          </div>
+          <div class="arch-card">
+            <div class="arch-card-header">
+              <div class="arch-fn">Resolve-ComputerMatch</div>
+              <div class="arch-tag discovery">Discovery</div>
+            </div>
+            <div class="arch-desc">Matches DHCP/ARP hostnames to AD computer objects. Strips domain suffix, tries exact match, then falls back to prefix match on first name segment.</div>
+          </div>
+          <div class="arch-card">
+            <div class="arch-card-header">
+              <div class="arch-fn">Main Execution Block</div>
+              <div class="arch-tag collection">Collection</div>
+            </div>
+            <div class="arch-desc">Orchestrates all phases inside a top-level try/catch: AD collection, MAC collection, WOL, ping, hardware collection, cache merge, and CSV export.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 3. PARAMETERS ═══ -->
+      <div class="section" id="parameters">
+        <h1>3. Parameters</h1>
+
+        <h2>Parameter Reference</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">DataFolder</td>
+                <td>String</td>
+                <td>No</td>
+                <td class="mono">C:\Databranch_Inventory</td>
+                <td>Working directory for all CSV output. Auto-created if absent. Maps to env var <code class="inline">DataFolder</code>.</td>
+              </tr>
+              <tr>
+                <td class="mono">WaitTimeMinutes</td>
+                <td>Int</td>
+                <td>No</td>
+                <td class="mono">3</td>
+                <td>Minutes to wait after WOL transmission before pinging. Set to 0 to skip. Maps to env var <code class="inline">WaitTimeMinutes</code>.</td>
+              </tr>
+              <tr>
+                <td class="mono">SiteName</td>
+                <td>String</td>
+                <td>No</td>
+                <td class="mono">UnknownSite</td>
+                <td>Customer/site name for log header. Auto-populated from <code class="inline">$env:CS_PROFILE_NAME</code> in DattoRMM.</td>
+              </tr>
+              <tr>
+                <td class="mono">Hostname</td>
+                <td>String</td>
+                <td>No</td>
+                <td class="mono">$env:COMPUTERNAME</td>
+                <td>Machine hostname for log header. Auto-populated from <code class="inline">$env:CS_HOSTNAME</code> in DattoRMM.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>DattoRMM Parameter Fallback Pattern</h2>
+        <p>Each parameter at the script level uses an inline default expression that checks for a DattoRMM
+        environment variable first, then falls back to the passed value or a hardcoded default:</p>
+        <div class="code-block"><span class="keyword">param</span> (
+    [string]<span class="var">$DataFolder</span> = $(<span class="keyword">if</span> (<span class="var">$env:DataFolder</span>) { <span class="var">$env:DataFolder</span> } <span class="keyword">else</span> { <span class="string">"C:\Databranch_Inventory"</span> }),
+    [int]<span class="var">$WaitTimeMinutes</span> = $(<span class="keyword">if</span> (<span class="var">$env:WaitTimeMinutes</span>) { [int]<span class="var">$env:WaitTimeMinutes</span> } <span class="keyword">else</span> { 3 }),
+    [string]<span class="var">$SiteName</span> = $(<span class="keyword">if</span> (<span class="var">$env:CS_PROFILE_NAME</span>) { <span class="var">$env:CS_PROFILE_NAME</span> } <span class="keyword">else</span> { <span class="string">"UnknownSite"</span> }),
+    [string]<span class="var">$Hostname</span> = $(<span class="keyword">if</span> (<span class="var">$env:CS_HOSTNAME</span>) { <span class="var">$env:CS_HOSTNAME</span> } <span class="keyword">else</span> { <span class="var">$env:COMPUTERNAME</span> })
+)</div>
+        <div class="callout note">
+          <div class="callout-icon">🔧</div>
+          <div class="callout-body">
+            <div class="callout-label">Type Coercion for Int Parameters</div>
+            <code class="inline">WaitTimeMinutes</code> must be explicitly cast with <code class="inline">[int]</code>
+            when reading from the environment variable — DattoRMM env vars are always strings, and an uncast
+            string will fail the <code class="inline">[int]</code>-typed parameter.
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 4. OPERATING MODES ═══ -->
+      <div class="section" id="modes">
+        <h1>4. Operating Modes</h1>
+
+        <h2>Manual / Interactive Mode</h2>
+        <p>Run directly from a PowerShell prompt by a Domain Admin. All parameters are passed as standard
+        PowerShell arguments. Full colored console output is rendered (Write-Console functions active).
+        Structured log output is also written. Best for first-run validation, troubleshooting, and ad-hoc
+        inventory collection.</p>
+
+        <h2>DattoRMM Automated Mode</h2>
+        <p>Deployed as a component targeting a DC or domain-joined admin server. Parameters supplied via
+        component environment variables. The DattoRMM agent captures stdout (Write-Output, Write-Warning)
+        for job output. Write-Host output is invisible to the agent — no conditional code needed. Exit code
+        is returned to DattoRMM for success/failure alerting.</p>
+
+        <div class="callout note">
+          <div class="callout-icon">ℹ️</div>
+          <div class="callout-body">
+            <div class="callout-label">No Mode Detection Required</div>
+            The dual-output pattern works automatically. Write-Log always runs (file + stdout).
+            Write-Console always runs (display stream only). DattoRMM captures stdout; the display
+            stream is invisible to it. No <code class="inline">if ($env:CS_PROFILE_NAME)</code>
+            guards are needed.
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 5. EXECUTION FLOW ═══ -->
+      <div class="section" id="flow">
+        <h1>5. Execution Flow</h1>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-content">
+              <div class="flow-title">Initialization <span class="flow-badge">Infra</span></div>
+              <div class="flow-desc">Initialize-Logging creates log folder and rotates old files. Log header written. Banner displayed.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-content">
+              <div class="flow-title">Pre-Check: AD Module <span class="flow-badge warn">Exit 2 if missing</span></div>
+              <div class="flow-desc">Verifies the ActiveDirectory module is available. Imports it. Exits with code 2 if not found.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">3</div>
+            <div class="flow-content">
+              <div class="flow-title">Load Cache</div>
+              <div class="flow-desc">Reads desktopsFINAL.csv from the previous run into a hashtable keyed by uppercase computer name. Missing or corrupt cache is non-fatal.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">4</div>
+            <div class="flow-content">
+              <div class="flow-title">AD Collection</div>
+              <div class="flow-desc">Get-ADComputer and Get-ADUser populate $DesktopsAD, $ServersAD, $UsersAD. Removed computer detection compares cache keys against current AD names.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">5</div>
+            <div class="flow-content">
+              <div class="flow-title">CSV Cleanup</div>
+              <div class="flow-desc">Stale CSVs from the previous run are deleted before any new data is written. Prevents partial merges.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">6</div>
+            <div class="flow-content">
+              <div class="flow-title">DC Discovery + MAC Collection</div>
+              <div class="flow-desc">Get-ADDomainController enumerates DCs. Each reachable DC is queried for DHCP leases (Get-DhcpMacs) and ARP table entries (Get-ARPmacs). Results pooled and deduplicated.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">7</div>
+            <div class="flow-content">
+              <div class="flow-title">Wake-on-LAN <span class="flow-badge">30 concurrent runspaces</span></div>
+              <div class="flow-desc">MACs matched to AD desktops via Resolve-ComputerMatch. WOL packets sent in parallel locally and from each reachable DC for cross-subnet reach. WaitTimeMinutes pause follows.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">8</div>
+            <div class="flow-content">
+              <div class="flow-title">Parallel Ping <span class="flow-badge">50 concurrent runspaces</span></div>
+              <div class="flow-desc">All desktops with an IPv4Address pinged in parallel. Results populate $Pingable and $PingResults hashtable for error reporting.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">9</div>
+            <div class="flow-content">
+              <div class="flow-title">Hardware Collection <span class="flow-badge">30 concurrent runspaces</span></div>
+              <div class="flow-desc">WinRM-first Invoke-Command with DCOM WMI fallback. Partial data is retained and flagged. Complete failures and offline machines logged to error report.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">10</div>
+            <div class="flow-content">
+              <div class="flow-title">Cache Merge</div>
+              <div class="flow-desc">For each desktop: fresh data wins. Cache used if offline. Empty record if never collected. LastInventoried timestamp preserved from original collection for cached records.</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">11</div>
+            <div class="flow-content">
+              <div class="flow-title">CSV Export <span class="flow-badge success">Exit 0</span></div>
+              <div class="flow-desc">Seven CSV files exported. Final summary written to log and displayed on console. Exit 0 on success.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 6. PARALLEL ENGINE ═══ -->
+      <div class="section" id="parallel">
+        <h1>6. Parallel Collection Engine</h1>
+        <p>The script uses PowerShell runspace pools throughout to achieve significant parallelism with
+        PS 5.1 compatibility. No <code class="inline">ForEach-Object -Parallel</code> (PS 7+ only) is used.</p>
+
+        <h2>Runspace Pool Pattern</h2>
+        <div class="code-block"><span class="comment"># Create pool with concurrency limit</span>
+<span class="var">$RunspacePool</span> = [runspacefactory]::CreateRunspacePool(1, <span class="var">$MaxConcurrent</span>)
+<span class="var">$RunspacePool</span>.Open()
+<span class="var">$Jobs</span> = @()
+
+<span class="keyword">foreach</span> (<span class="var">$Target</span> <span class="keyword">in</span> <span class="var">$Targets</span>) {
+    <span class="var">$PS</span> = [powershell]::Create()
+    <span class="var">$PS</span>.RunspacePool = <span class="var">$RunspacePool</span>
+    [void]<span class="var">$PS</span>.AddScript({ <span class="keyword">param</span>(<span class="var">$Arg</span>) <span class="comment"># ... work ...</span> }).AddArgument(<span class="var">$Target</span>)
+    <span class="var">$Jobs</span> += [PSCustomObject]@{ Pipe = <span class="var">$PS</span>; Status = <span class="var">$PS</span>.BeginInvoke() }
+}
+
+<span class="keyword">foreach</span> (<span class="var">$Job</span> <span class="keyword">in</span> <span class="var">$Jobs</span>) {
+    <span class="keyword">try</span> { <span class="var">$Result</span> = <span class="var">$Job</span>.Pipe.EndInvoke(<span class="var">$Job</span>.Status) }
+    <span class="keyword">catch</span> { <span class="comment"># handle failure</span> }
+    <span class="var">$Job</span>.Pipe.Dispose()
+}
+
+<span class="var">$RunspacePool</span>.Close()
+<span class="var">$RunspacePool</span>.Dispose()</div>
+
+        <h2>Concurrency Limits by Phase</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Phase</th><th>Max Concurrent</th><th>Rationale</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ARP reverse DNS (per DC)</td>
+                <td class="mono">20</td>
+                <td>DNS resolution is I/O bound; 20 concurrent lookups per DC is safe</td>
+              </tr>
+              <tr>
+                <td>WOL packet transmission</td>
+                <td class="mono">30</td>
+                <td>UDP sends are fast; 30 concurrent prevents socket exhaustion</td>
+              </tr>
+              <tr>
+                <td>Parallel ping verification</td>
+                <td class="mono">50</td>
+                <td>ICMP is lightweight; higher concurrency is acceptable</td>
+              </tr>
+              <tr>
+                <td>Hardware inventory collection</td>
+                <td class="mono">30</td>
+                <td>WinRM/WMI sessions are heavier; 30 balances throughput vs. network load</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-icon">🔧</div>
+          <div class="callout-body">
+            <div class="callout-label">Runspace Isolation</div>
+            Each runspace executes in its own isolated PowerShell session. Variables from the parent scope
+            are not automatically available — all needed data must be passed via <code class="inline">.AddArgument()</code>.
+            This is a common source of bugs when modifying runspace scriptblocks.
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 7. HARDWARE COLLECTION LOGIC ═══ -->
+      <div class="section" id="collection">
+        <h1>7. Hardware Collection Logic</h1>
+
+        <h2>WinRM → DCOM Fallback Chain</h2>
+        <p>Each hardware collection runspace attempts WinRM first (<code class="inline">Invoke-Command</code>),
+        then falls back to direct DCOM WMI if WinRM fails. Both methods query the same three WMI classes:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>WMI Class</th><th>Data Collected</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">Win32_ComputerSystem</td><td>Manufacturer, Model, TotalPhysicalMemory, Domain, Name</td></tr>
+              <tr><td class="mono">Win32_OperatingSystem</td><td>Caption (OS name), LastBootUpTime</td></tr>
+              <tr><td class="mono">Win32_BIOS</td><td>SerialNumber</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Partial Data Handling</h2>
+        <p>If WMI returns an object but some fields are null or empty, the result is still added to
+        <code class="inline">$AllHardware</code> (partial data is better than no data). A corresponding
+        entry is also added to <code class="inline">$CollectionErrors</code> with
+        <code class="inline">CollectionStatus = "Partial Data"</code> and the list of missing fields.</p>
+
+        <h2>MAC Address Matching — Resolve-ComputerMatch</h2>
+        <p>DHCP and ARP hostnames are not always in the same format as AD computer names. The match
+        function handles three common cases:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Match Type</th><th>Logic</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Exact</td>
+                <td>Uppercase comparison after stripping domain suffix</td>
+                <td><code class="inline">WORKSTATION01.corp.local</code> → <code class="inline">WORKSTATION01</code></td>
+              </tr>
+              <tr>
+                <td>Prefix</td>
+                <td>First segment before dash matched against AD name start</td>
+                <td><code class="inline">WS01</code> matches <code class="inline">WS01-RECEPTION</code></td>
+              </tr>
+              <tr>
+                <td>No match</td>
+                <td>Returns null; machine skipped for WOL</td>
+                <td>MAC from non-AD device (printer, AP, etc.)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ 8. SMART CACHING ═══ -->
+      <div class="section" id="caching">
+        <h1>8. Smart Caching System</h1>
+        <p>The caching system ensures that hardware data is never lost for machines that are temporarily
+        offline. On each run, <code class="inline">desktopsFINAL.csv</code> from the previous run is loaded
+        into a hashtable at startup and used as a fallback when fresh data cannot be collected.</p>
+
+        <h2>Cache Lifecycle</h2>
+        <ul class="styled">
+          <li><strong>Load:</strong> <code class="inline">desktopsFINAL.csv</code> read into <code class="inline">$CachedHardware</code> hashtable (key = uppercase Name). Only rows with a non-empty Manufacturer are cached.</li>
+          <li><strong>Merge priority:</strong> Fresh data always wins. Cache used only when fresh collection fails or machine is offline.</li>
+          <li><strong>LastInventoried:</strong> Fresh records get the current run timestamp. Cached records preserve the original <code class="inline">LastInventoried</code> date — this is intentional and indicates data age.</li>
+          <li><strong>Removed detection:</strong> Cache keys not found in current AD desktop names are written to <code class="inline">RemovedFromAD.csv</code>.</li>
+          <li><strong>Corruption:</strong> A corrupt or missing cache file is non-fatal. The script continues with an empty cache and logs a warning.</li>
+        </ul>
+
+        <div class="callout warn">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body">
+            <div class="callout-label">Cache Staleness</div>
+            Hardware data for persistently offline machines will become stale over time. The
+            <code class="inline">LastInventoried</code> column is the primary indicator of data freshness.
+            Machines with very old timestamps should be investigated for decommission or network issues.
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 9. LOGGING ARCHITECTURE ═══ -->
+      <div class="section" id="logging">
+        <h1>9. Logging Architecture</h1>
+
+        <h2>Structured Log Output — Write-Log</h2>
+        <p>All structured output uses <code class="inline">Write-Log</code>, which formats entries as
+        <code class="inline">[yyyy-MM-dd HH:mm:ss] [SEVERITY] Message</code> and simultaneously writes
+        to the log file and stdout. DattoRMM captures stdout for job output.</p>
+
+        <div class="sev-grid">
+          <div class="sev-cell">
+            <div class="sev-level" style="color:#60a5fa;">INFO</div>
+            <div class="sev-stream">Write-Output</div>
+            <div class="sev-desc">General progress and status messages</div>
+          </div>
+          <div class="sev-cell">
+            <div class="sev-level" style="color:#22c55e;">SUCCESS</div>
+            <div class="sev-stream">Write-Output</div>
+            <div class="sev-desc">Key step completed successfully</div>
+          </div>
+          <div class="sev-cell">
+            <div class="sev-level" style="color:#a78bfa;">DEBUG</div>
+            <div class="sev-stream">Write-Output</div>
+            <div class="sev-desc">Sub-step detail, counts, variable states</div>
+          </div>
+          <div class="sev-cell">
+            <div class="sev-level" style="color:#eab308;">WARN</div>
+            <div class="sev-stream">Write-Warning</div>
+            <div class="sev-desc">Non-fatal issues, skipped machines, partial data</div>
+          </div>
+          <div class="sev-cell">
+            <div class="sev-level" style="color:#ef4444;">ERROR</div>
+            <div class="sev-stream">Write-Error</div>
+            <div class="sev-desc">Failures, caught exceptions</div>
+          </div>
+        </div>
+
+        <h2>Log File Location and Rotation</h2>
+        <div class="code-block">C:\Databranch\ScriptLogs\Start-ADInventoryCollection\
+  Start-ADInventoryCollection_yyyy-MM-dd.log   ← one file per calendar day
+  (maximum 10 files retained; oldest purged automatically)</div>
+
+        <h2>Console Presentation Layer — Write-Console</h2>
+        <p>A parallel presentation layer uses <code class="inline">Write-Host</code> to write to PowerShell's
+        display stream (stream 6). This stream is completely separate from stdout. DattoRMM agents capture
+        stdout only — Write-Host output is never seen in DattoRMM job logs. No environment detection is
+        required; the separation is automatic.</p>
+
+        <h3>Write-Console Color Scheme</h3>
+        <div class="console-color-table">
+          <div class="ccrow">
+            <div class="ccsev" style="color:#60a5fa;">INFO</div>
+            <div class="cccolor">Cyan</div>
+            <div class="cchost">Write-Host</div>
+            <div class="ccdesc">General phase progress</div>
+          </div>
+          <div class="ccrow">
+            <div class="ccsev" style="color:#22c55e;">SUCCESS</div>
+            <div class="cccolor">Green</div>
+            <div class="cchost">Write-Host</div>
+            <div class="ccdesc">Key step confirmed</div>
+          </div>
+          <div class="ccrow">
+            <div class="ccsev" style="color:#eab308;">WARN</div>
+            <div class="cccolor">Yellow</div>
+            <div class="cchost">Write-Host</div>
+            <div class="ccdesc">Non-fatal issue</div>
+          </div>
+          <div class="ccrow">
+            <div class="ccsev" style="color:#ef4444;">ERROR</div>
+            <div class="cccolor">Red</div>
+            <div class="cchost">Write-Host</div>
+            <div class="ccdesc">Failure</div>
+          </div>
+          <div class="ccrow">
+            <div class="ccsev" style="color:#a78bfa;">DEBUG</div>
+            <div class="cccolor">Magenta</div>
+            <div class="cchost">Write-Host</div>
+            <div class="ccdesc">Granular detail (often indented)</div>
+          </div>
+          <div class="ccrow">
+            <div class="ccsev" style="color:#8a9bb5;">PLAIN</div>
+            <div class="cccolor">Gray</div>
+            <div class="cchost">Write-Host</div>
+            <div class="ccdesc">No severity prefix — metadata, labels</div>
+          </div>
+        </div>
+
+        <h3>Presentation Helpers</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Function</th><th>Output</th><th>Usage</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">Write-Banner</td>
+                <td><code class="inline">====...====  TITLE  ====...====</code></td>
+                <td>Script open, script close, major milestones</td>
+              </tr>
+              <tr>
+                <td class="mono">Write-Section</td>
+                <td><code class="inline">---- Section Title --------</code></td>
+                <td>Each logical phase of execution</td>
+              </tr>
+              <tr>
+                <td class="mono">Write-Separator</td>
+                <td><code class="inline">----...----</code> (60 chars)</td>
+                <td>Dividers between clusters of related output</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Standard Log Header</h2>
+        <p>Written at the start of every run via <code class="inline">Write-Log</code>:</p>
+        <div class="code-block">===== Start-ADInventoryCollection v1.0.0.0 =====
+Site     : &lt;CS_PROFILE_NAME or 'UnknownSite'&gt;
+Hostname : &lt;CS_HOSTNAME or $env:COMPUTERNAME&gt;
+Run As   : &lt;WindowsIdentity current user&gt;
+Params   : DataFolder='...' | WaitTimeMinutes='...'
+Log File : C:\Databranch\ScriptLogs\Start-ADInventoryCollection\...</div>
+      </div>
+
+      <!-- ═══ 10. ERROR HANDLING ═══ -->
+      <div class="section" id="errors">
+        <h1>10. Error Handling</h1>
+
+        <h2>Global Error Policy</h2>
+        <p><code class="inline">$ErrorActionPreference = 'Stop'</code> is set inside the master function.
+        All non-recoverable failures are caught by the outer <code class="inline">try/catch</code> block,
+        which logs the exception message and stack trace, displays a red failure banner, and exits with code 1.</p>
+
+        <h2>Per-Target Isolation</h2>
+        <p>Operations that process individual machines (DC queries, WOL, ping, hardware collection) use
+        inner try/catch blocks to isolate failures. A single unreachable DC or unresponsive desktop does
+        not abort the run. Failures are logged and/or added to the <code class="inline">$CollectionErrors</code>
+        array for export to <code class="inline">ADCollectionErrorReport.csv</code>.</p>
+
+        <h2>Error Report Fields</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Field</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">ComputerName</td><td>AD computer name</td></tr>
+              <tr><td class="mono">IPv4Address</td><td>IP from AD at time of run</td></tr>
+              <tr><td class="mono">LastLogonDate</td><td>Last domain authentication from AD</td></tr>
+              <tr><td class="mono">PingStatus</td><td>Online / Offline / Unknown</td></tr>
+              <tr><td class="mono">CollectionStatus</td><td>Partial Data / Failed - WinRM/DCOM / Failed - Job Exception / Skipped - Offline / Skipped - No IP</td></tr>
+              <tr><td class="mono">FailureReason</td><td>Exception message or human-readable explanation</td></tr>
+              <tr><td class="mono">MissingFields</td><td>Comma-separated list of empty hardware fields (Partial Data only)</td></tr>
+              <tr><td class="mono">AttemptDateTime</td><td>Script start timestamp</td></tr>
+              <tr><td class="mono">HasCachedData</td><td>Yes (from &lt;date&gt;) or No — indicates whether cached hardware is available</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Exit Codes</h2>
+        <div class="exit-codes">
+          <div class="exit-pill exit-green">
+            <div class="exit-num">0</div>
+            <div class="exit-label">Success</div>
+            <div class="exit-desc">All phases completed normally. CSVs exported.</div>
+          </div>
+          <div class="exit-pill exit-red">
+            <div class="exit-num">1</div>
+            <div class="exit-label">General Failure</div>
+            <div class="exit-desc">Unhandled exception caught by outer try/catch. Stack trace in log.</div>
+          </div>
+          <div class="exit-pill exit-amber">
+            <div class="exit-num">2</div>
+            <div class="exit-label">Module Missing</div>
+            <div class="exit-desc">ActiveDirectory module not available. Script cannot continue.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 11. LIMITATIONS ═══ -->
+      <div class="section" id="limitations">
+        <h1>11. Known Limitations</h1>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Limitation</th><th>Impact</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>WOL requires network support</td>
+                <td>Desktops may not wake on heavily managed switched networks</td>
+                <td>Managed switches need directed broadcast or DHCP relay for cross-subnet WOL. Layer 3 routing can drop magic packets.</td>
+              </tr>
+              <tr>
+                <td>Hardware collection requires WinRM or DCOM</td>
+                <td>Machines with both disabled will not have fresh hardware data</td>
+                <td>Enable WinRM via GPO. Ensure firewall allows WMI/DCOM (TCP 135 + dynamic).</td>
+              </tr>
+              <tr>
+                <td>IPv4Address in AD may be stale</td>
+                <td>Ping uses the AD-stored IP, which may not match the current DHCP lease</td>
+                <td>AD only updates the IPv4Address attribute when the computer account authenticates. Clients with expired leases may show wrong IPs.</td>
+              </tr>
+              <tr>
+                <td>Prefix-based name matching is approximate</td>
+                <td>Ambiguous or short hostname prefixes may cause incorrect WOL targets</td>
+                <td>The Resolve-ComputerMatch function favors exact matches. Prefix match is a last resort and may occasionally produce false positives in environments with similar naming patterns.</td>
+              </tr>
+              <tr>
+                <td>DHCP collection requires DhcpServer module</td>
+                <td>DHCP MACs unavailable if module not installed on the running machine</td>
+                <td>Script continues using ARP-sourced MACs only. Collection of ARP MACs still requires WinRM to the DC.</td>
+              </tr>
+              <tr>
+                <td>Cache grows unbounded for removed machines</td>
+                <td>RemovedFromAD.csv grows if machines are frequently added/removed</td>
+                <td>The removal detection log is per-run and is not cumulative — it only captures machines present in the cache but absent from the current AD query. Deleted CSVs reset the tracking baseline.</td>
+              </tr>
+              <tr>
+                <td>PS 5.1 runspaces do not share parent scope</td>
+                <td>Scriptblocks must receive all data via AddArgument()</td>
+                <td>Forgetting to pass a variable into a runspace scriptblock is a silent bug — the variable will be null inside the runspace.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ 12. VERSION HISTORY ═══ -->
+      <div class="section" id="changelog">
+        <h1>12. Version History</h1>
+
+        <div class="version-entry">
+          <div class="version-header">
+            <div class="version-num">v1.0.0.0</div>
+            <div class="version-meta">February 21, 2026</div>
+            <div class="version-author">Sam Kirsch</div>
+          </div>
+          <div class="version-body">
+            <ul>
+              <li>Modernized from legacy flat script (<code class="inline">FINAL_2026Q1v1_0_InventoryScript.ps1</code>)</li>
+              <li>Renamed to <code class="inline">Start-ADInventoryCollection</code> per project naming convention</li>
+              <li>Wrapped all logic in master function matching file name</li>
+              <li>Added full comment-based help block, <code class="inline">.NOTES</code>, and <code class="inline">.CHANGELOG</code></li>
+              <li>Added DattoRMM/manual parameter fallback pattern for <code class="inline">DataFolder</code> and <code class="inline">WaitTimeMinutes</code></li>
+              <li>Replaced all Write-Host logging with dual-output pattern (Write-Log + Write-Console)</li>
+              <li>Added Write-Banner, Write-Section, Write-Separator console presentation helpers</li>
+              <li>Added Initialize-Logging with 10-file log rotation to <code class="inline">C:\Databranch\ScriptLogs\</code></li>
+              <li>Added standard log header (Site, Hostname, Run As, Params, Log File)</li>
+              <li>Moved Get-DhcpMacs, Get-ARPmacs, Match-ComputerName inside master function scope; renamed Match-ComputerName to Resolve-ComputerMatch per approved verb convention</li>
+              <li>Added AD module pre-check with exit code 2</li>
+              <li>Replaced silent catch blocks with structured Write-Log ERROR entries</li>
+              <li>Added <code class="inline">$ErrorActionPreference = 'Stop'</code> with outer try/catch</li>
+              <li>Added explicit exit 0 / 1 / 2</li>
+              <li>Original inventory logic (caching, WOL, parallel runspaces, hardware collection, merging, CSV export) preserved intact</li>
+              <li>Original author Josh Britton credited in <code class="inline">.NOTES</code></li>
+            </ul>
+          </div>
+        </div>
+
+      </div><!-- /changelog -->
+
+    </div><!-- /content -->
+
+    <!-- FOOTER -->
+    <div class="doc-footer">
+      <span>Databranch — Confidential</span>
+      <span class="right">Start-ADInventoryCollection.ps1 | v1.0.0.0 | February 2026</span>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
