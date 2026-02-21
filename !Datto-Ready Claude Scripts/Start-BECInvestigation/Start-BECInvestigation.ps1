@@ -65,7 +65,7 @@
 
 .NOTES
     File Name      : Start-BECInvestigation.ps1
-    Version        : 3.0.1.0
+    Version        : 3.0.2.0
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -83,6 +83,15 @@
         1  - General failure (folder creation, XML generation, or script generation failed)
 
 .CHANGELOG
+    v3.0.2.0 - 2026-02-21 - Sam Kirsch
+        - Two-channel logging in all scripts: colorized Write-Host to console,
+          structured entries captured by Start-Transcript in generated scripts
+        - Added Write-Banner and Write-Section helpers in all scripts for formatted
+          interactive console output (script start/end banners, section dividers)
+        - Analysis script: completion banner shows severity counts color-coded by impact
+        - Unified audit log collection: 7-day chunked windows with 3-attempt retry
+          per chunk; eliminates server-side timeout error on large date ranges
+
     v3.0.1.0 - 2026-02-20 - Sam Kirsch
         - Fixed Add-XmlElement type check: changed [hashtable] to [IDictionary]
           so [ordered]@{} sections (OrderedDictionary) are written as nested XML
@@ -175,7 +184,7 @@ function Start-BECInvestigation {
     # CONFIGURATION
     # ==========================================================================
     $ScriptName    = "Start-BECInvestigation"
-    $ScriptVersion = "3.0.1.0"
+    $ScriptVersion = "3.0.2.0"
     $LogRoot       = "C:\Databranch\ScriptLogs"
     $LogFolder     = Join-Path -Path $LogRoot -ChildPath $ScriptName
     $LogDate       = Get-Date -Format "yyyy-MM-dd"
@@ -183,10 +192,15 @@ function Start-BECInvestigation {
     $MaxLogFiles   = 10
 
     # ==========================================================================
-    # LOGGING FUNCTION
-    # Writes to both stdout and log file with timestamp and severity level.
-    # Severity: INFO, WARN, ERROR, SUCCESS, DEBUG
-    # All severity levels are always logged (verbose by default).
+    # LOGGING FUNCTIONS
+    #
+    # Write-Log   : Two-channel output.
+    #               Console  -> colorized Write-Host (cyan/green/yellow/red/magenta)
+    #               Log file -> structured [timestamp][severity] entry always written
+    #               DattoRMM stdout is unaffected; Write-Host bypasses the output stream.
+    #
+    # Write-Banner  : Console-only section header banner (========). Not written to log.
+    # Write-Section : Console-only lightweight section divider (--- name ---). Not to log.
     # ==========================================================================
     function Write-Log {
         param (
@@ -201,20 +215,50 @@ function Start-BECInvestigation {
         $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         $LogEntry  = "[$Timestamp] [$Severity] $Message"
 
-        switch ($Severity) {
-            "INFO"    { Write-Output  $LogEntry }
-            "WARN"    { Write-Warning $LogEntry }
-            "ERROR"   { Write-Error   $LogEntry -ErrorAction Continue }
-            "SUCCESS" { Write-Output  $LogEntry }
-            "DEBUG"   { Write-Output  $LogEntry }
+        # Console: colorized severity prefix via Write-Host (bypasses output stream)
+        $ConsoleColor = switch ($Severity) {
+            "INFO"    { "Cyan"    }
+            "SUCCESS" { "Green"   }
+            "WARN"    { "Yellow"  }
+            "ERROR"   { "Red"     }
+            "DEBUG"   { "Magenta" }
         }
+        Write-Host $LogEntry -ForegroundColor $ConsoleColor
 
+        # Log file: structured entry, always written regardless of severity
         try {
             Add-Content -Path $LogFile -Value $LogEntry -Encoding UTF8
         }
         catch {
             Write-Warning "Could not write to log file: $_"
         }
+    }
+
+    function Write-Banner {
+        param (
+            [Parameter(Mandatory = $true)]
+            [string]$Title,
+
+            [Parameter(Mandatory = $false)]
+            [string]$Color = "Cyan"
+        )
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor $Color
+        Write-Host "  $Title" -ForegroundColor $Color
+        Write-Host "========================================" -ForegroundColor $Color
+        Write-Host ""
+    }
+
+    function Write-Section {
+        param (
+            [Parameter(Mandatory = $true)]
+            [string]$Title,
+
+            [Parameter(Mandatory = $false)]
+            [string]$Color = "Cyan"
+        )
+        Write-Host ""
+        Write-Host "--- $Title ---" -ForegroundColor $Color
     }
 
     # ==========================================================================
@@ -275,10 +319,21 @@ function Start-BECInvestigation {
 
     Initialize-Logging
 
+    # Log file header (structured - goes to file only via Write-Log)
     Write-Log "===== $ScriptName v$ScriptVersion =====" -Severity INFO
     Write-Log "Run As   : $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)" -Severity INFO
     Write-Log "Params   : VictimEmail='$VictimEmail' | WorkingDirectory='$WorkingDirectory' | Technician='$Technician' | IncidentTicket='$IncidentTicket'" -Severity INFO
     Write-Log "Log File : $LogFile" -Severity INFO
+
+    # Console banner
+    Write-Banner -Title "BEC INVESTIGATION - WORKSPACE INIT" -Color Cyan
+    Write-Host "  Victim Email      : $VictimEmail" -ForegroundColor Yellow
+    Write-Host "  Working Directory : $WorkingDirectory" -ForegroundColor Yellow
+    Write-Host "  Technician        : $Technician" -ForegroundColor Yellow
+    if ($IncidentTicket) {
+        Write-Host "  Incident Ticket   : $IncidentTicket" -ForegroundColor Yellow
+    }
+    Write-Host ""
 
     # Derive investigation identifiers
     $UserAlias         = $VictimEmail.Split("@")[0]
@@ -297,6 +352,7 @@ function Start-BECInvestigation {
         # ------------------------------------------------------------------
         # STEP 1: Create folder structure
         # ------------------------------------------------------------------
+        Write-Section -Title "Creating Folder Structure"
         Write-Log "Creating investigation folder structure..." -Severity INFO
 
         try {
@@ -304,6 +360,7 @@ function Start-BECInvestigation {
             $SubFolders = @("Logs", "RawData", "Reports", "Analysis", "Scripts")
             foreach ($Folder in $SubFolders) {
                 New-Item -Path (Join-Path -Path $InvestigationPath -ChildPath $Folder) -ItemType Directory -Force | Out-Null
+                Write-Host "    + $Folder" -ForegroundColor Green
                 Write-Log "  Created subfolder: $Folder" -Severity DEBUG
             }
             Write-Log "Folder structure created successfully." -Severity SUCCESS
@@ -316,6 +373,7 @@ function Start-BECInvestigation {
         # ------------------------------------------------------------------
         # STEP 2: Create Investigation.xml configuration file
         # ------------------------------------------------------------------
+        Write-Section -Title "Creating Investigation.xml"
         Write-Log "Creating Investigation.xml configuration file..." -Severity INFO
 
         $ConfigData = [ordered]@{
@@ -395,6 +453,7 @@ function Start-BECInvestigation {
         # STEP 3: Generate investigation scripts
         # ------------------------------------------------------------------
         $ScriptsPath = Join-Path -Path $InvestigationPath -ChildPath "Scripts"
+        Write-Section -Title "Generating Investigation Scripts"
         Write-Log "Generating investigation scripts..." -Severity INFO
 
         # ---- Invoke-BECDataCollection.ps1 ----
@@ -415,7 +474,7 @@ function Start-BECInvestigation {
       - Mail forwarding settings
       - Mailbox permissions (delegated, non-inherited)
       - Registered mobile devices
-      - Unified audit logs (Exchange item operations, last N days)
+      - Unified audit logs (Exchange item operations, collected in 7-day chunks)
       - Quick message traces (last 10 days, immediate results)
       - Historical message traces (last N days, async - 15-30 min to complete)
 
@@ -462,12 +521,12 @@ function Start-BECInvestigation {
 .CHANGELOG
     v{SCRIPT_VERSION} - {CREATED_DATE} - Sam Kirsch
         - Generated by Start-BECInvestigation.ps1 v{SCRIPT_VERSION}
-        - Renamed from BEC-DataCollection.ps1 to Invoke-BECDataCollection.ps1
-        - Added full compliant header block
-        - Added Write-Log function (mirrors project standard)
-        - Wrapped logic in master function Invoke-BECDataCollection
-        - Entry point uses splatted call
-        - Preserved all v2.3 collection logic and O/D/S file handling
+        - Two-channel logging: colorized Write-Host to console + structured entries to transcript
+        - Write-Banner and Write-Section helpers for formatted console output
+        - Unified audit log collection uses chunked 7-day windows to avoid server timeouts
+        - Null-guard validation after XML read
+        - NotifyAddress resolved from active Exchange connection (most recent, Connected state)
+        - Start-HistoricalSearch uses splatting; NotifyAddress is optional
 #>
 
 [CmdletBinding()]
@@ -503,7 +562,6 @@ function Invoke-BECDataCollection {
     $DaysToSearch     = [int]$Config.BECInvestigation.DataCollection.DaysSearched
 
     # Validate critical values loaded from XML before proceeding.
-    # If these are null/empty the XML structure is wrong (re-run Start-BECInvestigation.ps1).
     $XmlValidationErrors = @()
     if (-not $VictimEmail)  { $XmlValidationErrors += "Victim.Email" }
     if (-not $UserAlias)    { $XmlValidationErrors += "Victim.UserAlias" }
@@ -518,8 +576,9 @@ function Invoke-BECDataCollection {
 
     # ==========================================================================
     # LOGGING
-    # This generated script uses Start-Transcript for session capture, plus a
-    # lightweight Write-Log for structured severity output within the transcript.
+    # Two-channel approach:
+    #   Console  : colorized Write-Host (Write-Log + Write-Banner/Write-Section)
+    #   Transcript: Start-Transcript captures all console output including Write-Host
     # ==========================================================================
     $TranscriptTimestamp = Get-Date -Format "yyyyMMdd-HHmmss"
     $TranscriptPath      = Join-Path -Path $LogsPath -ChildPath "DataCollection_${TranscriptTimestamp}.log"
@@ -534,11 +593,29 @@ function Invoke-BECDataCollection {
         )
         $Ts    = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         $Entry = "[$Ts] [$Severity] $Message"
-        switch ($Severity) {
-            "WARN"    { Write-Warning $Entry }
-            "ERROR"   { Write-Error   $Entry -ErrorAction Continue }
-            default   { Write-Output  $Entry }
+        $Color = switch ($Severity) {
+            "INFO"    { "Cyan"    }
+            "SUCCESS" { "Green"   }
+            "WARN"    { "Yellow"  }
+            "ERROR"   { "Red"     }
+            "DEBUG"   { "Magenta" }
         }
+        Write-Host $Entry -ForegroundColor $Color
+    }
+
+    function Write-Banner {
+        param ([string]$Title, [string]$Color = "Cyan")
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor $Color
+        Write-Host "  $Title" -ForegroundColor $Color
+        Write-Host "========================================" -ForegroundColor $Color
+        Write-Host ""
+    }
+
+    function Write-Section {
+        param ([string]$Title, [string]$Color = "Cyan")
+        Write-Host ""
+        Write-Host "--- $Title ---" -ForegroundColor $Color
     }
 
     # ==========================================================================
@@ -595,16 +672,16 @@ function Invoke-BECDataCollection {
             if ($Data) {
                 $Data | Export-Csv -Path $FilePath -NoTypeInformation -Encoding UTF8
                 $Count = ($Data | Measure-Object).Count
-                Write-Log "$Description : $Count record(s) written to $(Split-Path -Path $FilePath -Leaf)" -Severity SUCCESS
+                Write-Log "  $Description : $Count record(s) -> $(Split-Path -Path $FilePath -Leaf)" -Severity SUCCESS
                 return $true
             }
             else {
-                Write-Log "$Description : No data found." -Severity INFO
+                Write-Log "  $Description : No data found." -Severity INFO
                 return $false
             }
         }
         catch {
-            Write-Log "$Description : Export failed - $($_.Exception.Message)" -Severity ERROR
+            Write-Log "  $Description : Export failed - $($_.Exception.Message)" -Severity ERROR
             return $false
         }
     }
@@ -613,6 +690,13 @@ function Invoke-BECDataCollection {
     # MAIN EXECUTION
     # ==========================================================================
     $ErrorActionPreference = "Continue"
+
+    Write-Banner -Title "BEC DATA COLLECTION" -Color Cyan
+    Write-Host "  Investigation : $($Config.BECInvestigation.Investigation.InvestigationID)" -ForegroundColor Yellow
+    Write-Host "  Victim        : $VictimEmail" -ForegroundColor Yellow
+    Write-Host "  Search Period : Last $DaysToSearch days" -ForegroundColor Yellow
+    Write-Host "  Script        : $ScriptName v$ScriptVersion" -ForegroundColor Yellow
+    Write-Host ""
 
     Write-Log "===== $ScriptName v$ScriptVersion =====" -Severity INFO
     Write-Log "Investigation : $($Config.BECInvestigation.Investigation.InvestigationID)" -Severity INFO
@@ -624,13 +708,16 @@ function Invoke-BECDataCollection {
     $EndDate   = Get-Date
 
     # ---- Verify ExchangeOnlineManagement module ----
+    Write-Section -Title "Module Check"
     if (-not (Get-Module -ListAvailable -Name ExchangeOnlineManagement)) {
         Write-Log "ExchangeOnlineManagement module not found. Installing for current user..." -Severity WARN
         Install-Module -Name ExchangeOnlineManagement -Force -AllowClobber -Scope CurrentUser
     }
     Import-Module -Name ExchangeOnlineManagement -ErrorAction Stop
+    Write-Log "ExchangeOnlineManagement module ready." -Severity SUCCESS
 
     # ---- Connect to Exchange Online ----
+    Write-Section -Title "Connecting to Exchange Online"
     Write-Log "Connecting to Exchange Online (REST API)..." -Severity INFO
     try {
         Connect-ExchangeOnline -ShowBanner:$false -UseRPSSession:$false -ErrorAction Stop
@@ -643,9 +730,12 @@ function Invoke-BECDataCollection {
     }
 
     # ---- Verify victim mailbox ----
+    Write-Section -Title "Verifying Victim Mailbox"
     try {
         $UserMailbox = Get-Mailbox -Identity $VictimEmail -ErrorAction Stop
         Write-Log "User verified: $($UserMailbox.DisplayName) ($VictimEmail)" -Severity SUCCESS
+        Write-Host "  Display Name : $($UserMailbox.DisplayName)" -ForegroundColor White
+        Write-Host "  Mailbox Type : $($UserMailbox.RecipientTypeDetails)" -ForegroundColor White
     }
     catch {
         Write-Log "Victim mailbox not found: $VictimEmail - $($_.Exception.Message)" -Severity ERROR
@@ -659,7 +749,7 @@ function Invoke-BECDataCollection {
     # ==========================================================================
 
     # ---- Inbox Rules ----
-    Write-Log "--- Collecting Inbox Rules ---" -Severity INFO
+    Write-Section -Title "Inbox Rules"
     $FileAction = Get-OutputFileAction -BasePath "$RawDataPath\InboxRules_${UserAlias}.csv" -Description "Inbox Rules"
     if ($FileAction.Action -eq "Collect") {
         try {
@@ -670,7 +760,6 @@ function Invoke-BECDataCollection {
                     RedirectTo, MailboxOwnerId
                 Export-DataWithLogging -Data $RuleDetails -FilePath $FileAction.Path -Description "Inbox Rules"
 
-                # Flag suspicious rules to Reports folder
                 $Suspicious = $RuleDetails | Where-Object {
                     $_.DeleteMessage -or $_.MoveToFolder -or $_.MarkAsRead -or $_.ForwardTo -or $_.RedirectTo
                 }
@@ -680,10 +769,14 @@ function Invoke-BECDataCollection {
                         $SuspiciousPath = "$ReportsPath\SUSPICIOUS-Rules_${UserAlias}_v$($Matches[1]).csv"
                     }
                     Export-DataWithLogging -Data $Suspicious -FilePath $SuspiciousPath -Description "Suspicious Rules (flagged)"
+                    Write-Log "  $($Suspicious.Count) suspicious rule(s) flagged to Reports folder." -Severity WARN
+                }
+                else {
+                    Write-Log "  No suspicious rules detected." -Severity SUCCESS
                 }
             }
             else {
-                Write-Log "No inbox rules found." -Severity INFO
+                Write-Log "  No inbox rules found." -Severity INFO
             }
         }
         catch {
@@ -692,7 +785,7 @@ function Invoke-BECDataCollection {
     }
 
     # ---- Mail Forwarding ----
-    Write-Log "--- Collecting Mail Forwarding Settings ---" -Severity INFO
+    Write-Section -Title "Mail Forwarding"
     $FileAction = Get-OutputFileAction -BasePath "$RawDataPath\MailForwarding_${UserAlias}.csv" -Description "Mail Forwarding"
     if ($FileAction.Action -eq "Collect") {
         try {
@@ -701,6 +794,12 @@ function Invoke-BECDataCollection {
                     ForwardingAddress, ForwardingSmtpAddress, DeliverToMailboxAndForward,
                     @{N='ForwardingEnabled'; E={ $null -ne $_.ForwardingAddress -or $null -ne $_.ForwardingSmtpAddress }}
             Export-DataWithLogging -Data $Forwarding -FilePath $FileAction.Path -Description "Mail Forwarding"
+            if ($Forwarding.ForwardingEnabled -eq $true) {
+                Write-Log "  WARNING: Mail forwarding is ENABLED to $($Forwarding.ForwardingSmtpAddress)" -Severity WARN
+            }
+            else {
+                Write-Log "  Mail forwarding is not enabled." -Severity SUCCESS
+            }
         }
         catch {
             Write-Log "Mail forwarding collection failed: $($_.Exception.Message)" -Severity ERROR
@@ -708,7 +807,7 @@ function Invoke-BECDataCollection {
     }
 
     # ---- Mailbox Permissions ----
-    Write-Log "--- Collecting Mailbox Permissions ---" -Severity INFO
+    Write-Section -Title "Mailbox Permissions"
     $FileAction = Get-OutputFileAction -BasePath "$RawDataPath\MailboxPermissions_${UserAlias}.csv" -Description "Mailbox Permissions"
     if ($FileAction.Action -eq "Collect") {
         try {
@@ -716,9 +815,10 @@ function Invoke-BECDataCollection {
                 Where-Object { $_.User -notlike "*SELF*" -and $_.IsInherited -eq $false }
             if ($Perms) {
                 Export-DataWithLogging -Data $Perms -FilePath $FileAction.Path -Description "Mailbox Permissions"
+                Write-Log "  $( ($Perms | Measure-Object).Count ) delegated permission(s) found - review for legitimacy." -Severity WARN
             }
             else {
-                Write-Log "No delegated mailbox permissions found (this is normal)." -Severity INFO
+                Write-Log "  No delegated mailbox permissions found (this is normal)." -Severity SUCCESS
             }
         }
         catch {
@@ -727,16 +827,17 @@ function Invoke-BECDataCollection {
     }
 
     # ---- Mobile Devices ----
-    Write-Log "--- Collecting Mobile Devices ---" -Severity INFO
+    Write-Section -Title "Mobile Devices"
     $FileAction = Get-OutputFileAction -BasePath "$RawDataPath\MobileDevices_${UserAlias}.csv" -Description "Mobile Devices"
     if ($FileAction.Action -eq "Collect") {
         try {
             $Devices = Get-MobileDevice -Mailbox $VictimEmail -ErrorAction Stop
             if ($Devices) {
                 Export-DataWithLogging -Data $Devices -FilePath $FileAction.Path -Description "Mobile Devices"
+                Write-Log "  $( ($Devices | Measure-Object).Count ) device(s) registered. Review for unrecognized devices." -Severity WARN
             }
             else {
-                Write-Log "No mobile devices registered." -Severity INFO
+                Write-Log "  No mobile devices registered." -Severity INFO
             }
         }
         catch {
@@ -744,34 +845,81 @@ function Invoke-BECDataCollection {
         }
     }
 
-    # ---- Unified Audit Logs ----
-    Write-Log "--- Collecting Unified Audit Logs (this may take several minutes) ---" -Severity INFO
+    # ---- Unified Audit Logs (chunked to avoid server timeout) ----
+    # Search-UnifiedAuditLog is unreliable over large date ranges and frequently
+    # times out with a server-side error. We collect in 7-day chunks and combine.
+    Write-Section -Title "Unified Audit Logs (chunked collection)"
+    Write-Log "Collecting audit logs in 7-day chunks to avoid server timeout..." -Severity INFO
     $FileAction = Get-OutputFileAction -BasePath "$RawDataPath\UnifiedAuditLogs_${UserAlias}.csv" -Description "Unified Audit Logs"
     if ($FileAction.Action -eq "Collect") {
-        try {
-            $AuditLogs = Search-UnifiedAuditLog -StartDate $StartDate -EndDate $EndDate `
-                -UserIds $VictimEmail -RecordType ExchangeItem -ResultSize 5000
-            if ($AuditLogs) {
-                Export-DataWithLogging -Data $AuditLogs -FilePath $FileAction.Path -Description "Unified Audit Logs"
+        $AllAuditLogs   = @()
+        $ChunkDays      = 7
+        $ChunkStart     = $StartDate
+        $ChunkNum       = 0
+        $TotalChunks    = [math]::Ceiling($DaysToSearch / $ChunkDays)
+
+        while ($ChunkStart -lt $EndDate) {
+            $ChunkEnd  = $ChunkStart.AddDays($ChunkDays)
+            if ($ChunkEnd -gt $EndDate) { $ChunkEnd = $EndDate }
+            $ChunkNum++
+
+            Write-Log "  Chunk $ChunkNum of $TotalChunks : $($ChunkStart.ToString('yyyy-MM-dd')) to $($ChunkEnd.ToString('yyyy-MM-dd'))" -Severity INFO
+
+            $Attempt = 0
+            $MaxAttempts = 3
+            $ChunkSuccess = $false
+
+            while ($Attempt -lt $MaxAttempts -and -not $ChunkSuccess) {
+                $Attempt++
+                try {
+                    $ChunkLogs = Search-UnifiedAuditLog `
+                        -StartDate $ChunkStart `
+                        -EndDate   $ChunkEnd `
+                        -UserIds   $VictimEmail `
+                        -RecordType ExchangeItem `
+                        -ResultSize 5000 `
+                        -ErrorAction Stop
+
+                    if ($ChunkLogs) {
+                        $AllAuditLogs += $ChunkLogs
+                        Write-Log "    Retrieved $($ChunkLogs.Count) record(s)." -Severity SUCCESS
+                    }
+                    else {
+                        Write-Log "    No records in this window." -Severity DEBUG
+                    }
+                    $ChunkSuccess = $true
+                }
+                catch {
+                    if ($Attempt -lt $MaxAttempts) {
+                        Write-Log "    Attempt $Attempt failed, retrying in 10s: $($_.Exception.Message)" -Severity WARN
+                        Start-Sleep -Seconds 10
+                    }
+                    else {
+                        Write-Log "    Chunk $ChunkNum failed after $MaxAttempts attempts: $($_.Exception.Message)" -Severity ERROR
+                    }
+                }
             }
-            else {
-                Write-Log "No unified audit logs found." -Severity INFO
-            }
+
+            $ChunkStart = $ChunkEnd
         }
-        catch {
-            Write-Log "Unified audit log collection failed: $($_.Exception.Message)" -Severity ERROR
+
+        if ($AllAuditLogs.Count -gt 0) {
+            Export-DataWithLogging -Data $AllAuditLogs -FilePath $FileAction.Path -Description "Unified Audit Logs (all chunks)"
+        }
+        else {
+            Write-Log "  No unified audit log entries found across all chunks." -Severity INFO
+            Write-Log "  Note: Audit logging may not be enabled, or no Exchange activity occurred in the search window." -Severity DEBUG
         }
     }
     else {
-        Write-Log "Unified Audit Log collection skipped (can take 3-5 minutes)." -Severity INFO
+        Write-Log "Unified Audit Log collection skipped." -Severity INFO
     }
 
     # ---- Quick Message Traces (10 days) ----
-    Write-Log "--- Running Quick Message Traces (last 10 days) ---" -Severity INFO
+    Write-Section -Title "Quick Message Traces (last 10 days)"
     $QuickStart         = (Get-Date).AddDays(-10)
     $WarningPreference  = "SilentlyContinue"
 
-    # Detect API version
     $UseV2 = $false
     try {
         $null = Get-Command -Name Get-MessageTraceV2 -ErrorAction Stop
@@ -782,7 +930,6 @@ function Invoke-BECDataCollection {
         Write-Log "Get-MessageTraceV2 not available. Using Get-MessageTrace V1 (deprecating Sept 2025)." -Severity WARN
     }
 
-    # Sent messages
     $FileAction = Get-OutputFileAction -BasePath "$RawDataPath\QuickTrace-Sent_${UserAlias}.csv" -Description "Quick Trace - Sent"
     if ($FileAction.Action -eq "Collect") {
         try {
@@ -795,7 +942,7 @@ function Invoke-BECDataCollection {
                 Export-DataWithLogging -Data $Sent -FilePath $FileAction.Path -Description "Sent Messages (10 days)"
             }
             else {
-                Write-Log "No sent messages found in last 10 days." -Severity INFO
+                Write-Log "  No sent messages found in last 10 days." -Severity INFO
             }
         }
         catch {
@@ -803,7 +950,6 @@ function Invoke-BECDataCollection {
         }
     }
 
-    # Received messages
     $FileAction = Get-OutputFileAction -BasePath "$RawDataPath\QuickTrace-Received_${UserAlias}.csv" -Description "Quick Trace - Received"
     if ($FileAction.Action -eq "Collect") {
         try {
@@ -816,7 +962,7 @@ function Invoke-BECDataCollection {
                 Export-DataWithLogging -Data $Received -FilePath $FileAction.Path -Description "Received Messages (10 days)"
             }
             else {
-                Write-Log "No received messages found in last 10 days." -Severity INFO
+                Write-Log "  No received messages found in last 10 days." -Severity INFO
             }
         }
         catch {
@@ -828,11 +974,10 @@ function Invoke-BECDataCollection {
 
     # ---- Historical Message Traces (30 days, async) ----
     if (-not $SkipHistoricalTraces) {
-        Write-Log "--- Initiating Historical Message Traces (last $DaysToSearch days) ---" -Severity INFO
-        Write-Log "Historical searches complete in 15-30 minutes. Run Invoke-BECMessageTraceRetrieval.ps1 to download when done." -Severity INFO
+        Write-Section -Title "Historical Message Traces (${DaysToSearch}-day async jobs)"
+        Write-Log "Submitting historical message trace jobs..." -Severity INFO
+        Write-Log "Jobs complete in 15-30 minutes. Run Invoke-BECMessageTraceRetrieval.ps1 to download when done." -Severity INFO
         try {
-            # Get the UPN of the currently authenticated technician to receive trace completion notifications.
-            # Filter to the active connection and take the most recently established one.
             $ConnectionInfo = Get-ConnectionInformation |
                               Where-Object { $_.State -eq 'Connected' } |
                               Sort-Object -Property ConnectedAt -Descending |
@@ -840,40 +985,41 @@ function Invoke-BECDataCollection {
             $NotifyAddress  = $ConnectionInfo.UserPrincipalName
 
             if (-not $NotifyAddress) {
-                Write-Log "Could not determine technician UPN from connection info. Trace notifications will not be sent." -Severity WARN
-                Write-Log "  Tip: Check Get-ConnectionInformation to see active sessions." -Severity DEBUG
+                Write-Log "Could not determine technician UPN. Trace completion notifications will not be sent." -Severity WARN
             }
             else {
-                Write-Log "Trace completion notifications will be sent to: $NotifyAddress" -Severity DEBUG
+                Write-Log "Trace notifications will be sent to: $NotifyAddress" -Severity DEBUG
             }
-            $SentTraceName   = "BEC-Sent-${UserAlias}-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+
+            $SentTraceName    = "BEC-Sent-${UserAlias}-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
             $SentSearchParams = @{
-                ReportType   = "MessageTrace"
-                StartDate    = $StartDate
-                EndDate      = $EndDate
-                ReportTitle  = $SentTraceName
+                ReportType    = "MessageTrace"
+                StartDate     = $StartDate
+                EndDate       = $EndDate
+                ReportTitle   = $SentTraceName
                 SenderAddress = $VictimEmail
             }
             if ($NotifyAddress) { $SentSearchParams['NotifyAddress'] = $NotifyAddress }
             $SentTrace = Start-HistoricalSearch @SentSearchParams
 
-            $ReceivedTraceName = "BEC-Received-${UserAlias}-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+            $ReceivedTraceName    = "BEC-Received-${UserAlias}-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
             $ReceivedSearchParams = @{
-                ReportType        = "MessageTrace"
-                StartDate         = $StartDate
-                EndDate           = $EndDate
-                ReportTitle       = $ReceivedTraceName
-                RecipientAddress  = $VictimEmail
+                ReportType       = "MessageTrace"
+                StartDate        = $StartDate
+                EndDate          = $EndDate
+                ReportTitle      = $ReceivedTraceName
+                RecipientAddress = $VictimEmail
             }
             if ($NotifyAddress) { $ReceivedSearchParams['NotifyAddress'] = $NotifyAddress }
             $ReceivedTrace = Start-HistoricalSearch @ReceivedSearchParams
 
             if ($SentTrace -and $ReceivedTrace) {
                 Write-Log "Historical message traces submitted successfully." -Severity SUCCESS
-                Write-Log "  Sent job     : $SentTraceName (ID: $($SentTrace.JobId))" -Severity DEBUG
-                Write-Log "  Received job : $ReceivedTraceName (ID: $($ReceivedTrace.JobId))" -Severity DEBUG
+                Write-Host "  + Sent job     : $SentTraceName" -ForegroundColor Green
+                Write-Host "  + Received job : $ReceivedTraceName" -ForegroundColor Green
+                Write-Log "  Sent job ID     : $($SentTrace.JobId)" -Severity DEBUG
+                Write-Log "  Received job ID : $($ReceivedTrace.JobId)" -Severity DEBUG
 
-                # Update XML with trace job IDs
                 [xml]$ConfigUpdate = Get-Content -Path $ConfigPath -Encoding UTF8
                 $ConfigUpdate.BECInvestigation.MessageTraces.SentTraceJobId     = $SentTrace.JobId.ToString()
                 $ConfigUpdate.BECInvestigation.MessageTraces.SentTraceName      = $SentTraceName
@@ -899,12 +1045,17 @@ function Invoke-BECDataCollection {
 
     Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
 
-    Write-Log "Data collection completed." -Severity SUCCESS
-    Write-Log "Next steps:" -Severity INFO
-    Write-Log "  1. Run .\Invoke-BECLogAnalysis.ps1 -SkipMessageTraces for immediate findings" -Severity INFO
-    Write-Log "  2. Wait 30 minutes, then run .\Invoke-BECMessageTraceRetrieval.ps1" -Severity INFO
-    Write-Log "  3. Re-run .\Invoke-BECLogAnalysis.ps1 for complete analysis" -Severity INFO
+    Write-Banner -Title "DATA COLLECTION COMPLETE" -Color Green
+    Write-Host "  RawData folder : $RawDataPath" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "  Next Steps:" -ForegroundColor Cyan
+    Write-Host "    1. .\Invoke-BECLogAnalysis.ps1 -SkipMessageTraces  (immediate triage)" -ForegroundColor White
+    Write-Host "    2. Wait ~30 min for historical traces to complete" -ForegroundColor White
+    Write-Host "    3. .\Invoke-BECMessageTraceRetrieval.ps1" -ForegroundColor White
+    Write-Host "    4. .\Invoke-BECLogAnalysis.ps1  (full analysis)" -ForegroundColor White
+    Write-Host ""
 
+    Write-Log "Data collection completed successfully." -Severity SUCCESS
     Stop-Transcript
     exit 0
 
@@ -1054,11 +1205,29 @@ function Invoke-BECLogAnalysis {
         )
         $Ts    = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         $Entry = "[$Ts] [$Severity] $Message"
-        switch ($Severity) {
-            "WARN"  { Write-Warning $Entry }
-            "ERROR" { Write-Error   $Entry -ErrorAction Continue }
-            default { Write-Output  $Entry }
+        $Color = switch ($Severity) {
+            "INFO"    { "Cyan"    }
+            "SUCCESS" { "Green"   }
+            "WARN"    { "Yellow"  }
+            "ERROR"   { "Red"     }
+            "DEBUG"   { "Magenta" }
         }
+        Write-Host $Entry -ForegroundColor $Color
+    }
+
+    function Write-Banner {
+        param ([string]$Title, [string]$Color = "Cyan")
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor $Color
+        Write-Host "  $Title" -ForegroundColor $Color
+        Write-Host "========================================" -ForegroundColor $Color
+        Write-Host ""
+    }
+
+    function Write-Section {
+        param ([string]$Title, [string]$Color = "Cyan")
+        Write-Host ""
+        Write-Host "--- $Title ---" -ForegroundColor $Color
     }
 
     # ==========================================================================
@@ -1106,12 +1275,20 @@ function Invoke-BECLogAnalysis {
     $ErrorActionPreference = "Continue"
     $AllFindings = @()
 
+    Write-Banner -Title "BEC LOG ANALYSIS" -Color Cyan
+    Write-Host "  Investigation : $($Config.BECInvestigation.Investigation.InvestigationID)" -ForegroundColor Yellow
+    Write-Host "  Victim        : $VictimEmail" -ForegroundColor Yellow
+    Write-Host "  Mode          : $(if ($SkipMessageTraces) { 'Immediate triage (no message traces)' } else { 'Full analysis (includes message traces)' })" -ForegroundColor Yellow
+    Write-Host "  Script        : $ScriptName v$ScriptVersion" -ForegroundColor Yellow
+    Write-Host ""
+
     Write-Log "===== $ScriptName v$ScriptVersion =====" -Severity INFO
     Write-Log "Investigation : $($Config.BECInvestigation.Investigation.InvestigationID)" -Severity INFO
     Write-Log "Victim        : $VictimEmail" -Severity INFO
     Write-Log "Mode          : $(if ($SkipMessageTraces) { 'Immediate triage (no message traces)' } else { 'Full analysis (includes message traces)' })" -Severity INFO
 
     # ---- Inbox Rules ----
+    Write-Section -Title "Inbox Rules"
     Write-Log "--- Analyzing Inbox Rules ---" -Severity INFO
     $RuleFiles = Get-AllVersionedFiles -Pattern "InboxRules_*.csv"
     if ($RuleFiles.Count -eq 0) {
@@ -1170,6 +1347,7 @@ function Invoke-BECLogAnalysis {
     }
 
     # ---- Mail Forwarding ----
+    Write-Section -Title "Mail Forwarding"
     Write-Log "--- Analyzing Mail Forwarding ---" -Severity INFO
     $FwdFiles = Get-AllVersionedFiles -Pattern "MailForwarding_*.csv"
     if ($FwdFiles.Count -eq 0) {
@@ -1189,6 +1367,7 @@ function Invoke-BECLogAnalysis {
     }
 
     # ---- Mailbox Permissions ----
+    Write-Section -Title "Mailbox Permissions"
     Write-Log "--- Analyzing Mailbox Permissions ---" -Severity INFO
     $PermFiles = Get-AllVersionedFiles -Pattern "MailboxPermissions_*.csv"
     if ($PermFiles.Count -eq 0) {
@@ -1209,6 +1388,7 @@ function Invoke-BECLogAnalysis {
 
     # ---- Message Traces ----
     if (-not $SkipMessageTraces) {
+        Write-Section -Title "Message Traces"
         Write-Log "--- Analyzing Message Traces ---" -Severity INFO
         $SentFiles = Get-AllVersionedFiles -Pattern "QuickTrace-Sent_*.csv"
         if ($SentFiles.Count -eq 0) {
@@ -1249,6 +1429,7 @@ function Invoke-BECLogAnalysis {
     }
 
     # ---- Generate report ----
+    Write-Section -Title "Generating Analysis Report"
     Write-Log "--- Generating Analysis Report ---" -Severity INFO
     $ReportPath = Join-Path -Path $AnalysisPath -ChildPath "ANALYSIS-REPORT.txt"
 
@@ -1313,9 +1494,26 @@ $FindingsDetail$NoFindingsNote
     $Config.Save($ConfigPath)
 
     Write-Log "Investigation.xml updated with analysis results." -Severity SUCCESS
-    Write-Log "CRITICAL findings: $(($AllFindings | Where-Object {$_.Severity -eq 'CRITICAL'}).Count)" -Severity $(if (($AllFindings | Where-Object {$_.Severity -eq 'CRITICAL'}).Count -gt 0) {"WARN"} else {"INFO"})
-    Write-Log "HIGH findings    : $(($AllFindings | Where-Object {$_.Severity -eq 'HIGH'}).Count)" -Severity INFO
+    $CritCount = ($AllFindings | Where-Object {$_.Severity -eq 'CRITICAL'}).Count
+    $HighCount  = ($AllFindings | Where-Object {$_.Severity -eq 'HIGH'}).Count
+
+    Write-Log "CRITICAL findings: $CritCount" -Severity $(if ($CritCount -gt 0) {"WARN"} else {"INFO"})
+    Write-Log "HIGH findings    : $HighCount" -Severity INFO
     Write-Log "Analysis complete. Review: $ReportPath" -Severity SUCCESS
+
+    Write-Banner -Title "ANALYSIS COMPLETE" -Color $(if ($CritCount -gt 0) {"Red"} else {"Green"})
+    if ($AllFindings.Count -gt 0) {
+        Write-Host "  CRITICAL : $CritCount" -ForegroundColor $(if ($CritCount -gt 0) {"Red"} else {"Green"})
+        Write-Host "  HIGH     : $HighCount" -ForegroundColor $(if ($HighCount -gt 0) {"Red"} else {"Green"})
+        Write-Host "  MEDIUM   : $(($AllFindings | Where-Object {$_.Severity -eq 'MEDIUM'}).Count)" -ForegroundColor Yellow
+        Write-Host "  LOW      : $(($AllFindings | Where-Object {$_.Severity -eq 'LOW'}).Count)" -ForegroundColor Cyan
+    }
+    else {
+        Write-Host "  No suspicious activity detected." -ForegroundColor Green
+    }
+    Write-Host ""
+    Write-Host "  Report : $ReportPath" -ForegroundColor Yellow
+    Write-Host ""
 
     Stop-Transcript
     Start-Process -FilePath "explorer.exe" -ArgumentList $AnalysisPath
@@ -1443,17 +1641,40 @@ function Invoke-BECMessageTraceRetrieval {
         )
         $Ts    = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         $Entry = "[$Ts] [$Severity] $Message"
-        switch ($Severity) {
-            "WARN"  { Write-Warning $Entry }
-            "ERROR" { Write-Error   $Entry -ErrorAction Continue }
-            default { Write-Output  $Entry }
+        $Color = switch ($Severity) {
+            "INFO"    { "Cyan"    }
+            "SUCCESS" { "Green"   }
+            "WARN"    { "Yellow"  }
+            "ERROR"   { "Red"     }
+            "DEBUG"   { "Magenta" }
         }
+        Write-Host $Entry -ForegroundColor $Color
+    }
+
+    function Write-Banner {
+        param ([string]$Title, [string]$Color = "Cyan")
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor $Color
+        Write-Host "  $Title" -ForegroundColor $Color
+        Write-Host "========================================" -ForegroundColor $Color
+        Write-Host ""
+    }
+
+    function Write-Section {
+        param ([string]$Title, [string]$Color = "Cyan")
+        Write-Host ""
+        Write-Host "--- $Title ---" -ForegroundColor $Color
     }
 
     # ==========================================================================
     # MAIN EXECUTION
     # ==========================================================================
     $ErrorActionPreference = "Continue"
+
+    Write-Banner -Title "BEC MESSAGE TRACE RETRIEVAL" -Color Cyan
+    Write-Host "  Investigation : $($Config.BECInvestigation.Investigation.InvestigationID)" -ForegroundColor Yellow
+    Write-Host "  Script        : $ScriptName v$ScriptVersion" -ForegroundColor Yellow
+    Write-Host ""
 
     Write-Log "===== $ScriptName v$ScriptVersion =====" -Severity INFO
     Write-Log "Investigation : $($Config.BECInvestigation.Investigation.InvestigationID)" -Severity INFO
@@ -1660,7 +1881,16 @@ For assistance: Contact Databranch MSP Team Lead
         # ------------------------------------------------------------------
         Write-Log "===== Workspace initialization complete =====" -Severity SUCCESS
         Write-Log "Investigation workspace: $InvestigationPath" -Severity INFO
-        Write-Log "Next step: cd `"$ScriptsPath`" and run .\Invoke-BECDataCollection.ps1" -Severity INFO
+
+        Write-Banner -Title "WORKSPACE CREATED SUCCESSFULLY" -Color Green
+        Write-Host "  Investigation ID : $InvestigationName" -ForegroundColor Yellow
+        Write-Host "  Workspace        : $InvestigationPath" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  Next Steps:" -ForegroundColor Cyan
+        Write-Host "    1. cd `"$ScriptsPath`"" -ForegroundColor White
+        Write-Host "    2. .\Invoke-BECDataCollection.ps1" -ForegroundColor White
+        Write-Host "    3. .\Invoke-BECLogAnalysis.ps1 -SkipMessageTraces" -ForegroundColor White
+        Write-Host ""
 
         Start-Process -FilePath "explorer.exe" -ArgumentList $InvestigationPath
 
