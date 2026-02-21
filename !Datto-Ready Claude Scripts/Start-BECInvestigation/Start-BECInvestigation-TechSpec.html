@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start-BECInvestigation — Technical Specification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:           #0f1e35;
+    --navy-mid:       #1a3154;
+    --navy-light:     #1e4a7a;
+    --accent:         #2e8bff;
+    --accent-dim:     #1a5fbd;
+    --teal:           #00c9b1;
+    --white:          #f4f7fb;
+    --text:           #d0dce8;
+    --text-muted:     #8a9bb5;
+    --text-dim:       #5a6f8a;
+    --border:         #1e3a5a;
+    --border-mid:     #2a4f72;
+    --code-bg:        #0a1624;
+    --row-alt:        #0d1e30;
+    --success-bg:     #0a2418;
+    --success-border: #1a6640;
+    --warn-bg:        #1e1a08;
+    --warn-border:    #7a6010;
+    --note-bg:        #0a1a2e;
+    --note-border:    #1a4a7a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--navy); color: var(--text); font-size: 14px; line-height: 1.7; }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 260px; min-height: 100vh; background: #080f1a; position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+  .main { margin-left: 260px; flex: 1; }
+
+  /* ── Sidebar ── */
+  .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo .company { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: var(--teal); text-transform: uppercase; letter-spacing: 0.15em; font-variant: small-caps; }
+  .sidebar-logo .script-name { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--white); margin-top: 6px; word-break: break-all; }
+  .sidebar-logo .doc-type { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  nav { padding: 16px 0; }
+  .nav-section-label { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; padding: 12px 20px 4px; }
+  .nav-link { display: block; font-size: 13px; color: var(--text-muted); text-decoration: none; padding: 6px 20px; transition: all 0.15s; border-left: 3px solid transparent; }
+  .nav-link:hover { color: var(--white); background: rgba(46,139,255,0.06); }
+  .nav-link.active { color: var(--accent); background: var(--navy-light); border-left-color: var(--accent); }
+  .nav-link.sub { padding-left: 36px; font-size: 12px; }
+
+  /* ── Cover ── */
+  .cover { position: relative; padding: 64px 80px 56px; background: linear-gradient(145deg, #0a1828 0%, #0f2544 40%, #0a1e3a 100%); overflow: hidden; border-bottom: 1px solid var(--border); }
+  .cover::before { content: ''; position: absolute; top: -80px; right: -80px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(46,139,255,0.12) 0%, transparent 70%); pointer-events: none; }
+  .cover::after  { content: ''; position: absolute; bottom: -60px; left: -60px; width: 320px; height: 320px; background: radial-gradient(circle, rgba(0,201,177,0.08) 0%, transparent 70%); pointer-events: none; }
+  .cover-eyebrow { font-size: 11px; font-weight: 600; color: var(--teal); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 16px; }
+  .cover-title { font-size: 42px; font-weight: 700; color: var(--white); line-height: 1.15; margin-bottom: 10px; }
+  .cover-script { font-family: 'IBM Plex Mono', monospace; font-size: 16px; color: var(--accent); margin-bottom: 6px; }
+  .cover-doctype { font-style: italic; font-size: 15px; color: var(--text-muted); margin-bottom: 32px; }
+  .cover-meta { display: flex; flex-wrap: wrap; gap: 28px; }
+  .cover-meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .cover-meta-label { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+  .cover-meta-value { font-size: 13px; color: var(--white); }
+  .cover-meta-value.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+
+  /* ── Content ── */
+  .content { max-width: 900px; padding: 56px 80px 80px; }
+  .section { margin-bottom: 64px; }
+  h1 { font-size: 26px; font-weight: 700; color: var(--white); border-bottom: 2px solid var(--navy-light); padding-bottom: 12px; margin-bottom: 24px; }
+  h1::before { content: '//  '; font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+  h2 { font-size: 18px; font-weight: 600; color: var(--accent); margin: 28px 0 12px; }
+  h3 { font-size: 12px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 8px; }
+  p { color: var(--text); font-size: 14px; line-height: 1.7; margin-bottom: 14px; }
+  strong { color: var(--white); }
+
+  /* ── Code ── */
+  .code-block { background: var(--code-bg); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 16px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--text); overflow-x: auto; margin: 16px 0; white-space: pre; }
+  code.inline { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 3px; padding: 1px 6px; color: var(--accent); }
+  .comment  { color: #4a7a5a; }
+  .keyword  { color: #c084fc; }
+  .string   { color: #86efac; }
+  .var      { color: #fde68a; }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--navy-mid); color: var(--text-muted); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-mid); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: rgba(46,139,255,0.05); }
+  td { padding: 10px 14px; font-size: 13px; vertical-align: top; }
+  td.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); white-space: nowrap; }
+  td.num  { font-family: 'IBM Plex Mono', monospace; font-size: 18px; text-align: center; }
+
+  /* ── Callouts ── */
+  .callout { display: flex; gap: 14px; padding: 16px 18px; border-radius: 6px; margin: 18px 0; border-left: 3px solid; }
+  .callout .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .callout .callout-body { flex: 1; }
+  .callout .callout-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .callout.note  { background: var(--note-bg);    border-color: var(--note-border);    } .callout.note  .callout-label { color: var(--accent); }
+  .callout.tip   { background: var(--success-bg); border-color: var(--success-border); } .callout.tip   .callout-label { color: #22c55e; }
+  .callout.warn  { background: var(--warn-bg);    border-color: var(--warn-border);    } .callout.warn  .callout-label { color: #eab308; }
+
+  /* ── Badges ── */
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; }
+  .badge-blue  { background: rgba(46,139,255,0.15);  color: var(--accent); }
+  .badge-teal  { background: rgba(0,201,177,0.15);   color: var(--teal); }
+  .badge-green { background: rgba(34,197,94,0.15);   color: #22c55e; }
+  .badge-amber { background: rgba(234,179,8,0.15);   color: #eab308; }
+  .badge-red   { background: rgba(239,68,68,0.15);   color: #ef4444; }
+
+  /* ── Styled Lists ── */
+  ul.styled { list-style: none; padding: 0; margin: 12px 0; }
+  ul.styled li { padding: 5px 0 5px 20px; position: relative; color: var(--text); }
+  ul.styled li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-size: 12px; top: 7px; }
+  ol.styled { list-style: none; counter-reset: ol-counter; padding: 0; margin: 12px 0; }
+  ol.styled li { counter-increment: ol-counter; padding: 6px 0 6px 40px; position: relative; color: var(--text); }
+  ol.styled li::before { content: counter(ol-counter); position: absolute; left: 0; top: 4px; width: 26px; height: 26px; background: var(--navy-light); color: var(--accent); border-radius: 50%; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+
+  /* ── Architecture Grid ── */
+  .arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .arch-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+  .arch-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 10px; }
+  .arch-fn { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--white); font-weight: 500; }
+  .arch-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+  .arch-tag.discovery  { background: rgba(0,201,177,0.15);  color: var(--teal); }
+  .arch-tag.collection { background: rgba(46,139,255,0.15); color: var(--accent); }
+  .arch-tag.infra      { background: rgba(138,155,181,0.15); color: var(--text-muted); }
+  .arch-tag.output     { background: rgba(34,197,94,0.15);  color: #22c55e; }
+  .arch-desc { font-size: 13px; color: var(--text-muted); }
+
+  /* ── Flow Diagrams ── */
+  .flow { margin: 16px 0; }
+  .flow-step { display: flex; gap: 16px; margin-bottom: 4px; position: relative; }
+  .flow-step:not(:last-child)::after { content: ''; position: absolute; left: 17px; top: 40px; bottom: -4px; width: 2px; background: var(--border); }
+  .flow-num { width: 36px; height: 36px; background: var(--navy-light); border-radius: 50%; color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid var(--border); }
+  .flow-content { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; flex: 1; margin-bottom: 8px; }
+  .flow-title { font-weight: 600; color: var(--white); font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .flow-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 1px 7px; border-radius: 3px; background: rgba(46,139,255,0.15); color: var(--accent); }
+  .flow-badge.teal { background: rgba(0,201,177,0.15); color: var(--teal); }
+  .flow-badge.amber { background: rgba(234,179,8,0.15); color: #eab308; }
+  .flow-badge.green { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .flow-desc { font-size: 13px; color: var(--text-muted); }
+
+  /* ── Severity Grid ── */
+  .sev-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 16px 0; }
+  .sev-cell { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; }
+  .sev-level { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .sev-stream { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); margin-bottom: 8px; }
+  .sev-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ── Exit Code Pills ── */
+  .exit-codes { display: flex; gap: 14px; flex-wrap: wrap; margin: 16px 0; }
+  .exit-pill { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; min-width: 140px; text-align: center; }
+  .exit-pill .exit-num { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 600; margin-bottom: 4px; }
+  .exit-pill .exit-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 4px; }
+  .exit-pill .exit-desc { font-size: 12px; color: var(--text-muted); }
+  .exit-pill.success .exit-num { color: #22c55e; }
+  .exit-pill.fail    .exit-num { color: #ef4444; }
+
+  /* ── Version History ── */
+  .version-entry { border: 1px solid var(--border); border-radius: 8px; margin: 16px 0; overflow: hidden; }
+  .version-header { display: flex; align-items: center; gap: 20px; background: var(--navy-mid); padding: 14px 18px; }
+  .version-num { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: var(--accent); }
+  .version-meta { font-size: 12px; color: var(--text-muted); }
+  .version-author { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+  .version-body { padding: 14px 18px; }
+  .version-body ul { padding-left: 18px; }
+  .version-body li { font-size: 13px; color: var(--text); margin-bottom: 4px; }
+
+  /* ── Footer ── */
+  .doc-footer { border-top: 1px solid var(--border); padding: 20px 80px; display: flex; justify-content: space-between; align-items: center; color: var(--text-dim); font-size: 12px; }
+  .doc-footer .footer-right { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── Print ── */
+  @media print {
+    body { background: #fff; color: #111; font-size: 12px; }
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ══════════════════════════════════════════════════════════════ SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="company">Databranch</div>
+    <div class="script-name">Start-BECInvestigation.ps1</div>
+    <div class="doc-type">Technical Specification</div>
+  </div>
+  <nav>
+    <div class="nav-section-label">Specification</div>
+    <a href="#purpose"       class="nav-link">1. Purpose and Scope</a>
+    <a href="#architecture"  class="nav-link">2. Script Architecture</a>
+    <a href="#architecture"  class="nav-link sub">Main Script Functions</a>
+    <a href="#architecture"  class="nav-link sub">Generated Script Functions</a>
+    <a href="#parameters"    class="nav-link">3. Parameters</a>
+    <a href="#workflow"      class="nav-link">4. Investigation Workflow</a>
+    <a href="#generation"    class="nav-link">5. Workspace Generation</a>
+    <a href="#generation"    class="nav-link sub">Folder Creation</a>
+    <a href="#generation"    class="nav-link sub">XML Configuration</a>
+    <a href="#generation"    class="nav-link sub">Script Generation</a>
+    <a href="#collection"    class="nav-link">6. Data Collection Logic</a>
+    <a href="#collection"    class="nav-link sub">Audit Log Chunking</a>
+    <a href="#collection"    class="nav-link sub">Message Traces</a>
+    <a href="#logging"       class="nav-link">7. Logging Architecture</a>
+    <a href="#logging"       class="nav-link sub">Dual-Output Pattern</a>
+    <a href="#logging"       class="nav-link sub">Console Helpers</a>
+    <a href="#errors"        class="nav-link">8. Error Handling</a>
+    <a href="#limitations"   class="nav-link">9. Known Limitations</a>
+    <a href="#changelog"     class="nav-link">10. Version History</a>
+  </nav>
+</aside>
+
+<!-- ════════════════════════════════════════════════════════════════ MAIN -->
+<main class="main">
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-eyebrow">Databranch Script Library</div>
+    <div class="cover-title">BEC Investigation Toolkit</div>
+    <div class="cover-script">Start-BECInvestigation.ps1</div>
+    <div class="cover-doctype">Technical Specification</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Version</div>
+        <div class="cover-meta-value mono">3.0.2.0</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Date</div>
+        <div class="cover-meta-value">February 21, 2026</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Author</div>
+        <div class="cover-meta-value">Sam Kirsch</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">PS Minimum</div>
+        <div class="cover-meta-value mono">5.1</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Run Context</div>
+        <div class="cover-meta-value">Interactive / Technician Workstation</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══════════════════════════════════════════════ 1. PURPOSE -->
+    <div class="section" id="purpose">
+      <h1>1. Purpose and Scope</h1>
+      <p>The BEC Investigation Toolkit automates the setup and execution of a Business Email Compromise investigation against a compromised Microsoft 365 mailbox. It addresses a specific workflow problem: BEC incident response requires collecting forensic data from Exchange Online across multiple collection phases — some immediate, some requiring a 30-minute wait for historical data to become available — with all intermediate state needing to persist between sessions.</p>
+      <p>Prior to this toolkit, technicians manually downloaded three separate scripts, passed victim email addresses as parameters to each, and tracked investigation progress informally. Errors from stale parameters or running scripts in the wrong order were common.</p>
+      <p>The solution is a <strong>single-script deployment model</strong>. The technician downloads only <code class="inline">Start-BECInvestigation.ps1</code>. On execution, it generates a self-contained investigation workspace with three pre-configured forensic scripts that read all their configuration from a shared <code class="inline">Investigation.xml</code> file. No parameters are needed when running those scripts. All investigation state is persisted in the XML between phases.</p>
+
+      <h3>Scope</h3>
+      <ul class="styled">
+        <li><strong>In scope:</strong> M365 mailbox forensics via Exchange Online PowerShell. Inbox rules, forwarding settings, permissions, mobile devices, audit logs, and message traces.</li>
+        <li><strong>In scope:</strong> Generated script creation, XML configuration management, investigation folder structure.</li>
+        <li><strong>Out of scope:</strong> Azure AD sign-in log collection (requires separate manual export from Azure Portal for Business Premium tenants).</li>
+        <li><strong>Out of scope:</strong> Automated remediation. The toolkit collects and analyzes — it does not delete rules, reset passwords, or revoke sessions.</li>
+        <li><strong>Out of scope:</strong> DattoRMM deployment. All scripts require interactive Exchange authentication.</li>
+      </ul>
+    </div>
+
+    <!-- ══════════════════════════════════════════ 2. ARCHITECTURE -->
+    <div class="section" id="architecture">
+      <h1>2. Script Architecture</h1>
+      <p>The toolkit follows the Databranch Script Library structural pattern: <code class="inline">#Requires -Version 5.1</code>, full comment-based help with <code class="inline">.CHANGELOG</code>, a master function matching the filename, nested helper functions, and a splatted entry point at the bottom of the file. All logic lives inside the master function scope.</p>
+
+      <h2>Start-BECInvestigation.ps1 — Main Script Functions</h2>
+      <div class="arch-grid">
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Start-BECInvestigation</div>
+            <div class="arch-tag infra">Master</div>
+          </div>
+          <div class="arch-desc">Master function containing all logic. Called by the splatted entry point at the bottom of the file with <code class="inline">@ScriptParams</code>.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Write-Log</div>
+            <div class="arch-tag infra">Infra</div>
+          </div>
+          <div class="arch-desc">Two-channel output: colorized <code class="inline">Write-Host</code> to console + structured <code class="inline">[timestamp][severity]</code> entry appended to <code class="inline">$LogFile</code>. Five severity levels.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Write-Banner</div>
+            <div class="arch-tag infra">Infra</div>
+          </div>
+          <div class="arch-desc">Console-only 40-char <code class="inline">========</code> section header. Not written to log file. Color-parameterized.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Write-Section</div>
+            <div class="arch-tag infra">Infra</div>
+          </div>
+          <div class="arch-desc">Console-only lightweight <code class="inline">--- Title ---</code> divider for sub-steps. Not written to log file.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Initialize-Logging</div>
+            <div class="arch-tag infra">Infra</div>
+          </div>
+          <div class="arch-desc">Creates <code class="inline">$LogFolder</code> if absent. Rotates log files: retrieves existing <code class="inline">*.log</code> by <code class="inline">LastWriteTime</code> descending, removes all beyond <code class="inline">$MaxLogFiles</code> (10).</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Add-XmlElement</div>
+            <div class="arch-tag output">Output</div>
+          </div>
+          <div class="arch-desc">Recursive XML builder. Accepts <code class="inline">[System.Collections.IDictionary]</code> — handles both <code class="inline">[hashtable]</code> and <code class="inline">[ordered]@{}</code> (OrderedDictionary). Nested dictionaries become nested XML elements.</div>
+        </div>
+      </div>
+
+      <h2>Generated Scripts — Shared Function Pattern</h2>
+      <p>Each of the three generated scripts follows the same internal structure. Functions are nested within the master function scope.</p>
+      <div class="arch-grid">
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Invoke-BEC*</div>
+            <div class="arch-tag infra">Master</div>
+          </div>
+          <div class="arch-desc">Master function per generated script. Name matches filename: <code class="inline">Invoke-BECDataCollection</code>, <code class="inline">Invoke-BECLogAnalysis</code>, <code class="inline">Invoke-BECMessageTraceRetrieval</code>.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Write-Log</div>
+            <div class="arch-tag infra">Infra</div>
+          </div>
+          <div class="arch-desc">Local Write-Log in each generated script. Same colorized Write-Host implementation as main script. Output captured by <code class="inline">Start-Transcript</code>.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Write-Banner / Write-Section</div>
+            <div class="arch-tag infra">Infra</div>
+          </div>
+          <div class="arch-desc">Same console-only helpers as main script, defined locally in each generated script's master function scope.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Get-OutputFileAction</div>
+            <div class="arch-tag collection">Collection</div>
+          </div>
+          <div class="arch-desc">Pre-flight conflict check. Returns <code class="inline">@{Action; Path}</code>. Prompts for Overwrite / Duplicate / Skip when the target file already exists. Duplicate versioning increments <code class="inline">_v2</code>, <code class="inline">_v3</code>…</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Export-DataWithLogging</div>
+            <div class="arch-tag output">Output</div>
+          </div>
+          <div class="arch-desc">Wraps <code class="inline">Export-Csv</code> with null check, count logging, and error catch. Returns <code class="inline">$true</code> on success, <code class="inline">$false</code> on failure or empty result.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">Get-AllVersionedFiles</div>
+            <div class="arch-tag discovery">Discovery</div>
+          </div>
+          <div class="arch-desc">In <code class="inline">Invoke-BECLogAnalysis</code>. Returns all CSV files matching a pattern — base file first, then versioned files (<code class="inline">_v2</code>, <code class="inline">_v3</code>…) in alphabetical order. Ensures all collection runs are analyzed.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <div class="arch-fn">New-Finding</div>
+            <div class="arch-tag output">Output</div>
+          </div>
+          <div class="arch-desc">In <code class="inline">Invoke-BECLogAnalysis</code>. Constructs a <code class="inline">PSCustomObject</code> with Severity, Category, Finding, Evidence, Recommendation. Also logs the finding immediately via <code class="inline">Write-Log</code>.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ 3. PARAMETERS -->
+    <div class="section" id="parameters">
+      <h1>3. Parameters</h1>
+      <h2>Start-BECInvestigation.ps1</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Parameter</th><th>Type</th><th>Mandatory</th><th>Default</th><th>Validation</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">VictimEmail</td><td>String</td><td>Yes</td><td>—</td><td><code class="inline">ValidatePattern</code> — must match <code class="inline">^[^@]+@[^@]+\.[^@]+$</code></td><td>Full UPN of the compromised user. Pattern validation rejects obviously malformed addresses at the parameter binding stage.</td></tr>
+            <tr><td class="mono">WorkingDirectory</td><td>String</td><td>No</td><td class="mono">C:\Databranch_BEC</td><td>None</td><td>Root directory for the investigation workspace. Created if absent via <code class="inline">New-Item -Force</code>.</td></tr>
+            <tr><td class="mono">IncidentTicket</td><td>String</td><td>No</td><td>Empty string</td><td>None</td><td>Stored in <code class="inline">Investigation.xml</code> and the per-investigation README. Purely informational.</td></tr>
+            <tr><td class="mono">Technician</td><td>String</td><td>No</td><td class="mono">$env:USERNAME</td><td>None</td><td>Stored in <code class="inline">Investigation.xml</code>. Defaults to the Windows session username.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Invoke-BECDataCollection.ps1</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Parameter</th><th>Type</th><th>Mandatory</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">SkipHistoricalTraces</td><td>Switch</td><td>No</td><td>Suppresses submission of 30-day <code class="inline">Start-HistoricalSearch</code> jobs. Use on re-runs when jobs are already queued. All other collection types still execute.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Invoke-BECLogAnalysis.ps1</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Parameter</th><th>Type</th><th>Mandatory</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">SkipMessageTraces</td><td>Switch</td><td>No</td><td>Skips analysis of <code class="inline">QuickTrace-*.csv</code> and <code class="inline">MessageTrace-*.csv</code> files. All mailbox-based analysis (rules, forwarding, permissions) still runs. Use for immediate triage before historical traces complete.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-body">
+          <div class="callout-label">DattoRMM Parameters</div>
+          <p>No DattoRMM environment variable pattern is implemented. These scripts require interactive authentication and are not designed for RMM deployment. The <code class="inline">Investigation.xml</code> configuration file fulfills the role that environment variables would serve in an RMM context — all inter-script parameter passing goes through the XML.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════ 4. WORKFLOW -->
+    <div class="section" id="workflow">
+      <h1>4. Investigation Workflow</h1>
+      <p>The full investigation spans five sequential phases. Steps 2–5 are executed from the generated <code class="inline">Scripts\</code> subfolder. <code class="inline">Investigation.xml</code> is updated after each phase to track completion state.</p>
+
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-num">1</div>
+          <div class="flow-content">
+            <div class="flow-title">Initialize Workspace <span class="flow-badge">Start-BECInvestigation.ps1</span></div>
+            <div class="flow-desc">Creates folder structure, generates <code class="inline">Investigation.xml</code>, writes three generated scripts, creates <code class="inline">Investigation-README.txt</code>. No Exchange connection. Completes in &lt;5 seconds.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">2</div>
+          <div class="flow-content">
+            <div class="flow-title">Collect Forensic Data <span class="flow-badge">Invoke-BECDataCollection.ps1</span></div>
+            <div class="flow-desc">Connects to Exchange Online interactively. Collects all data types in sequence. Submits async 30-day historical trace jobs. Updates <code class="inline">DataCollection.Completed</code> and <code class="inline">MessageTraces.SentTraceJobId</code> / <code class="inline">ReceivedTraceJobId</code> in XML. 2–5 min active time.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">3</div>
+          <div class="flow-content">
+            <div class="flow-title">Immediate Triage Analysis <span class="flow-badge teal">Invoke-BECLogAnalysis.ps1 -SkipMessageTraces</span></div>
+            <div class="flow-desc">Analyzes rules, forwarding, permissions, audit data. Produces <code class="inline">ANALYSIS-REPORT.txt</code>. Updates <code class="inline">Analysis.ImmediateAnalysisCompleted</code> and severity counts in XML. 1–2 min.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">4</div>
+          <div class="flow-content">
+            <div class="flow-title">Retrieve Historical Traces <span class="flow-badge amber">~30 min wait</span></div>
+            <div class="flow-desc">Technician waits for Exchange to complete background trace jobs. <code class="inline">Invoke-BECMessageTraceRetrieval.ps1</code> polls job status via <code class="inline">Get-HistoricalSearch</code> and downloads completed traces. Idempotent — safe to re-run. Sets <code class="inline">MessageTraces.TracesCompleted=true</code> in XML when both jobs are downloaded.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">5</div>
+          <div class="flow-content">
+            <div class="flow-title">Full Analysis <span class="flow-badge green">Invoke-BECLogAnalysis.ps1</span></div>
+            <div class="flow-desc">Re-runs analysis including 30-day message trace data. Volume spike detection, external send ratio, breach timeline. Updates <code class="inline">Analysis.CompleteAnalysisCompleted</code> in XML. Overwrites <code class="inline">ANALYSIS-REPORT.txt</code> with complete findings.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ 5. GENERATION -->
+    <div class="section" id="generation">
+      <h1>5. Workspace Generation</h1>
+
+      <h2>Folder Creation</h2>
+      <p>Subfolders are created sequentially using <code class="inline">New-Item -ItemType Directory -Force</code>. The <code class="inline">-Force</code> flag makes the call idempotent — if the directory already exists, no error is thrown. The investigation root path is never re-created for an existing investigation name since the timestamp component makes it unique.</p>
+
+      <h2>XML Configuration — Add-XmlElement and IDictionary</h2>
+      <p>Configuration data is defined as a nested <code class="inline">[ordered]@{}</code> hashtable and converted to XML via the recursive <code class="inline">Add-XmlElement</code> helper. A critical implementation detail: <code class="inline">[ordered]@{}</code> produces a <code class="inline">System.Collections.Specialized.OrderedDictionary</code>, not a <code class="inline">[hashtable]</code>. Using <code class="inline">-is [hashtable]</code> as the type check returns <code class="inline">$false</code> for ordered dictionaries, causing nested sections to collapse to their <code class="inline">.ToString()</code> value rather than being recursed as child elements.</p>
+      <p>The fix is to use the shared interface: both types implement <code class="inline">System.Collections.IDictionary</code>, so the type check and the function parameter type are both declared as <code class="inline">[System.Collections.IDictionary]</code>.</p>
+      <div class="code-block"><span class="keyword">function</span> <span class="var">Add-XmlElement</span> {
+    <span class="keyword">param</span> (
+        [System.Xml.XmlElement]<span class="var">$Parent</span>,
+        [System.Collections.IDictionary]<span class="var">$Data</span>   <span class="comment"># accepts both [hashtable] and [ordered]</span>
+    )
+    <span class="keyword">foreach</span> (<span class="var">$Key</span> <span class="keyword">in</span> <span class="var">$Data</span>.Keys) {
+        <span class="var">$Element</span> = <span class="var">$XmlDoc</span>.CreateElement(<span class="var">$Key</span>)
+        <span class="keyword">if</span> (<span class="var">$Data</span>[<span class="var">$Key</span>] -is [System.Collections.IDictionary]) {
+            Add-XmlElement -Parent <span class="var">$Element</span> -Data <span class="var">$Data</span>[<span class="var">$Key</span>]
+        } <span class="keyword">else</span> {
+            <span class="var">$Element</span>.InnerText = [string]<span class="var">$Data</span>[<span class="var">$Key</span>]
+        }
+        <span class="var">$Parent</span>.AppendChild(<span class="var">$Element</span>) | Out-Null
+    }
+}</div>
+      <p>The XML writer uses <code class="inline">System.Xml.XmlWriterSettings</code> with <code class="inline">Indent = $true</code> and UTF-8 encoding for human-readable output. The writer is explicitly closed after save to release the file handle.</p>
+
+      <h2>Script Generation — Here-Strings and Token Substitution</h2>
+      <p>Each generated script is embedded in <code class="inline">Start-BECInvestigation.ps1</code> as a PowerShell here-string (<code class="inline">@' ... '@</code>). Single-quoted here-strings prevent PowerShell from expanding variables at definition time, which is critical — the here-strings contain PowerShell variables (like <code class="inline">$VictimEmail</code>) that should be literal text in the output scripts, not resolved at generation time.</p>
+      <p>Investigation-specific values (victim email, investigation ID, created date, script version) are injected via post-processing string replacement using <code class="inline">[regex]::Escape()</code> to safely handle curly-brace token syntax:</p>
+      <div class="code-block"><span class="var">$Substitutions</span> = @{
+    <span class="string">'{INVESTIGATION_ID}'</span> = <span class="var">$InvestigationName</span>
+    <span class="string">'{VICTIM_EMAIL}'</span>     = <span class="var">$VictimEmail</span>
+    <span class="string">'{CREATED_DATE}'</span>     = <span class="var">$CreatedDate</span>
+    <span class="string">'{SCRIPT_VERSION}'</span>   = <span class="var">$ScriptVersion</span>
+}
+
+<span class="keyword">foreach</span> (<span class="var">$Token</span> <span class="keyword">in</span> <span class="var">$Substitutions</span>.Keys) {
+    <span class="var">$Content</span> = <span class="var">$Content</span> -replace [regex]::Escape(<span class="var">$Token</span>), <span class="var">$Substitutions</span>[<span class="var">$Token</span>]
+}</div>
+      <p>The resulting scripts are written using <code class="inline">Out-File -Encoding UTF8</code>. All three scripts are processed in a single loop over a <code class="inline">$ScriptDefinitions</code> array of <code class="inline">@{Content; FileName}</code> hashtables, keeping the substitution logic DRY.</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════ 6. COLLECTION -->
+    <div class="section" id="collection">
+      <h1>6. Data Collection Logic</h1>
+
+      <h2>XML Null-Guard Pattern</h2>
+      <p>All three generated scripts validate critical XML fields immediately after reading <code class="inline">Investigation.xml</code>, before starting any transcript or Exchange connection. If any required field is null or empty, the script exits with a clear message directing the technician to regenerate the workspace. This prevents cascading null-reference errors from propagating into Exchange cmdlets (where a null <code class="inline">-Identity</code> argument causes the cmdlet to target all objects, not fail gracefully).</p>
+      <div class="code-block"><span class="var">$XmlValidationErrors</span> = @()
+<span class="keyword">if</span> (-not <span class="var">$VictimEmail</span>)  { <span class="var">$XmlValidationErrors</span> += <span class="string">"Victim.Email"</span> }
+<span class="keyword">if</span> (-not <span class="var">$RawDataPath</span>)  { <span class="var">$XmlValidationErrors</span> += <span class="string">"Paths.RawDataPath"</span> }
+<span class="keyword">if</span> (<span class="var">$XmlValidationErrors</span>.Count -gt 0) {
+    Write-Host <span class="string">"[ERROR] Investigation.xml is missing: $($XmlValidationErrors -join ', ')"</span> -ForegroundColor Red
+    <span class="keyword">exit</span> 1
+}</div>
+
+      <h2>Unified Audit Log — Chunked Collection</h2>
+      <p><code class="inline">Search-UnifiedAuditLog</code> is unreliable when querying date ranges longer than approximately 7 days. Microsoft's servers frequently return a generic "server side error" after a multi-minute timeout. The toolkit avoids this by splitting the full search window into 7-day chunks and collecting each independently.</p>
+      <div class="code-block"><span class="var">$ChunkDays</span>   = 7
+<span class="var">$ChunkStart</span>  = <span class="var">$StartDate</span>
+<span class="var">$TotalChunks</span> = [math]::Ceiling(<span class="var">$DaysToSearch</span> / <span class="var">$ChunkDays</span>)
+
+<span class="keyword">while</span> (<span class="var">$ChunkStart</span> -lt <span class="var">$EndDate</span>) {
+    <span class="var">$ChunkEnd</span> = <span class="var">$ChunkStart</span>.AddDays(<span class="var">$ChunkDays</span>)
+    <span class="keyword">if</span> (<span class="var">$ChunkEnd</span> -gt <span class="var">$EndDate</span>) { <span class="var">$ChunkEnd</span> = <span class="var">$EndDate</span> }
+    <span class="comment"># ... up to 3 retry attempts per chunk with 10-second backoff ...</span>
+    <span class="var">$AllAuditLogs</span> += <span class="var">$ChunkLogs</span>
+    <span class="var">$ChunkStart</span> = <span class="var">$ChunkEnd</span>
+}</div>
+      <p>Each chunk has up to 3 retry attempts with a 10-second sleep between attempts. Chunk failures are logged at <code class="inline">ERROR</code> severity but do not abort collection — subsequent chunks continue. All accumulated results are written to a single CSV after the loop completes.</p>
+
+      <h2>Message Trace API Detection</h2>
+      <p>The toolkit detects whether <code class="inline">Get-MessageTraceV2</code> (Exchange Online REST API, released 2024) is available and prefers it. If not available, it falls back to the legacy <code class="inline">Get-MessageTrace</code> with a <code class="inline">WARN</code> log entry. The detection uses <code class="inline">Get-Command -ErrorAction Stop</code> inside a try/catch:</p>
+      <div class="code-block"><span class="keyword">try</span> {
+    <span class="var">$null</span> = Get-Command -Name Get-MessageTraceV2 -ErrorAction Stop
+    <span class="var">$UseV2</span> = <span class="var">$true</span>
+} <span class="keyword">catch</span> {
+    <span class="var">$UseV2</span> = <span class="var">$false</span>   <span class="comment"># fall back to Get-MessageTrace V1</span>
+}</div>
+
+      <h2>Historical Trace NotifyAddress Resolution</h2>
+      <p><code class="inline">Start-HistoricalSearch</code> accepts a <code class="inline">-NotifyAddress</code> parameter for email notification when the async job completes. To resolve the currently authenticated technician's UPN without relying on a hardcoded value, the toolkit queries the active Exchange connection:</p>
+      <div class="code-block"><span class="var">$ConnectionInfo</span> = Get-ConnectionInformation |
+    Where-Object { <span class="var">$_</span>.State -eq <span class="string">'Connected'</span> } |
+    Sort-Object -Property ConnectedAt -Descending |
+    Select-Object -First 1
+<span class="var">$NotifyAddress</span> = <span class="var">$ConnectionInfo</span>.UserPrincipalName</div>
+      <p>Sorting by <code class="inline">ConnectedAt</code> descending and taking the first result ensures the most recently established connection is used, avoiding stale or background session entries (e.g. monitoring mailboxes) that appear in the connection pool. <code class="inline">-NotifyAddress</code> is passed via splatting so it is omitted entirely if the UPN cannot be resolved, rather than passing a null value that would cause a parameter binding error.</p>
+
+      <h2>Analysis Detection Logic</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Data Source</th><th>Indicator</th><th>Severity</th><th>Detection Field</th></tr></thead>
+          <tbody>
+            <tr><td>Inbox Rules</td><td>Forwarding or redirect rule to external address</td><td><span class="badge badge-red">CRITICAL</span></td><td><code class="inline">ForwardTo</code> or <code class="inline">RedirectTo</code> not empty</td></tr>
+            <tr><td>Inbox Rules</td><td>Rule automatically deleting messages</td><td><span class="badge badge-amber">HIGH</span></td><td><code class="inline">DeleteMessage -eq "True"</code></td></tr>
+            <tr><td>Inbox Rules</td><td>Rule moving to non-standard folder</td><td><span class="badge badge-amber">MEDIUM</span></td><td><code class="inline">MoveToFolder</code> not Inbox/Junk/Archive</td></tr>
+            <tr><td>Inbox Rules</td><td>Rule marking messages as read</td><td><span class="badge badge-teal">LOW</span></td><td><code class="inline">MarkAsRead -eq "True"</code></td></tr>
+            <tr><td>Mail Forwarding</td><td>SMTP forwarding enabled</td><td><span class="badge badge-red">CRITICAL</span></td><td><code class="inline">ForwardingEnabled -eq $true</code></td></tr>
+            <tr><td>Mailbox Permissions</td><td>Delegated access detected</td><td><span class="badge badge-amber">MEDIUM</span></td><td>Non-SELF, non-inherited permissions exist</td></tr>
+            <tr><td>Message Traces</td><td>Daily volume spike</td><td><span class="badge badge-amber">HIGH</span></td><td>Any single day &gt;50 outbound messages</td></tr>
+            <tr><td>Message Traces</td><td>High external send ratio</td><td><span class="badge badge-amber">MEDIUM</span></td><td>&gt;70% of sent messages to external domains</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Findings are sorted by severity using a lookup hashtable (<code class="inline">@{CRITICAL=1; HIGH=2; MEDIUM=3; LOW=4}</code>) before being written to the report. The analysis report is always overwritten — it is not versioned, since it reflects the current state of the <code class="inline">RawData\</code> folder at the time of the run.</p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ 7. LOGGING -->
+    <div class="section" id="logging">
+      <h1>7. Logging Architecture</h1>
+
+      <h2>Dual-Output Pattern</h2>
+      <p>The toolkit uses a two-channel output model. Every <code class="inline">Write-Log</code> call produces output in two places simultaneously, with different characteristics in each:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Channel</th><th>Mechanism</th><th>PowerShell Stream</th><th>Captured By</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>Console</td><td><code class="inline">Write-Host</code></td><td>Stream 6 (Information host)</td><td>Start-Transcript, terminal</td><td>Human-readable colorized output during interactive sessions. Automatically suppressed in DattoRMM and other stdout-capturing automation without conditional logic.</td></tr>
+            <tr><td>Structured Log</td><td><code class="inline">Add-Content</code> to <code class="inline">$LogFile</code></td><td>N/A (file I/O)</td><td>Log file on disk</td><td>Persistent structured record. Used by <code class="inline">Start-BECInvestigation.ps1</code> only. Generated scripts use Start-Transcript instead.</td></tr>
+            <tr><td>Transcript</td><td><code class="inline">Start-Transcript</code></td><td>Captures Write-Host + Write-Output + Write-Warning</td><td>.log file in investigation Logs folder</td><td>Full session capture for generated scripts. Replaces the file-based log for per-investigation script sessions.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout note">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-body">
+          <div class="callout-label">Why Write-Host for Console</div>
+          <p><code class="inline">Write-Host</code> writes to PowerShell's host information stream (stream 6), which is separate from the success output stream (stream 1) that DattoRMM captures. This means colorized console output reaches technician terminals during interactive runs, but is naturally absent from DattoRMM job logs — no <code class="inline">if ($env:CS_HOSTNAME)</code> guards or conditional suppression logic is needed.</p>
+        </div>
+      </div>
+
+      <h2>Severity Levels</h2>
+      <div class="sev-grid">
+        <div class="sev-cell">
+          <div class="sev-level" style="color:#60a5fa;">INFO</div>
+          <div class="sev-stream">Write-Host</div>
+          <div class="sev-desc">General progress. Connecting, starting phases, reading config.</div>
+        </div>
+        <div class="sev-cell">
+          <div class="sev-level" style="color:#22c55e;">SUCCESS</div>
+          <div class="sev-stream">Write-Host</div>
+          <div class="sev-desc">Completed operation. File written, user verified, connected.</div>
+        </div>
+        <div class="sev-cell">
+          <div class="sev-level" style="color:#eab308;">WARN</div>
+          <div class="sev-stream">Write-Host</div>
+          <div class="sev-desc">Non-fatal. File conflict, suspicious finding, module missing.</div>
+        </div>
+        <div class="sev-cell">
+          <div class="sev-level" style="color:#ef4444;">ERROR</div>
+          <div class="sev-stream">Write-Host</div>
+          <div class="sev-desc">Failed operation. Collection error, connection failure.</div>
+        </div>
+        <div class="sev-cell">
+          <div class="sev-level" style="color:#a78bfa;">DEBUG</div>
+          <div class="sev-stream">Write-Host</div>
+          <div class="sev-desc">Low-level detail. Chunk progress, job IDs, version numbers.</div>
+        </div>
+      </div>
+
+      <h2>Console Helper Functions</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Function</th><th>Output</th><th>Written to Log?</th><th>When Used</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">Write-Banner</td><td>40-char <code class="inline">========</code> block with title and blank lines above/below</td><td>No</td><td>Script start, script completion. Color parameterized — green for success banners, red for critical findings.</td></tr>
+            <tr><td class="mono">Write-Section</td><td><code class="inline">--- Title ---</code> with leading blank line</td><td>No</td><td>Between major collection phases or analysis sections within a script run.</td></tr>
+            <tr><td class="mono">Write-Log</td><td>Colorized <code class="inline">[timestamp][severity] message</code> via Write-Host</td><td>Yes (main script) / Via transcript (generated)</td><td>All structured log entries. Every meaningful event.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Log File Locations</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Script</th><th>Log Location</th><th>Rotation</th></tr></thead>
+          <tbody>
+            <tr><td>Start-BECInvestigation.ps1</td><td class="mono">C:\Databranch\ScriptLogs\Start-BECInvestigation\Start-BECInvestigation_yyyy-MM-dd.log</td><td>Last 10 files kept</td></tr>
+            <tr><td>Invoke-BECDataCollection.ps1</td><td class="mono">&lt;InvestigationRoot&gt;\Logs\DataCollection_yyyyMMdd-HHmmss.log</td><td>No rotation — per-investigation</td></tr>
+            <tr><td>Invoke-BECLogAnalysis.ps1</td><td class="mono">&lt;InvestigationRoot&gt;\Logs\Analysis_yyyyMMdd-HHmmss.log</td><td>No rotation — per-investigation</td></tr>
+            <tr><td>Invoke-BECMessageTraceRetrieval.ps1</td><td class="mono">&lt;InvestigationRoot&gt;\Logs\TraceRetrieval_yyyyMMdd-HHmmss.log</td><td>No rotation — per-investigation</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════ 8. ERRORS -->
+    <div class="section" id="errors">
+      <h1>8. Error Handling</h1>
+
+      <h2>Global Error Policy</h2>
+      <p>In <code class="inline">Start-BECInvestigation.ps1</code>, <code class="inline">$ErrorActionPreference = 'Stop'</code> is set inside the master function after logging initialization. All folder creation and XML generation is wrapped in a top-level <code class="inline">try/catch</code> that logs the exception and stack trace before exiting with code 1.</p>
+      <p>In the generated scripts, <code class="inline">$ErrorActionPreference = "Continue"</code> is used deliberately. Exchange Online cmdlets frequently emit non-terminating errors for legitimate conditions (e.g. empty result sets, partial permission issues). Using <code class="inline">Stop</code> in the generated scripts would cause data collection to abort on the first minor error rather than continuing to collect what is available. Each collection phase has its own <code class="inline">try/catch</code> to handle errors in isolation.</p>
+
+      <h2>Exit Code Behavior</h2>
+      <div class="exit-codes">
+        <div class="exit-pill success">
+          <div class="exit-num">0</div>
+          <div class="exit-label">Success</div>
+          <div class="exit-desc">Script completed. For analysis: findings may or may not exist.</div>
+        </div>
+        <div class="exit-pill fail">
+          <div class="exit-num">1</div>
+          <div class="exit-label">Failure</div>
+          <div class="exit-desc">Fatal error: XML invalid/missing, Exchange connection failed, victim not found, folder creation failed.</div>
+        </div>
+      </div>
+
+      <h2>Per-Phase Error Isolation</h2>
+      <p>In <code class="inline">Invoke-BECDataCollection.ps1</code>, each data type (inbox rules, forwarding, permissions, devices, audit logs, traces) is collected inside its own <code class="inline">try/catch</code> block. A failure in one collection type logs an <code class="inline">ERROR</code> entry but does not abort subsequent collection types. The investigation can proceed with whatever data was successfully collected.</p>
+      <p>Exchange connection failure and victim mailbox not found are the only errors that trigger <code class="inline">Disconnect-ExchangeOnline</code> + <code class="inline">Stop-Transcript</code> + <code class="inline">exit 1</code>, since all subsequent operations depend on those two prerequisites.</p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ 9. LIMITATIONS -->
+    <div class="section" id="limitations">
+      <h1>9. Known Limitations</h1>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Limitation</th><th>Impact</th><th>Workaround / Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Unified Audit Log ResultSize cap</td><td>Maximum 5,000 records per chunk window. High-activity mailboxes may truncate.</td><td>Reduce <code class="inline">$ChunkDays</code> to 3–4 for high-volume mailboxes. Future: implement page-through with <code class="inline">-SessionId</code> parameter.</td></tr>
+            <tr><td>Search-UnifiedAuditLog deprecation</td><td>Microsoft has signaled intent to migrate to Purview-native APIs. The cmdlet may be removed in a future update.</td><td>Monitor Microsoft deprecation announcements. Migration to <code class="inline">Search-ComplianceSearchAction</code> or Purview API will be required.</td></tr>
+            <tr><td>Get-MessageTrace V1 deprecation</td><td>Legacy <code class="inline">Get-MessageTrace</code> was targeted for deprecation in late 2025.</td><td>Toolkit detects and prefers V2. If V1 is removed before V2 is available in all tenants, quick trace collection will fail. Monitor EXO deprecation notices.</td></tr>
+            <tr><td>Azure AD sign-in logs not collected</td><td>Sign-in log analysis (unusual geolocation, unfamiliar devices) is not automated.</td><td>Manual export from Azure Portal: Users → [User] → Sign-in logs → Download. Save to <code class="inline">RawData\</code> for manual review. Business Premium license required.</td></tr>
+            <tr><td>Interactive authentication required</td><td>Scripts cannot run unattended (e.g. DattoRMM, scheduled tasks).</td><td>By design. Exchange modern auth requires interactive MFA. A separate non-interactive script using app-only authentication (certificate-based) would be needed for automated scenarios.</td></tr>
+            <tr><td>Historical trace report URL delay</td><td>Even after a trace job reports <code class="inline">Status=Done</code>, the download URL may not be immediately available.</td><td><code class="inline">Invoke-BECMessageTraceRetrieval.ps1</code> logs a WARN and instructs the technician to retry. The URL typically becomes available within a few minutes of the Done state.</td></tr>
+            <tr><td>Generated scripts are workspace-specific</td><td>Generated scripts contain hardcoded investigation ID and victim email. They cannot be reused across investigations.</td><td>By design. Each investigation gets its own workspace and scripts. Run <code class="inline">Start-BECInvestigation.ps1</code> for each new victim.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ 10. CHANGELOG -->
+    <div class="section" id="changelog">
+      <h1>10. Version History</h1>
+
+      <div class="version-entry">
+        <div class="version-header">
+          <div class="version-num">v3.0.2.0</div>
+          <div class="version-meta">February 21, 2026</div>
+          <div class="version-author">Sam Kirsch</div>
+        </div>
+        <div class="version-body">
+          <ul>
+            <li>Two-channel logging in all scripts: colorized <code class="inline">Write-Host</code> to console; structured entries to log file (main) or Start-Transcript (generated)</li>
+            <li>Added <code class="inline">Write-Banner</code> and <code class="inline">Write-Section</code> console helpers to all four scripts</li>
+            <li>Analysis script completion banner color-codes by CRITICAL findings count (red vs green)</li>
+            <li>Unified audit log collection: 7-day chunked windows with 3-attempt retry per chunk; eliminates server-side timeout on large date ranges</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="version-entry">
+        <div class="version-header">
+          <div class="version-num">v3.0.1.0</div>
+          <div class="version-meta">February 20, 2026</div>
+          <div class="version-author">Sam Kirsch</div>
+        </div>
+        <div class="version-body">
+          <ul>
+            <li>Fixed <code class="inline">Add-XmlElement</code>: changed type check from <code class="inline">-is [hashtable]</code> to <code class="inline">-is [System.Collections.IDictionary]</code> — <code class="inline">[ordered]@{}</code> is an <code class="inline">OrderedDictionary</code>, not a hashtable; nested sections were collapsing to string values</li>
+            <li>Added XML null-guard validation in all three generated scripts; scripts exit cleanly with a diagnostic error if required XML fields are missing</li>
+            <li>Fixed <code class="inline">Get-ConnectionInformation</code> UPN resolution: now filters to <code class="inline">State='Connected'</code>, sorts by <code class="inline">ConnectedAt</code> descending, takes first result</li>
+            <li><code class="inline">Start-HistoricalSearch</code> now uses splatting; <code class="inline">-NotifyAddress</code> is omitted entirely when UPN cannot be resolved</li>
+            <li>Moved <code class="inline">Start-Transcript</code> calls to after XML validation in all generated scripts</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="version-entry">
+        <div class="version-header">
+          <div class="version-num">v3.0.0.0</div>
+          <div class="version-meta">February 20, 2026</div>
+          <div class="version-author">Sam Kirsch</div>
+        </div>
+        <div class="version-body">
+          <ul>
+            <li>Renamed from <code class="inline">Start-Investigation.ps1</code> to <code class="inline">Start-BECInvestigation.ps1</code></li>
+            <li>Full Databranch Script Library spec compliance: <code class="inline">#Requires -Version 5.1</code>, complete <code class="inline">.NOTES</code> / <code class="inline">.CHANGELOG</code>, master function <code class="inline">Start-BECInvestigation</code>, splatted entry point</li>
+            <li>Added <code class="inline">Write-Log</code> + <code class="inline">Initialize-Logging</code> per project template</li>
+            <li>Generated scripts renamed to Verb-Noun convention</li>
+            <li>Generated scripts updated with compliant headers, <code class="inline">Write-Log</code>, master function wrappers, splatted entry points</li>
+            <li><code class="inline">Add-XmlElement</code> moved inside master function scope</li>
+            <li>Config hashtables converted to <code class="inline">[ordered]@{}</code> for deterministic XML element ordering</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="version-entry">
+        <div class="version-header">
+          <div class="version-num">v2.3.0.0</div>
+          <div class="version-meta">February 15, 2024</div>
+          <div class="version-author">Sam Kirsch</div>
+        </div>
+        <div class="version-body">
+          <ul>
+            <li>O/D/S file conflict checks run before collection begins, not after</li>
+            <li>Improved mailbox permissions handling — empty result set no longer treated as error</li>
+            <li>Analysis: added <code class="inline">MoveToFolder</code>, <code class="inline">DeleteMessage</code>, <code class="inline">MarkAsRead</code> rule detection</li>
+            <li>Improved severity classification (CRITICAL / HIGH / MEDIUM / LOW)</li>
+            <li>"No findings" report section explains what clean results mean</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="version-entry">
+        <div class="version-header">
+          <div class="version-num">v2.0.0.0</div>
+          <div class="version-meta">February 01, 2024</div>
+          <div class="version-author">Sam Kirsch</div>
+        </div>
+        <div class="version-body">
+          <ul>
+            <li>Redesigned as single-script deployment model</li>
+            <li>XML-based configuration management; all inter-script parameter passing eliminated</li>
+            <li>Three investigation scripts auto-generated per investigation workspace</li>
+            <li>Standardized folder structure (RawData, Reports, Analysis, Scripts, Logs)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="version-entry">
+        <div class="version-header">
+          <div class="version-num">v1.0.0.0</div>
+          <div class="version-meta">January 10, 2024</div>
+          <div class="version-author">Sam Kirsch</div>
+        </div>
+        <div class="version-body">
+          <ul>
+            <li>Initial release — manual multi-script workflow, parameters passed individually to each script</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /content -->
+
+  <div class="doc-footer">
+    <span>Databranch — Confidential</span>
+    <span class="footer-right">Start-BECInvestigation.ps1 | v3.0.2.0 | February 2026</span>
+  </div>
+
+</main>
+</div>
+
+<script>
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
