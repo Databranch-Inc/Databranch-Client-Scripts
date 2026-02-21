@@ -64,12 +64,12 @@
 
 .NOTES
     File Name      : Start-EventLogCollection.ps1
-    Version        : 1.0.1.0
+    Version        : 1.1.0.0
     Author         : Josh Britton / Sam Kirsch
     Contributors   :
     Company        : Databranch
     Created        : 2026-02-20
-    Last Modified  : 2026-02-20
+    Last Modified  : 2026-02-21
     Modified By    : Sam Kirsch
 
     Requires       : PowerShell 5.1+
@@ -84,7 +84,29 @@
         1  - Partial success (one or more targets failed, but at least one succeeded)
         2  - Complete failure (no targets collected, or fatal error during execution)
 
+    Output Design:
+        Write-Log     - Structured [timestamp][SEVERITY] output to log file AND
+                        DattoRMM stdout. Always verbose. No color.
+        Write-Console - Human-friendly colored console output for manual/interactive
+                        runs. Uses Write-Host (display stream only). Suppressed in
+                        DattoRMM agent context automatically.
+
 .CHANGELOG
+    v1.1.0.0 - 2026-02-21 - Sam Kirsch
+        - Added Write-Console function for human-friendly colored terminal output
+        - Added Write-Banner, Write-Section, Write-Separator console helpers
+        - Implemented dual-output pattern throughout: structured log/stdout via
+          Write-Log, presentation layer via Write-Console (display stream only)
+        - Added rich console output to all phases: startup, discovery, pre-checks,
+          collection, and summary
+        - Console shows per-server reachability and collection results with
+          color-coded SUCCESS/WARN/ERROR severity on each line
+        - Run summary console block shows colored tallies  -  green for success,
+          amber for partial, red for failures
+        - Skipped servers and error details echoed to console in colored output
+        - Parallel result log lines now routed through correct severity on flush
+        - Added Output Design notes to .NOTES block
+
     v1.0.1.0 - 2026-02-20 - Sam Kirsch
         - Fixed pipeline pollution in Get-ServersFromAD, Get-LocalSubnets, Get-ServersFromPingSweep
           Write-Log calls inside return-value functions were leaking log strings into $TargetList
@@ -159,7 +181,7 @@ function Start-EventLogCollection {
     # CONFIGURATION
     # ==========================================================================
     $ScriptName     = "Start-EventLogCollection"
-    $ScriptVersion  = "1.0.1.0"
+    $ScriptVersion  = "1.1.0.0"
     $RunTimestamp   = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
     $RunDate        = Get-Date -Format "yyyy-MM-dd"
     $LogRoot        = "C:\Databranch\ScriptLogs"
@@ -172,7 +194,13 @@ function Start-EventLogCollection {
     $MaxParallel    = 10                        # Max concurrent runspace threads (PS 5.1)
 
     # ==========================================================================
-    # LOGGING
+    # WRITE-LOG  (Structured Output Layer)
+    # Writes timestamped, severity-tagged entries to BOTH the log file and
+    # DattoRMM stdout. Always verbose  -  all levels always written.
+    #
+    # Uses Write-Output / Write-Warning / Write-Error (NOT Write-Host) so
+    # output is captured by DattoRMM job stdout, pipeline, and transcripts.
+    # Do NOT use Write-Host here  -  it would bypass DattoRMM capture.
     # ==========================================================================
     function Write-Log {
         param (
@@ -188,6 +216,7 @@ function Start-EventLogCollection {
         $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         $LogEntry  = "[$Timestamp] [$Severity] $Message"
 
+        # Write to stdout  -  captured by DattoRMM, pipeline, and transcript
         switch ($Severity) {
             "INFO"    { Write-Output  $LogEntry }
             "WARN"    { Write-Warning $LogEntry }
@@ -196,6 +225,7 @@ function Start-EventLogCollection {
             "DEBUG"   { Write-Output  $LogEntry }
         }
 
+        # Write to log file  -  always
         try {
             Add-Content -Path $LogFile -Value $LogEntry -Encoding UTF8
         }
@@ -204,21 +234,147 @@ function Start-EventLogCollection {
         }
     }
 
+    # ==========================================================================
+    # WRITE-CONSOLE  (Presentation Layer)
+    # Human-friendly colored output for interactive/manual terminal runs.
+    # Uses Write-Host  -  writes to the PowerShell display stream ONLY.
+    # NOT captured by DattoRMM stdout, pipeline redirection, or transcripts.
+    # Safe to call alongside Write-Log  -  the two output streams are independent.
+    #
+    # Severity color scheme:
+    #   INFO    = Cyan       WARN    = Yellow
+    #   SUCCESS = Green      ERROR   = Red
+    #   DEBUG   = Magenta    PLAIN   = Gray (no severity prefix)
+    #
+    # Use -Indent to create visual hierarchy for sub-items under a parent step.
+    # Each indent level adds 2 spaces of leading whitespace.
+    # ==========================================================================
+    function Write-Console {
+        param (
+            [Parameter(Mandatory = $false)]
+            [AllowEmptyString()]
+            [string]$Message = "",
+
+            [Parameter(Mandatory = $false)]
+            [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS", "DEBUG", "PLAIN")]
+            [string]$Severity = "PLAIN",
+
+            [Parameter(Mandatory = $false)]
+            [int]$Indent = 0
+        )
+
+        $Prefix = "  " * $Indent
+
+        $SeverityColors = @{
+            INFO    = "Cyan"
+            SUCCESS = "Green"
+            WARN    = "Yellow"
+            ERROR   = "Red"
+            DEBUG   = "Magenta"
+            PLAIN   = "Gray"
+        }
+        $Color = $SeverityColors[$Severity]
+
+        if ($Severity -eq "PLAIN") {
+            Write-Host "$Prefix$Message" -ForegroundColor $Color
+        }
+        else {
+            Write-Host "$Prefix" -NoNewline
+            Write-Host "[$Severity]" -ForegroundColor $Color -NoNewline
+            Write-Host " $Message"   -ForegroundColor White
+        }
+    }
+
+    # ==========================================================================
+    # CONSOLE PRESENTATION HELPERS
+    # Write-Banner, Write-Section, Write-Separator  -  for structured, readable
+    # console output during interactive runs. All use Write-Host (display stream
+    # only). Not captured by DattoRMM, pipeline, or transcripts.
+    # ==========================================================================
+
+    # Write-Banner  -  full-width start/end banner. Use at script open/close.
+    #
+    # Output:
+    #   ============================================================
+    #     SCRIPT NAME v1.0.0.0
+    #   ============================================================
+    function Write-Banner {
+        param (
+            [Parameter(Mandatory = $true)]
+            [string]$Title,
+
+            [Parameter(Mandatory = $false)]
+            [string]$Color = "Cyan"
+        )
+
+        $Line = "=" * 60
+        Write-Host ""
+        Write-Host $Line       -ForegroundColor $Color
+        Write-Host "  $Title"  -ForegroundColor White
+        Write-Host $Line       -ForegroundColor $Color
+        Write-Host ""
+    }
+
+    # Write-Section  -  lightweight section header within a script run.
+    #
+    # Output:
+    #   ---- Section Title -----------------------------------------
+    function Write-Section {
+        param (
+            [Parameter(Mandatory = $true)]
+            [string]$Title,
+
+            [Parameter(Mandatory = $false)]
+            [string]$Color = "Cyan"
+        )
+
+        $TitleStr = "---- $Title "
+        $Padding  = "-" * [Math]::Max(0, (60 - $TitleStr.Length))
+        Write-Host ""
+        Write-Host "$TitleStr$Padding" -ForegroundColor $Color
+    }
+
+    # Write-Separator  -  thin divider line between logical groups.
+    #
+    # Output:
+    #   ------------------------------------------------------------
+    function Write-Separator {
+        param (
+            [Parameter(Mandatory = $false)]
+            [string]$Color = "DarkGray"
+        )
+
+        Write-Host ("-" * 60) -ForegroundColor $Color
+    }
+
+    # ==========================================================================
+    # LOG SETUP
+    # Creates log folder if needed and rotates old log files.
+    # ==========================================================================
     function Initialize-Logging {
         if (-not (Test-Path $LogFolder)) {
-            try { New-Item -ItemType Directory -Path $LogFolder -Force | Out-Null }
-            catch { Write-Warning "Could not create log folder '$LogFolder': $_" }
+            try {
+                New-Item -ItemType Directory -Path $LogFolder -Force | Out-Null
+            }
+            catch {
+                Write-Warning "Could not create log folder '$LogFolder': $_"
+            }
         }
+
+        # Rotate  -  keep only the $MaxLogFiles most recent log files
         try {
             $ExistingLogs = Get-ChildItem -Path $LogFolder -Filter "$($ScriptName)_*.log" |
                             Sort-Object LastWriteTime -Descending
+
             if ($ExistingLogs.Count -ge $MaxLogFiles) {
                 $ExistingLogs | Select-Object -Skip ($MaxLogFiles - 1) | ForEach-Object {
-                    Remove-Item $_.FullName -Force
+                    Remove-Item -Path $_.FullName -Force
                 }
             }
         }
-        catch { Write-Warning "Log rotation failed: $_" }
+        catch {
+            Write-Warning "Log rotation failed: $_"
+        }
     }
 
     # ==========================================================================
@@ -228,10 +384,12 @@ function Start-EventLogCollection {
         if (-not (Test-Path $OutputFolder)) {
             try {
                 New-Item -ItemType Directory -Path $OutputFolder -Force | Out-Null
-                Write-Log "Output folder created: $OutputFolder" -Severity INFO
+                Write-Log     "Output folder created: $OutputFolder" -Severity DEBUG
+                Write-Console "Output folder: $OutputFolder"         -Severity DEBUG -Indent 1
             }
             catch {
-                Write-Log "Failed to create output folder '$OutputFolder': $_" -Severity ERROR
+                Write-Log     "Failed to create output folder '$OutputFolder': $_" -Severity ERROR
+                Write-Console "Failed to create output folder: $_"                 -Severity ERROR
                 throw
             }
         }
@@ -292,15 +450,18 @@ function Start-EventLogCollection {
         $servers = [System.Collections.Generic.List[string]]::new()
         try {
             Import-Module ActiveDirectory -ErrorAction Stop
-            Write-Log "Querying Active Directory for Windows Server machines..." -Severity INFO | Out-Null
+            Write-Log     "Querying Active Directory for Windows Server machines..." -Severity INFO | Out-Null
+            Write-Console "Querying Active Directory..." -Severity INFO -Indent 1
             $adComputers = Get-ADComputer -Filter { OperatingSystem -like "*Windows Server*" } `
                            -Properties Name, OperatingSystem, Enabled |
                            Where-Object { $_.Enabled -eq $true }
             foreach ($c in $adComputers) { $servers.Add($c.Name) }
-            Write-Log "AD query returned $($servers.Count) Windows Server machine(s)." -Severity INFO | Out-Null
+            Write-Log     "AD query returned $($servers.Count) Windows Server machine(s)." -Severity INFO | Out-Null
+            Write-Console "$($servers.Count) Windows Server machine(s) found in AD." -Severity SUCCESS -Indent 1
         }
         catch {
-            Write-Log "AD query failed: $_" -Severity WARN | Out-Null
+            Write-Log     "AD query failed: $_" -Severity WARN | Out-Null
+            Write-Console "AD query failed: $_" -Severity WARN -Indent 1
         }
         return ,$servers
     }
@@ -309,15 +470,20 @@ function Start-EventLogCollection {
         <# Pings all IPs in provided subnets, then fingerprints responders for Windows Server OS #>
         param ([string[]]$SubnetList)
 
-        Write-Log "Starting ping sweep across $($SubnetList.Count) subnet(s)..." -Severity INFO | Out-Null
+        Write-Log     "Starting ping sweep across $($SubnetList.Count) subnet(s)..." -Severity INFO | Out-Null
+        Write-Console "Sweeping $($SubnetList.Count) subnet(s)  -  this may take a moment..." -Severity INFO -Indent 1
+
         $allIPs = [System.Collections.Generic.List[string]]::new()
         foreach ($subnet in $SubnetList) {
             $expanded = Get-SubnetIPs -CIDR $subnet
-            Write-Log "Subnet $subnet expanded to $($expanded.Count) host addresses." -Severity DEBUG | Out-Null
+            Write-Log     "Subnet $subnet expanded to $($expanded.Count) host addresses." -Severity DEBUG | Out-Null
+            Write-Console "$subnet  -  $($expanded.Count) host addresses" -Severity DEBUG -Indent 2
             foreach ($ip in $expanded) { $allIPs.Add($ip) }
         }
 
-        Write-Log "Pinging $($allIPs.Count) addresses (this may take a moment)..." -Severity INFO | Out-Null
+        Write-Log     "Pinging $($allIPs.Count) addresses..." -Severity INFO | Out-Null
+        Write-Console "Pinging $($allIPs.Count) addresses..." -Severity INFO -Indent 1
+
         $liveHosts = [System.Collections.Generic.List[string]]::new()
 
         $pingJobs = @()
@@ -333,7 +499,9 @@ function Start-EventLogCollection {
         $pingJobs    | Remove-Job -Force
 
         foreach ($r in ($pingResults | Where-Object { $_ })) { $liveHosts.Add($r) }
-        Write-Log "$($liveHosts.Count) host(s) responded to ping." -Severity INFO | Out-Null
+
+        Write-Log     "$($liveHosts.Count) host(s) responded to ping." -Severity INFO | Out-Null
+        Write-Console "$($liveHosts.Count) host(s) responded to ping." -Severity INFO -Indent 1
 
         $confirmedServers = [System.Collections.Generic.List[string]]::new()
         foreach ($h in $liveHosts) {
@@ -357,7 +525,8 @@ function Start-EventLogCollection {
             }
 
             if ($osName -like "*Windows Server*") {
-                Write-Log "Confirmed Windows Server: $h ($osName)" -Severity DEBUG | Out-Null
+                Write-Log     "Confirmed Windows Server: $h ($osName)" -Severity DEBUG | Out-Null
+                Write-Console "$h  -  $osName" -Severity DEBUG -Indent 2
                 $confirmedServers.Add($h)
             }
             elseif ($osName) {
@@ -368,7 +537,8 @@ function Start-EventLogCollection {
             }
         }
 
-        Write-Log "Ping sweep confirmed $($confirmedServers.Count) Windows Server machine(s)." -Severity INFO | Out-Null
+        Write-Log     "Ping sweep confirmed $($confirmedServers.Count) Windows Server machine(s)." -Severity INFO | Out-Null
+        Write-Console "$($confirmedServers.Count) Windows Server(s) confirmed." -Severity SUCCESS -Indent 1
         return ,$confirmedServers
     }
 
@@ -382,9 +552,10 @@ function Start-EventLogCollection {
             [ref]$OSName
         )
 
-        # Ping first - fast fail
+        # Ping first  -  fast fail
         if (-not (Test-Connection -ComputerName $Server -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
-            Write-Log "[$Server] Pre-check FAILED - no ping response." -Severity WARN
+            Write-Log     "[$Server] Pre-check FAILED - no ping response." -Severity WARN
+            Write-Console "[$Server] No ping response" -Severity WARN -Indent 1
             return $false
         }
 
@@ -393,7 +564,7 @@ function Start-EventLogCollection {
             $cim = Get-CimInstance -ClassName Win32_OperatingSystem -ComputerName $Server `
                    -OperationTimeoutSec 15 -ErrorAction Stop
             $OSName.Value = $cim.Caption
-            Write-Log "[$Server] Pre-check OK via CIM ($($cim.Caption))." -Severity DEBUG
+            Write-Log     "[$Server] Pre-check OK via CIM ($($cim.Caption))." -Severity DEBUG
             return $true
         }
         catch {
@@ -406,11 +577,12 @@ function Start-EventLogCollection {
                 (Get-CimInstance Win32_OperatingSystem).Caption
             } -ErrorAction Stop
             $OSName.Value = $os
-            Write-Log "[$Server] Pre-check OK via WinRM ($os)." -Severity DEBUG
+            Write-Log     "[$Server] Pre-check OK via WinRM ($os)." -Severity DEBUG
             return $true
         }
         catch {
-            Write-Log "[$Server] Pre-check FAILED - CIM and WinRM both unreachable: $_" -Severity WARN
+            Write-Log     "[$Server] Pre-check FAILED - CIM and WinRM both unreachable: $_" -Severity WARN
+            Write-Console "[$Server] Unreachable  -  CIM and WinRM both failed" -Severity WARN -Indent 1
             return $false
         }
     }
@@ -430,16 +602,16 @@ function Start-EventLogCollection {
         )
 
         $results = @{
-            Server     = $Server
-            Success    = @()
-            Failed     = @()
-            Skipped    = @()
-            Errors     = @()
+            Server  = $Server
+            Success = @()
+            Failed  = @()
+            Skipped = @()
+            Errors  = @()
         }
 
         foreach ($LogName in $LogNames) {
-            $SafeServer  = $Server -replace '[\\/:*?"<>|]', '_'
-            $OutFile     = Join-Path $OutputFolder "$SafeServer $LogName Event Log.csv"
+            $SafeServer = $Server -replace '[\\/:*?"<>|]', '_'
+            $OutFile    = Join-Path $OutputFolder "$SafeServer $LogName Event Log.csv"
 
             # Remove old file if present
             if (Test-Path $OutFile) {
@@ -477,11 +649,11 @@ function Start-EventLogCollection {
                         @{N='Message';      E={ $_.Message }}
                     ) | Export-Csv -Path $OutFile -Force -NoTypeInformation -Encoding UTF8
 
-                    Write-Log "[$Server] $LogName - $($events.Count) event(s) written to $OutFile" -Severity SUCCESS
+                    Write-Log     "[$Server] $LogName - $($events.Count) event(s) written to $OutFile" -Severity SUCCESS
                     $results.Success += $LogName
                 }
                 else {
-                    Write-Log "[$Server] $LogName - No Critical/Error events found in window." -Severity INFO
+                    Write-Log     "[$Server] $LogName - No Critical/Error events found in window." -Severity INFO
                     $results.Skipped += $LogName
                 }
             }
@@ -514,7 +686,8 @@ function Start-EventLogCollection {
             [int]$MaxThreads
         )
 
-        Write-Log "Using PS 5.1 runspace pool (max $MaxThreads threads)..." -Severity INFO
+        Write-Log     "Using PS 5.1 runspace pool (max $MaxThreads threads)..." -Severity INFO
+        Write-Console "Engine: PS 5.1 runspace pool ($MaxThreads threads)" -Severity DEBUG -Indent 1
 
         $RunspacePool = [System.Management.Automation.Runspaces.RunspaceFactory]::CreateRunspacePool(1, $MaxThreads)
         $RunspacePool.Open()
@@ -587,12 +760,12 @@ function Start-EventLogCollection {
             return $results
         }
 
-        $Jobs = @()
+        $Jobs         = @()
         $LocalMachine = $env:COMPUTERNAME
 
         foreach ($Server in $Servers) {
-            $IsLocal  = ($Server -eq $LocalMachine -or $Server -eq "localhost" -or $Server -eq "127.0.0.1")
-            $PS       = [System.Management.Automation.PowerShell]::Create()
+            $IsLocal         = ($Server -eq $LocalMachine -or $Server -eq "localhost" -or $Server -eq "127.0.0.1")
+            $PS              = [System.Management.Automation.PowerShell]::Create()
             $PS.RunspacePool = $RunspacePool
             [void]$PS.AddScript($CollectionScript)
             [void]$PS.AddArgument($Server)
@@ -609,8 +782,13 @@ function Start-EventLogCollection {
             try {
                 $result = $Job.PS.EndInvoke($Job.Handle)
                 if ($result) {
-                    # Flush buffered log lines to main log
-                    foreach ($line in $result.Log) { Write-Log $line -Severity INFO }
+                    # Flush buffered log lines  -  route each through the correct severity
+                    foreach ($line in $result.Log) {
+                        if     ($line -like "*[SUCCESS]*") { Write-Log $line -Severity SUCCESS }
+                        elseif ($line -like "*[ERROR]*")   { Write-Log $line -Severity ERROR   }
+                        elseif ($line -like "*[WARN]*")    { Write-Log $line -Severity WARN    }
+                        else                               { Write-Log $line -Severity INFO    }
+                    }
                     $AllResults += $result
                 }
             }
@@ -640,7 +818,9 @@ function Start-EventLogCollection {
             [int]$MaxThreads
         )
 
-        Write-Log "Using PowerShell 7+ ForEach-Object -Parallel (max $MaxThreads threads)..." -Severity INFO
+        Write-Log     "Using PowerShell 7+ ForEach-Object -Parallel (max $MaxThreads threads)..." -Severity INFO
+        Write-Console "Engine: PS 7+ ForEach-Object -Parallel ($MaxThreads threads)" -Severity DEBUG -Indent 1
+
         $LocalMachine = $env:COMPUTERNAME
 
         $AllResults = $Servers | ForEach-Object -Parallel {
@@ -717,7 +897,12 @@ function Start-EventLogCollection {
         } -ThrottleLimit $MaxThreads
 
         foreach ($result in $AllResults) {
-            foreach ($line in $result.Log) { Write-Log $line -Severity INFO }
+            foreach ($line in $result.Log) {
+                if     ($line -like "*[SUCCESS]*") { Write-Log $line -Severity SUCCESS }
+                elseif ($line -like "*[ERROR]*")   { Write-Log $line -Severity ERROR   }
+                elseif ($line -like "*[WARN]*")    { Write-Log $line -Severity WARN    }
+                else                               { Write-Log $line -Severity INFO    }
+            }
         }
 
         return $AllResults
@@ -725,6 +910,8 @@ function Start-EventLogCollection {
 
     # ==========================================================================
     # RUN SUMMARY
+    # Writes structured text file + log entries via Write-Log, and a rich
+    # colored display via Write-Console for interactive terminal runs.
     # ==========================================================================
     function Write-RunSummary {
         param (
@@ -742,6 +929,7 @@ function Start-EventLogCollection {
         $PartialFail = ($Results | Where-Object { $_.Failed.Count -gt 0 -and $_.Success.Count -gt 0 }).Count
         $FullFail    = ($Results | Where-Object { $_.Failed.Count -gt 0 -and $_.Success.Count -eq 0 }).Count
         $NoEvents    = ($Results | Where-Object { $_.Failed.Count -eq 0 -and $_.Success.Count -eq 0 }).Count
+        $RunAs       = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 
         $summary = @"
 ================================================================================
@@ -753,7 +941,7 @@ function Start-EventLogCollection {
   Mode          : $Mode
   Duration      : $($Duration.ToString("hh\:mm\:ss"))
   Site          : $SiteName
-  Run As        : $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)
+  Run As        : $RunAs
 
   DISCOVERY
   ---------
@@ -793,7 +981,7 @@ function Start-EventLogCollection {
 
         $summary += "=" * 80
 
-        # Write to file and log
+        # Write to summary file
         try {
             $summary | Out-File -FilePath $SummaryFile -Encoding UTF8 -Force
         }
@@ -801,8 +989,55 @@ function Start-EventLogCollection {
             Write-Log "Could not write summary file: $_" -Severity WARN
         }
 
+        # Write to structured log
         Write-Log "" -Severity INFO
         $summary -split "`n" | ForEach-Object { Write-Log $_ -Severity INFO }
+
+        # -----------------------------------------------------------------------
+        # Console summary  -  colored, human-readable, display stream only
+        # -----------------------------------------------------------------------
+        Write-Section "Run Summary"
+        Write-Console "Duration   : $($Duration.ToString("hh\:mm\:ss"))"  -Severity PLAIN
+        Write-Console "Mode       : $Mode"                                   -Severity PLAIN
+        Write-Console "Site       : $SiteName"                              -Severity PLAIN
+        Write-Console "Output     : $OutputFolder"                          -Severity PLAIN
+        Write-Separator
+
+        Write-Console "DISCOVERY" -Severity PLAIN
+        Write-Console "Servers discovered : $TotalDiscovered"   -Severity PLAIN   -Indent 1
+        Write-Console "Servers attempted  : $($Results.Count)"  -Severity PLAIN   -Indent 1
+        if ($Skipped.Count -gt 0) {
+            Write-Console "Servers skipped    : $($Skipped.Count)" -Severity WARN -Indent 1
+        }
+        else {
+            Write-Console "Servers skipped    : 0"                 -Severity PLAIN -Indent 1
+        }
+
+        Write-Separator
+        Write-Console "COLLECTION RESULTS" -Severity PLAIN
+        Write-Console "Fully successful   : $Succeeded"   -Severity $(if ($Succeeded -gt 0)   { "SUCCESS" } else { "PLAIN" }) -Indent 1
+        Write-Console "Partial success    : $PartialFail" -Severity $(if ($PartialFail -gt 0) { "WARN"    } else { "PLAIN" }) -Indent 1
+        Write-Console "Fully failed       : $FullFail"    -Severity $(if ($FullFail -gt 0)    { "ERROR"   } else { "PLAIN" }) -Indent 1
+        Write-Console "No events found    : $NoEvents"    -Severity PLAIN -Indent 1
+
+        if ($Skipped.Count -gt 0) {
+            Write-Separator
+            Write-Console "SKIPPED SERVERS" -Severity WARN
+            foreach ($s in $Skipped) {
+                Write-Console $s -Severity WARN -Indent 1
+            }
+        }
+
+        if ($PartialFail -gt 0 -or $FullFail -gt 0) {
+            Write-Separator
+            Write-Console "ERRORS" -Severity ERROR
+            foreach ($r in ($Results | Where-Object { $_.Errors.Count -gt 0 })) {
+                Write-Console "[$($r.Server)]" -Severity ERROR -Indent 1
+                foreach ($e in $r.Errors) {
+                    Write-Console $e -Severity ERROR -Indent 2
+                }
+            }
+        }
 
         return @{
             Succeeded   = $Succeeded
@@ -816,66 +1051,90 @@ function Start-EventLogCollection {
     # ==========================================================================
     $ErrorActionPreference = 'Stop'
     $ScriptStartTime = Get-Date
+    $RunAs           = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 
     Initialize-Logging
-    Initialize-OutputFolder
 
+    # --------------------------------------------------------------------------
+    # Startup  -  structured log header (DattoRMM/file) + console banner (display)
+    # --------------------------------------------------------------------------
     Write-Log "===== $ScriptName v$ScriptVersion =====" -Severity INFO
-    Write-Log "Site        : $SiteName"           -Severity INFO
-    Write-Log "Hostname    : $Hostname"            -Severity INFO
-    Write-Log "Run As      : $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)" -Severity INFO
-    Write-Log "Mode        : $Mode"                -Severity INFO
-    Write-Log "DaysBack    : $DaysBack"            -Severity INFO
-    Write-Log "Log Names   : $($LogNames -join ', ')"  -Severity INFO
-    Write-Log "Levels      : Critical, Error"      -Severity INFO
-    Write-Log "Output Path : $OutputFolder"        -Severity INFO
-    Write-Log "Log File    : $LogFile"             -Severity INFO
+    Write-Log "Site        : $SiteName"                   -Severity INFO
+    Write-Log "Hostname    : $Hostname"                   -Severity INFO
+    Write-Log "Run As      : $RunAs"                      -Severity INFO
+    Write-Log "Mode        : $Mode"                       -Severity INFO
+    Write-Log "DaysBack    : $DaysBack"                   -Severity INFO
+    Write-Log "Log Names   : $($LogNames -join ', ')"     -Severity INFO
+    Write-Log "Levels      : Critical, Error"             -Severity INFO
+    Write-Log "Output Path : $OutputPath"                 -Severity INFO
+    Write-Log "Log File    : $LogFile"                    -Severity INFO
     Write-Log "PS Version  : $($PSVersionTable.PSVersion)" -Severity INFO
     Write-Log "Starting execution..." -Severity INFO
+
+    Write-Banner "$($ScriptName.ToUpper()) v$ScriptVersion"
+    Write-Console "Site        : $SiteName"                            -Severity PLAIN
+    Write-Console "Hostname    : $Hostname"                            -Severity PLAIN
+    Write-Console "Run As      : $RunAs"                               -Severity PLAIN
+    Write-Console "Mode        : $Mode"                                -Severity PLAIN
+    Write-Console "Days Back   : $DaysBack"                            -Severity PLAIN
+    Write-Console "Logs        : $($LogNames -join ', ')"              -Severity PLAIN
+    Write-Console "PS Version  : $($PSVersionTable.PSVersion)"        -Severity PLAIN
+    Write-Console "Log File    : $LogFile"                             -Severity PLAIN
+    Write-Separator
 
     try {
         $StartDate    = (Get-Date).AddDays(-$DaysBack)
         $TargetList   = @()
         $LocalMachine = $env:COMPUTERNAME
 
+        Initialize-OutputFolder
+
         # -----------------------------------------------------------------------
         # SERVER DISCOVERY
         # -----------------------------------------------------------------------
-        if ($Mode -eq "Automated") {
+        Write-Section "Server Discovery"
+        Write-Log "--- SERVER DISCOVERY ---" -Severity INFO
 
-            Write-Log "--- AUTOMATED DISCOVERY ---" -Severity INFO
+        if ($Mode -eq "Automated") {
 
             # Always include local machine first
             $TargetList += $LocalMachine
-            Write-Log "Local machine added: $LocalMachine" -Severity INFO
+            Write-Log     "Local machine added: $LocalMachine" -Severity INFO
+            Write-Console "Local machine added: $LocalMachine" -Severity INFO -Indent 1
 
             # AD Query
             $adServers = Get-ServersFromAD
             if ($adServers.Count -gt 0) {
                 $TargetList += $adServers
-                Write-Log "AD discovery complete. $($adServers.Count) server(s) added." -Severity SUCCESS
+                Write-Log     "AD discovery complete. $($adServers.Count) server(s) added." -Severity SUCCESS
+                Write-Console "AD discovery complete  -  $($adServers.Count) server(s) added." -Severity SUCCESS
             }
             else {
                 # Fallback: ping sweep
-                Write-Log "AD returned no results. Falling back to ping sweep..." -Severity WARN
+                Write-Log     "AD returned no results. Falling back to ping sweep..." -Severity WARN
+                Write-Console "AD returned no results  -  falling back to ping sweep..." -Severity WARN
 
                 $subnetList = if ($Subnets -and $Subnets.Count -gt 0) {
-                    Write-Log "Using user-provided subnet list." -Severity INFO
+                    Write-Log     "Using user-provided subnet list." -Severity INFO
+                    Write-Console "Using provided subnets: $($Subnets -join ', ')" -Severity INFO -Indent 1
                     $Subnets
                 }
                 else {
-                    Write-Log "Auto-detecting local subnets..." -Severity INFO
+                    Write-Log     "Auto-detecting local subnets..." -Severity INFO
+                    Write-Console "Auto-detecting local subnets..." -Severity INFO -Indent 1
                     Get-LocalSubnets
                 }
 
                 if ($subnetList.Count -eq 0) {
-                    Write-Log "No subnets available for ping sweep. Cannot proceed with discovery." -Severity ERROR
+                    Write-Log     "No subnets available for ping sweep. Cannot proceed with discovery." -Severity ERROR
+                    Write-Console "No subnets available for ping sweep  -  cannot continue." -Severity ERROR
                     throw "No servers discovered and no subnets available for fallback sweep."
                 }
 
                 $sweepServers = Get-ServersFromPingSweep -SubnetList $subnetList
                 $TargetList  += $sweepServers
-                Write-Log "Ping sweep complete. $($sweepServers.Count) Windows Server(s) added." -Severity SUCCESS
+                Write-Log     "Ping sweep complete. $($sweepServers.Count) Windows Server(s) added." -Severity SUCCESS
+                Write-Console "Ping sweep complete  -  $($sweepServers.Count) server(s) added." -Severity SUCCESS
             }
 
         }
@@ -889,77 +1148,107 @@ function Start-EventLogCollection {
             }
 
             if (-not $ComputerName -or $ComputerName.Count -eq 0) {
-                Write-Log "Custom mode selected but no -ComputerName targets provided." -Severity ERROR
+                Write-Log     "Custom mode selected but no -ComputerName targets provided." -Severity ERROR
+                Write-Console "No -ComputerName targets provided for Custom mode." -Severity ERROR
                 throw "No ComputerName targets specified for Custom mode."
             }
 
             $TargetList = $ComputerName
-            Write-Log "$($TargetList.Count) custom target(s) specified." -Severity INFO
+            Write-Log     "$($TargetList.Count) custom target(s) specified." -Severity INFO
+            Write-Console "$($TargetList.Count) custom target(s):" -Severity INFO
+            foreach ($t in $TargetList) {
+                Write-Console $t -Severity PLAIN -Indent 1
+            }
         }
 
         # Deduplicate
         $TargetList = $TargetList | Sort-Object -Unique
-        Write-Log "Total unique targets after deduplication: $($TargetList.Count)" -Severity INFO
+        Write-Log     "Total unique targets after deduplication: $($TargetList.Count)" -Severity INFO
+        Write-Console "Total unique targets: $($TargetList.Count)" -Severity INFO
+
         $TotalDiscovered = $TargetList.Count
 
         # -----------------------------------------------------------------------
         # CONNECTIVITY PRE-CHECKS
         # -----------------------------------------------------------------------
+        Write-Section "Connectivity Pre-Checks"
         Write-Log "--- CONNECTIVITY PRE-CHECKS ---" -Severity INFO
+
         $ReachableServers = @()
         $SkippedServers   = @()
 
         foreach ($Server in $TargetList) {
-            # Local machine skips remote connectivity check
             $IsLocal = ($Server -eq $LocalMachine -or $Server -eq "localhost" -or $Server -eq "127.0.0.1")
             if ($IsLocal) {
-                Write-Log "[$Server] Local machine - skipping remote pre-check." -Severity DEBUG
+                Write-Log     "[$Server] Local machine - skipping remote pre-check." -Severity DEBUG
+                Write-Console "[$Server] Local  -  skipping pre-check" -Severity DEBUG -Indent 1
                 $ReachableServers += $Server
                 continue
             }
 
             $osRef = [ref]""
             if (Test-ServerConnectivity -Server $Server -OSName $osRef) {
-                Write-Log "[$Server] Reachable - $($osRef.Value)" -Severity INFO
+                Write-Log     "[$Server] Reachable  -  $($osRef.Value)" -Severity INFO
+                Write-Console "[$Server] $($osRef.Value)" -Severity SUCCESS -Indent 1
                 $ReachableServers += $Server
             }
             else {
-                Write-Log "[$Server] UNREACHABLE - skipping." -Severity WARN
+                Write-Log     "[$Server] UNREACHABLE  -  skipping." -Severity WARN
                 $SkippedServers += $Server
             }
         }
 
-        Write-Log "$($ReachableServers.Count) server(s) passed pre-check. $($SkippedServers.Count) skipped." -Severity INFO
+        Write-Log     "$($ReachableServers.Count) server(s) passed pre-check. $($SkippedServers.Count) skipped." -Severity INFO
+        Write-Console "$($ReachableServers.Count) reachable, $($SkippedServers.Count) skipped." -Severity INFO
 
         if ($ReachableServers.Count -eq 0) {
-            Write-Log "No reachable servers to collect from. Exiting." -Severity ERROR
+            Write-Log     "No reachable servers to collect from. Exiting." -Severity ERROR
+            Write-Console "No reachable servers found  -  nothing to collect." -Severity ERROR
             throw "All discovered servers failed the connectivity pre-check."
         }
 
         # -----------------------------------------------------------------------
-        # COLLECTION - RUNTIME PS VERSION DETECTION
+        # COLLECTION  -  RUNTIME PS VERSION DETECTION
         # -----------------------------------------------------------------------
+        Write-Section "Event Log Collection"
         Write-Log "--- EVENT LOG COLLECTION ---" -Severity INFO
+
         $AllResults = @()
         $PSMajor    = $PSVersionTable.PSVersion.Major
 
         if ($PSMajor -ge 7) {
             $AllResults = Invoke-ParallelCollection7 `
-                -Servers     $ReachableServers `
-                -LogNames    $LogNames `
-                -StartDate   $StartDate `
+                -Servers      $ReachableServers `
+                -LogNames     $LogNames `
+                -StartDate    $StartDate `
                 -OutputFolder $OutputFolder `
-                -EventLevels $EventLevels `
-                -MaxThreads  $MaxParallel
+                -EventLevels  $EventLevels `
+                -MaxThreads   $MaxParallel
         }
         else {
             $AllResults = Invoke-ParallelCollection51 `
-                -Servers     $ReachableServers `
-                -LogNames    $LogNames `
-                -StartDate   $StartDate `
+                -Servers      $ReachableServers `
+                -LogNames     $LogNames `
+                -StartDate    $StartDate `
                 -OutputFolder $OutputFolder `
-                -EventLevels $EventLevels `
-                -MaxThreads  $MaxParallel
+                -EventLevels  $EventLevels `
+                -MaxThreads   $MaxParallel
+        }
+
+        # Display per-server collection results to console
+        foreach ($r in $AllResults) {
+            if ($r.Failed.Count -eq 0 -and $r.Success.Count -gt 0) {
+                Write-Console "[$($r.Server)] $($r.Success.Count) log(s) written successfully" -Severity SUCCESS -Indent 1
+            }
+            elseif ($r.Failed.Count -gt 0 -and $r.Success.Count -gt 0) {
+                Write-Console "[$($r.Server)] Partial  -  $($r.Success.Count) OK, $($r.Failed.Count) failed" -Severity WARN -Indent 1
+            }
+            elseif ($r.Failed.Count -gt 0) {
+                Write-Console "[$($r.Server)] FAILED  -  $($r.Failed.Count) log(s) could not be collected" -Severity ERROR -Indent 1
+            }
+            else {
+                Write-Console "[$($r.Server)] No Critical/Error events in collection window" -Severity INFO -Indent 1
+            }
         }
 
         # -----------------------------------------------------------------------
@@ -973,17 +1262,20 @@ function Start-EventLogCollection {
             -Mode            $Mode `
             -TotalDiscovered $TotalDiscovered
 
-        # Determine exit code
+        # Determine exit code and show closing banner
         if ($summaryStats.FullFail -gt 0 -and $summaryStats.Succeeded -eq 0 -and $summaryStats.PartialFail -eq 0) {
             Write-Log "Collection complete with full failures. Exit 2." -Severity ERROR
+            Write-Banner "COLLECTION FAILED" -Color "Red"
             exit 2
         }
         elseif ($summaryStats.FullFail -gt 0 -or $summaryStats.PartialFail -gt 0) {
             Write-Log "Collection complete with partial failures. Exit 1." -Severity WARN
+            Write-Banner "COMPLETED WITH WARNINGS" -Color "Yellow"
             exit 1
         }
         else {
             Write-Log "Collection complete. All targets successful. Exit 0." -Severity SUCCESS
+            Write-Banner "COMPLETED SUCCESSFULLY" -Color "Green"
             exit 0
         }
 
@@ -991,6 +1283,10 @@ function Start-EventLogCollection {
     catch {
         Write-Log "FATAL: Unhandled exception: $_"            -Severity ERROR
         Write-Log "Stack Trace: $($_.ScriptStackTrace)"       -Severity ERROR
+
+        Write-Banner "SCRIPT FAILED" -Color "Red"
+        Write-Console "Error : $_"  -Severity ERROR
+
         exit 2
     }
 
@@ -1000,14 +1296,14 @@ function Start-EventLogCollection {
 # ENTRY POINT
 # ==============================================================================
 $ScriptParams = @{
-    Mode        = $Mode
+    Mode         = $Mode
     ComputerName = $ComputerName
-    Subnets     = $Subnets
-    DaysBack    = $DaysBack
-    OutputPath  = $OutputPath
-    LogNames    = $LogNames
-    SiteName    = $SiteName
-    Hostname    = $Hostname
+    Subnets      = $Subnets
+    DaysBack     = $DaysBack
+    OutputPath   = $OutputPath
+    LogNames     = $LogNames
+    SiteName     = $SiteName
+    Hostname     = $Hostname
 }
 
 Start-EventLogCollection @ScriptParams
