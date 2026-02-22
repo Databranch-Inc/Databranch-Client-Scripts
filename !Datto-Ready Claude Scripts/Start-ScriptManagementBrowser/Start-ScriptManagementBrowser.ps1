@@ -32,7 +32,7 @@
 
 .NOTES
     File Name      : Start-ScriptManagementBrowser.ps1
-    Version        : 1.0.5.0
+    Version        : 1.0.7.0
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -61,6 +61,22 @@
         Full path : /sites/YourSite/IT Scripts/Published/Scripts
 
 .CHANGELOG
+    v1.0.7.0 - 2026-02-21 - Sam Kirsch
+        - Added: Ancestor path diagnostic in folder pre-creation pass. Walks each
+          segment of the root target path (e.g. Documents, Engineering Procedures,
+          _GitScriptsRepo) and logs OK/MISS for each so the exact break point is
+          visible in the log. Folder pass now aborts after 3 consecutive errors
+          rather than hammering all 54 folders when the root itself is inaccessible.
+
+    v1.0.6.0 - 2026-02-21 - Sam Kirsch
+        - Added: SharePoint path sanitization. Leading ! and . characters on any
+          folder or file name segment are replaced with - when constructing SP
+          destination paths. Local Git repo paths are never modified. Sanitization
+          is applied consistently across the folder pre-creation pass, expected SP
+          path comparison, upload folder, and filename. Mapping is logged when a
+          path differs (e.g. "!Archive -> -Archive").
+        - Added: Sanitize-SpPath and Sanitize-SpSegment helper functions in runspace.
+
     v1.0.5.0 - 2026-02-21 - Sam Kirsch
         - Fixed: .Replace("\","/") calls inside the runspace script block were
           corrupted by Python string processing during patching — backslashes were
@@ -154,7 +170,7 @@ function Start-ScriptManagementBrowser {
     # APP CONSTANTS
     # ==========================================================================
     $script:AppName       = "ScriptManagementBrowser"
-    $script:AppVersion    = "1.0.5.0"
+    $script:AppVersion    = "1.0.7.0"
     $script:AppDataDir    = "$env:APPDATA\ScriptManagementBrowser"
     $script:ConfigFile    = "$script:AppDataDir\config.json"
     $script:LogFile       = "$script:AppDataDir\app.log"
@@ -523,6 +539,26 @@ function Start-ScriptManagementBrowser {
             }
 
             try {
+                # ------------------------------------------------------------------
+                # PATH SANITIZATION
+                # SharePoint blocks folder/file names with leading ! or . characters.
+                # Sanitize-SpPath converts each path segment: leading ! or . becomes -
+                # Applied to all SP destination paths. Local repo paths are never modified.
+                # ------------------------------------------------------------------
+                function Sanitize-SpSegment {
+                    param([string]$Segment)
+                    # Replace leading ! or . with - (SharePoint rejects both as first char)
+                    return $Segment -replace '^[!.]+', '-'
+                }
+
+                function Sanitize-SpPath {
+                    param([string]$RelPath)
+                    # Split on /, sanitize each segment, rejoin
+                    $segments = $RelPath -split '/'
+                    $sanitized = $segments | ForEach-Object { Sanitize-SpSegment $_ }
+                    return $sanitized -join '/'
+                }
+
                 RS-Log "Importing PnP.PowerShell..."
                 Import-Module PnP.PowerShell -ErrorAction Stop
 
@@ -594,13 +630,33 @@ function Start-ScriptManagementBrowser {
                         # issues when this script block is marshalled into the runspace.
                         $rel = ($_.FullName.Substring($rsConfig.GitRepoPath.Length).TrimStart('/\') -replace '\\','/')
                         $dir = ([System.IO.Path]::GetDirectoryName($rel) -replace '\\','/')
-                        if ($dir) { "$folderPath/$dir" } else { $folderPath }
+                        $spDir = if ($dir) { Sanitize-SpPath $dir } else { "" }
+                        if ($spDir) { "$folderPath/$spDir" } else { $folderPath }
                     } |
                     Sort-Object -Unique
 
                 RS-Log "Unique folders to ensure exist: $($uniqueFolders.Count)"
                 $foldersCreated = 0
                 $folderErrors   = 0
+
+                # ------------------------------------------------------------------
+                # DIAGNOSTIC: verify each ancestor of the root target path exists
+                # before attempting Resolve-PnPFolder. Logs each segment so we know
+                # exactly where the chain breaks.
+                # ------------------------------------------------------------------
+                RS-Log "--- Diagnosing ancestor path accessibility ---"
+                $rootSegments  = $folderPath -split '/'
+                $ancestorPath  = ""
+                foreach ($seg in $rootSegments) {
+                    $ancestorPath = if ($ancestorPath) { "$ancestorPath/$seg" } else { $seg }
+                    try {
+                        $folderObj = Get-PnPFolder -Url $ancestorPath -ErrorAction Stop
+                        RS-Log "  [OK]     EXISTS: $ancestorPath  (ItemCount=$($folderObj.ItemCount))"
+                    } catch {
+                        RS-Log "  [MISS]   NOT FOUND or NO ACCESS: $ancestorPath  Error: $_" "WARN"
+                    }
+                }
+                RS-Log "--- End ancestor diagnostic ---"
 
                 foreach ($spFolderRelPath in $uniqueFolders) {
                     try {
@@ -610,6 +666,11 @@ function Start-ScriptManagementBrowser {
                     } catch {
                         $folderErrors++
                         RS-Log "  ERROR ensuring folder '$spFolderRelPath': $_" "ERROR"
+                        # Only log first 3 errors then break — if root fails, all will fail
+                        if ($folderErrors -ge 3) {
+                            RS-Log "  Too many folder errors — aborting folder pass. Check ancestor diagnostic above." "ERROR"
+                            break
+                        }
                     }
                 }
 
@@ -630,19 +691,25 @@ function Start-ScriptManagementBrowser {
                     # Build the relative path from repo root, use forward slashes
                     $relPath = ($localFile.FullName.Substring($rsConfig.GitRepoPath.Length).TrimStart('/\') -replace '\\','/')
 
-                    # Build expected SP server-relative path
-                    $expectedSpPath = "$targetFolder/$relPath"
+                    # Sanitize the local relative path for SP destination:
+                    # leading ! or . on any path segment becomes - in SharePoint.
+                    # relPath is used for local file reading; spRelPath is used for all SP ops.
+                    $spRelPath       = Sanitize-SpPath $relPath
+
+                    # Build expected SP server-relative path (sanitized)
+                    $expectedSpPath      = "$targetFolder/$spRelPath"
                     $expectedSpPathLower = $expectedSpPath.ToLower()
 
                     # Determine SP target folder for this specific file.
-                    # targetFolder is already the full server-relative path to the sync root.
-                    # Append the file's relative directory (if any) to get the upload destination.
-                    $fileRelDir     = ([System.IO.Path]::GetDirectoryName($relPath) -replace '\\','/')
+                    $fileRelDir     = ([System.IO.Path]::GetDirectoryName($spRelPath) -replace '\\','/')
                     $spUploadFolder = if ($fileRelDir) {
                         "$targetFolder/$fileRelDir"
                     } else {
                         $targetFolder
                     }
+
+                    # SP file name is also sanitized (e.g. .gitignore -> -gitignore)
+                    $spFileName = Sanitize-SpSegment $localFile.Name
 
                     $needsUpload = $true
 
@@ -691,11 +758,14 @@ function Start-ScriptManagementBrowser {
 
                     if ($needsUpload) {
                         try {
+                            if ($spRelPath -ne $relPath) {
+                                RS-Log "  Path mapped: $relPath -> $spRelPath"
+                            }
                             $fileBytes = [System.IO.File]::ReadAllBytes($localFile.FullName)
                             $memStream = [System.IO.MemoryStream]::new($fileBytes)
                             Add-PnPFile -Stream $memStream `
                                         -Folder $spUploadFolder `
-                                        -FileName $localFile.Name `
+                                        -FileName $spFileName `
                                         -ErrorAction Stop | Out-Null
                             $memStream.Dispose()
                             $uploaded++
