@@ -1,4 +1,5 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
+##SCRIPTMGMT#TAGS#isFunction,security
 <#
 .SYNOPSIS
     Initializes a BEC (Business Email Compromise) investigation workspace for a

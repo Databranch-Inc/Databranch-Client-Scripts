@@ -1,4 +1,5 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
+##SCRIPTMGMT#TAGS#isFunction,isMigrated,automation,maintenance
 <#
 .SYNOPSIS
     Collects Windows Event Log entries from local and remote servers, saving output to CSV files.

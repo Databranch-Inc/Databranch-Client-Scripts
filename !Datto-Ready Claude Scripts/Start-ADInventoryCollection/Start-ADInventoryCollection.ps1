@@ -1,4 +1,5 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
+##SCRIPTMGMT#TAGS#isFunction,isMigrated,maintenance,automation
 <#
 .SYNOPSIS
     Collects a full Active Directory inventory including users, servers, desktops, and

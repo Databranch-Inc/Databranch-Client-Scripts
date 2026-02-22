@@ -1,4 +1,5 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
+##SCRIPTMGMT#TAGS#isApp,PowerShell 7,utility
 <#
 .SYNOPSIS
     Script Management Browser - Local Git repository script browser, metadata manager,
@@ -23,16 +24,12 @@
         %APPDATA%\ScriptManagementBrowser\app.log
 
     Comment/tag syntax written into managed script files:
-        ##SCRIPTMGMT#COMMENT#<your comment here>
-        ##SCRIPTMGMT#TAGS#<tag1,tag2,tag3>
 
     Legacy EngineersPowerApp syntax is read transparently and upgraded on next save:
-        ##ENGINEERSPOWERAPP#COMMENT#<comment>
-        ##ENGINEERSPOWERAPP#TAGS#<tags>
 
 .NOTES
     File Name      : Start-ScriptManagementBrowser.ps1
-    Version        : 1.0.9.0
+    Version        : 1.0.12.0
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -61,6 +58,23 @@
         Full path : /sites/YourSite/IT Scripts/Published/Scripts
 
 .CHANGELOG
+    v1.0.10.0 - 2026-02-22 - Sam Kirsch
+        - Fixed: BtnTagIsApp, BtnTagIsFunction, BtnTagIsMigrated, BtnTagPS7 were added
+          to XAML but never retrieved via Get-Control, causing null-valued expression
+          errors on all four Add_Click handlers at startup.
+        - Fixed: Tags stored as Object[] after JSON deserialization caused "Object[] Array"
+          display in Tag view and broken -contains comparisons. Fixed in Load-GitCache,
+          Start-GitScan, Invoke-TagView iteration, pinned/untagged/negative -contains
+          checks, NegativeGroups predicates, and Select-File display.
+        - Fixed: New-TagTreeItem no longer calls New-FileViewModel (which returned $null
+          for files with missing Extension after deserialization). Now resolves ext/icon/
+          color inline, eliminating the null-vm crash that left TreeViewItem headers blank.
+        - Fixed: Select-File now wrapped in try/catch — any field-population error is
+          logged and shown in status bar instead of silently leaving the detail panel
+          blank on first click. DateTime fields cast defensively from string.
+        - Fixed: Tags display in Select-File now casts $File.Tags to string[] before
+          -join, preventing "System.Object[]" appearing in the tags text box.
+
     v1.0.9.0 - 2026-02-22 - Sam Kirsch
         - Fixed: Git repository scan now reads every .ps1/.bat file's content at
           scan time to extract embedded comments and tags. Previously tags were only
@@ -217,7 +231,7 @@ function Start-ScriptManagementBrowser {
     # APP CONSTANTS
     # ==========================================================================
     $script:AppName       = "ScriptManagementBrowser"
-    $script:AppVersion    = "1.0.9.0"
+    $script:AppVersion    = "1.0.12.0"
     $script:AppDataDir    = "$env:APPDATA\ScriptManagementBrowser"
     $script:ConfigFile    = "$script:AppDataDir\config.json"
     $script:LogFile       = "$script:AppDataDir\app.log"
@@ -355,7 +369,7 @@ function Start-ScriptManagementBrowser {
                     SizeBytes      = $f.SizeBytes
                     Extension      = $f.Extension
                     Comment        = $f.Comment
-                    Tags           = @($f.Tags)
+                    Tags           = [string[]]@($f.Tags | Where-Object { $_ -ne $null } | ForEach-Object { "$_" })
                     TagsRaw        = $f.TagsRaw
                     ContentLoaded  = $false
                 })
@@ -1639,9 +1653,60 @@ Target : $($result.TargetPath)
                                       Visibility="Collapsed">
                                 <TreeView.Resources>
                                     <Style TargetType="TreeViewItem">
-                                        <Setter Property="Background"  Value="Transparent"/>
-                                        <Setter Property="Foreground"  Value="#F0F4FF"/>
-                                        <Setter Property="IsExpanded"  Value="True"/>
+                                        <Setter Property="Background"       Value="Transparent"/>
+                                        <Setter Property="Foreground"       Value="#F0F4FF"/>
+                                        <Setter Property="IsExpanded"       Value="True"/>
+                                        <Setter Property="Padding"          Value="4,3"/>
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="TreeViewItem">
+                                                    <StackPanel>
+                                                        <Border x:Name="Bd" Background="Transparent"
+                                                                CornerRadius="4" Padding="{TemplateBinding Padding}"
+                                                                Margin="0,1">
+                                                            <ContentPresenter x:Name="PART_Header"
+                                                                              ContentSource="Header"
+                                                                              HorizontalAlignment="Left"/>
+                                                        </Border>
+                                                        <ItemsPresenter x:Name="ItemsHost"
+                                                                        Margin="16,0,0,0"/>
+                                                    </StackPanel>
+                                                    <ControlTemplate.Triggers>
+                                                        <!-- Collapsed state -->
+                                                        <Trigger Property="IsExpanded" Value="False">
+                                                            <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/>
+                                                        </Trigger>
+                                                        <!-- Hover -->
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Bd" Property="Background" Value="#1D2E48"/>
+                                                        </Trigger>
+                                                        <!-- Selected + focused (app has focus) -->
+                                                        <MultiTrigger>
+                                                            <MultiTrigger.Conditions>
+                                                                <Condition Property="IsSelected" Value="True"/>
+                                                                <Condition Property="IsSelectionActive" Value="True"/>
+                                                            </MultiTrigger.Conditions>
+                                                            <Setter TargetName="Bd" Property="Background" Value="#162238"/>
+                                                            <Setter TargetName="Bd" Property="BorderBrush" Value="#2E8BFF"/>
+                                                            <Setter TargetName="Bd" Property="BorderThickness" Value="0,0,0,0"/>
+                                                            <Setter Property="Foreground" Value="#F0F4FF"/>
+                                                        </MultiTrigger>
+                                                        <!-- Selected + unfocused (clicked away, Load Content focused, etc.) -->
+                                                        <MultiTrigger>
+                                                            <MultiTrigger.Conditions>
+                                                                <Condition Property="IsSelected" Value="True"/>
+                                                                <Condition Property="IsSelectionActive" Value="False"/>
+                                                            </MultiTrigger.Conditions>
+                                                            <Setter TargetName="Bd" Property="Background" Value="#111C2E"/>
+                                                            <Setter TargetName="Bd" Property="BorderBrush" Value="#213A58"/>
+                                                            <Setter TargetName="Bd" Property="BorderThickness" Value="0,0,0,0"/>
+                                                            <Setter Property="Foreground" Value="#A8BDD8"/>
+                                                        </MultiTrigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
                                     </Style>
                                 </TreeView.Resources>
                             </TreeView>
@@ -1996,6 +2061,10 @@ Target : $($result.TargetPath)
     $BtnCopyUrl          = Get-Control "BtnCopyUrl"
     $TxtComment          = Get-Control "TxtComment"
     $TxtTags             = Get-Control "TxtTags"
+    $BtnTagIsApp        = Get-Control "BtnTagIsApp"
+    $BtnTagIsFunction   = Get-Control "BtnTagIsFunction"
+    $BtnTagIsMigrated   = Get-Control "BtnTagIsMigrated"
+    $BtnTagPS7          = Get-Control "BtnTagPS7"
     $BtnTagAutomation    = Get-Control "BtnTagAutomation"
     $BtnTagMaintenance   = Get-Control "BtnTagMaintenance"
     $BtnTagDeploy        = Get-Control "BtnTagDeploy"
@@ -2146,7 +2215,7 @@ Target : $($result.TargetPath)
         $FileListBox.Items.Clear()
         foreach ($f in $sorted) {
             $vm = New-FileViewModel $f
-            if ($null -ne $vm) { $FileListBox.Items.Add($vm) }
+            if ($null -ne $vm) { $FileListBox.Items.Add($vm) | Out-Null }
         }
     }
 
@@ -2165,8 +2234,10 @@ Target : $($result.TargetPath)
             $header.IsExpanded = $true
 
             foreach ($f in ($group.Group | Sort-Object Name)) {
+                $vm = New-FileViewModel $f
+                if ($null -eq $vm) { continue }
+
                 $item = New-Object System.Windows.Controls.TreeViewItem
-                $vm   = New-FileViewModel $f
 
                 $sp             = New-Object System.Windows.Controls.StackPanel
                 $sp.Orientation = "Horizontal"
@@ -2178,19 +2249,18 @@ Target : $($result.TargetPath)
                 $extLbl.Margin     = [System.Windows.Thickness]::new(0,0,8,0)
                 $extLbl.FontSize   = 10
 
-                $nameLbl           = New-Object System.Windows.Controls.TextBlock
-                $nameLbl.Text      = $f.Name
+                $nameLbl            = New-Object System.Windows.Controls.TextBlock
+                $nameLbl.Text       = $f.Name
                 $nameLbl.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xF0,0xF4,0xFF)
 
-                $sp.Children.Add($extLbl)
-                $sp.Children.Add($nameLbl)
+                $sp.Children.Add($extLbl)  | Out-Null
+                $sp.Children.Add($nameLbl) | Out-Null
 
                 $item.Header = $sp
                 $item.Tag    = $f
-                $item.Add_Selected({ param($s,$e) Select-File $s.Tag })
-                $header.Items.Add($item)
+                $header.Items.Add($item) | Out-Null
             }
-            $FileTreeView.Items.Add($header)
+            $FileTreeView.Items.Add($header) | Out-Null
         }
     }
 
@@ -2199,31 +2269,41 @@ Target : $($result.TargetPath)
     # Negative virtual groups shown below Untagged
     # Key = display label, Value = scriptblock that returns $true if file BELONGS in this group
     $script:NegativeGroups = [ordered]@{
-        "NotMigrated" = { param($f) ($f.Tags -notcontains "isMigrated") }
-        "NotFunction"  = { param($f) ($f.Tags -notcontains "isFunction") }
+        "NotMigrated" = { param($f) ([string[]]@($f.Tags) -notcontains "isMigrated") }
+        "NotFunction"  = { param($f) ([string[]]@($f.Tags) -notcontains "isFunction") }
     }
 
     function New-TagTreeItem {
         param($File, [string]$NameOverride = "")
-        $item    = New-Object System.Windows.Controls.TreeViewItem
-        $vm      = New-FileViewModel $File
-        $sp      = New-Object System.Windows.Controls.StackPanel
+        $item = New-Object System.Windows.Controls.TreeViewItem
+        $item.Tag = $File
+
+        $ext   = if ($File.Extension) { $File.Extension.ToLower() } else { ".ps1" }
+        $icon  = if ($ext -eq ".ps1") { "PS1" } else { "BAT" }
+        $color = if ($ext -eq ".ps1") { "#4A8FD4" } else { "#E8A020" }
+        $label = if ($NameOverride) { $NameOverride } else { "$($File.Name)" }
+
+        $sp = New-Object System.Windows.Controls.StackPanel
         $sp.Orientation = "Horizontal"
+
         $extLbl            = New-Object System.Windows.Controls.TextBlock
-        $extLbl.Text       = $vm.ExtIcon
+        $extLbl.Text       = $icon
         $extLbl.Foreground = [System.Windows.Media.SolidColorBrush](
-            [System.Windows.Media.ColorConverter]::ConvertFromString($vm.ExtColor))
+            [System.Windows.Media.ColorConverter]::ConvertFromString($color))
         $extLbl.Margin     = [System.Windows.Thickness]::new(0,0,8,0)
         $extLbl.FontSize   = 10
-        $nameLbl           = New-Object System.Windows.Controls.TextBlock
-        $nameLbl.Text      = if ($NameOverride) { $NameOverride } else { $File.Name }
+
+        $nameLbl            = New-Object System.Windows.Controls.TextBlock
+        $nameLbl.Text       = $label
         $nameLbl.Foreground = [System.Windows.Media.SolidColorBrush](
             [System.Windows.Media.ColorConverter]::ConvertFromString("#F0F4FF"))
-        $sp.Children.Add($extLbl)
-        $sp.Children.Add($nameLbl)
+
+        # Pipe Children.Add() to $null — it returns an int index that PowerShell
+        # would include in the function's output stream, causing the caller to
+        # receive @(0, 1, $item) instead of just $item ("Object[] Array" bug).
+        $sp.Children.Add($extLbl) | Out-Null
+        $sp.Children.Add($nameLbl) | Out-Null
         $item.Header = $sp
-        $item.Tag    = $File
-        $item.Add_Selected({ param($s,$e) Select-File $s.Tag })
         return $item
     }
 
@@ -2251,8 +2331,8 @@ Target : $($result.TargetPath)
         $tagMap = @{}
         foreach ($f in $Files) {
             if (-not $f.Tags -or $f.Tags.Count -eq 0) { continue }
-            foreach ($tag in $f.Tags) {
-                $t = $tag.Trim()
+            foreach ($rawTag in $f.Tags) {
+                $t = ("$rawTag").Trim()   # cast to string — JSON deserializes as Object[]
                 if ([string]::IsNullOrEmpty($t)) { continue }
                 if (-not $tagMap.ContainsKey($t)) {
                     $tagMap[$t] = [System.Collections.Generic.List[PSObject]]::new()
@@ -2266,12 +2346,12 @@ Target : $($result.TargetPath)
         # -------------------------------------------------------
         foreach ($pinnedTag in $script:PinnedTags) {
             $filesWithTag = if ($tagMap.ContainsKey($pinnedTag)) { $tagMap[$pinnedTag] } else { @() }
-            $countAll     = @($allForCounts | Where-Object { $_.Tags -contains $pinnedTag }).Count
+            $countAll     = @($allForCounts | Where-Object { [string[]]@($_.Tags) -contains $pinnedTag }).Count
             $header = New-TagGroupHeader "[#] $pinnedTag ($countAll)" "#2E8BFF" $true
             foreach ($f in ($filesWithTag | Sort-Object Name)) {
-                $header.Items.Add((New-TagTreeItem $f))
+                $header.Items.Add((New-TagTreeItem $f)) | Out-Null
             }
-            $FileTreeView.Items.Add($header)
+            $FileTreeView.Items.Add($header) | Out-Null
         }
 
         # -------------------------------------------------------
@@ -2280,16 +2360,16 @@ Target : $($result.TargetPath)
         foreach ($tag in ($tagMap.Keys | Where-Object { $_ -notin $script:PinnedTags } | Sort-Object)) {
             $header = New-TagGroupHeader "[#] $tag ($($tagMap[$tag].Count))" "#A8BDD8" $true
             foreach ($f in ($tagMap[$tag] | Sort-Object Name)) {
-                $header.Items.Add((New-TagTreeItem $f))
+                $header.Items.Add((New-TagTreeItem $f)) | Out-Null
             }
-            $FileTreeView.Items.Add($header)
+            $FileTreeView.Items.Add($header) | Out-Null
         }
 
         # -------------------------------------------------------
         # SECTION 3: Untagged — count from ALL files, display from filtered
         # -------------------------------------------------------
-        $untaggedAll      = @($allForCounts | Where-Object { -not $_.Tags -or $_.Tags.Count -eq 0 })
-        $untaggedFiltered = @($Files        | Where-Object { -not $_.Tags -or $_.Tags.Count -eq 0 })
+        $untaggedAll      = @($allForCounts | Where-Object { -not $_.Tags -or @($_.Tags | Where-Object { "$_".Trim() -ne "" }).Count -eq 0 })
+        $untaggedFiltered = @($Files        | Where-Object { -not $_.Tags -or @($_.Tags | Where-Object { "$_".Trim() -ne "" }).Count -eq 0 })
         $countLabel       = if ($Files.Count -eq $allForCounts.Count) {
             "[ ] Untagged ($($untaggedAll.Count))"
         } else {
@@ -2297,23 +2377,23 @@ Target : $($result.TargetPath)
         }
         $untaggedHeader = New-TagGroupHeader $countLabel "#607090" $false
         foreach ($f in ($untaggedFiltered | Sort-Object Name)) {
-            $untaggedHeader.Items.Add((New-TagTreeItem $f))
+            $untaggedHeader.Items.Add((New-TagTreeItem $f)) | Out-Null
         }
-        $FileTreeView.Items.Add($untaggedHeader)
+        $FileTreeView.Items.Add($untaggedHeader) | Out-Null
 
         # -------------------------------------------------------
         # SECTION 4: Negative virtual groups (bottom of list)
         # -------------------------------------------------------
         foreach ($groupName in $script:NegativeGroups.Keys) {
-            $predicate   = $script:NegativeGroups[$groupName]
+            $predicate     = $script:NegativeGroups[$groupName]
             $groupAllFiles = @($allForCounts | Where-Object { & $predicate $_ })
             $groupFiltered = @($Files        | Where-Object { & $predicate $_ })
-            $negLabel    = "[-] $groupName ($($groupAllFiles.Count))"
-            $negHeader   = New-TagGroupHeader $negLabel "#C0404A" $false
+            $negLabel      = "[-] $groupName ($($groupAllFiles.Count))"
+            $negHeader     = New-TagGroupHeader $negLabel "#C0404A" $false
             foreach ($f in ($groupFiltered | Sort-Object Name)) {
-                $negHeader.Items.Add((New-TagTreeItem $f))
+                $negHeader.Items.Add((New-TagTreeItem $f)) | Out-Null
             }
-            $FileTreeView.Items.Add($negHeader)
+            $FileTreeView.Items.Add($negHeader) | Out-Null
         }
     }
 
@@ -2322,42 +2402,57 @@ Target : $($result.TargetPath)
     # ==========================================================================
     function Select-File {
         param([PSCustomObject]$File)
+        if ($null -eq $File) { return }
         $script:SelectedFile = $File
         $script:FileContent  = $null
 
         $PanelEmpty.Visibility  = "Collapsed"
         $PanelDetail.Visibility = "Visible"
 
-        $ext = $File.Extension.ToLower()
-        if ($ext -eq ".ps1") {
-            $TxtFileIcon.Text       = "PS1"
-            $TxtFileIcon.Foreground = "#4A8FD4"
-        } else {
-            $TxtFileIcon.Text       = "BAT"
-            $TxtFileIcon.Foreground = "#E8A020"
+        try {
+            $ext = if ($File.Extension) { $File.Extension.ToLower() } else { ".ps1" }
+            if ($ext -eq ".ps1") {
+                $TxtFileIcon.Text       = "PS1"
+                $TxtFileIcon.Foreground = "#4A8FD4"
+            } else {
+                $TxtFileIcon.Text       = "BAT"
+                $TxtFileIcon.Foreground = "#E8A020"
+            }
+
+            $TxtDetailName.Text   = $File.Name
+            $TxtDetailPath.Text   = $File.FileRef
+
+            # Dates come back as strings from JSON cache — cast defensively
+            $TxtMetaCreated.Text  = try {
+                if ($File.Created)  { ([datetime]$File.Created).ToString("MMM dd, yyyy h:mmtt")  } else { "-" }
+            } catch { "-" }
+            $TxtMetaModified.Text = try {
+                if ($File.Modified) { ([datetime]$File.Modified).ToString("MMM dd, yyyy h:mmtt") } else { "-" }
+            } catch { "-" }
+
+            $TxtMetaLibrary.Text  = if ($File.Library)   { $File.Library }  else { "-" }
+            $TxtMetaSize.Text     = if ($File.SizeBytes)  { Format-FileSize([long]$File.SizeBytes) } else { "-" }
+            $TxtMetaType.Text     = $ext.ToUpper().TrimStart(".")
+            $TxtMetaFolder.Text   = if ($File.FolderPath) { $File.FolderPath } else { "-" }
+
+            # SharePoint URL preview (if configured)
+            $spUrl = Get-SharePointFileUrl -File $File
+            $TxtMetaSpUrl.Text = if ($spUrl) { $spUrl } else { "(SharePoint sync not configured)" }
+
+            # Cast Tags to string[] before join so Object[] from JSON doesn't cause issues
+            $tagsDisplay          = [string[]]@($File.Tags | Where-Object { $_ -ne $null } | ForEach-Object { "$_" })
+            $TxtComment.Text      = if ($File.Comment) { $File.Comment } else { "" }
+            $TxtTags.Text         = ($tagsDisplay -join ", ")
+            $TxtFileContent.Text  = "(Click 'Load Content' to preview and enable metadata editing)"
+            $TxtPreviewNote.Text  = " — click 'Load Content' above"
+            $TxtSaveStatus.Text   = ""
+
+            Set-Status "Selected: $($File.Name)"
+            Write-AppLog "File selected: $($File.FileRef)"
+        } catch {
+            Write-AppLog "Select-File error on $($File.Name): $_" "ERROR"
+            Set-Status "Error displaying file: $_" "#C84040"
         }
-
-        $TxtDetailName.Text  = $File.Name
-        $TxtDetailPath.Text  = $File.FileRef
-        $TxtMetaCreated.Text = if ($File.Created)  { $File.Created.ToString("MMM dd, yyyy h:mmtt")  } else { "-" }
-        $TxtMetaModified.Text= if ($File.Modified) { $File.Modified.ToString("MMM dd, yyyy h:mmtt") } else { "-" }
-        $TxtMetaLibrary.Text = if ($File.Library)  { $File.Library }  else { "-" }
-        $TxtMetaSize.Text    = if ($File.SizeBytes) { Format-FileSize([long]$File.SizeBytes) } else { "-" }
-        $TxtMetaType.Text    = $ext.ToUpper().TrimStart(".")
-        $TxtMetaFolder.Text  = if ($File.FolderPath) { $File.FolderPath } else { "-" }
-
-        # SharePoint URL preview (if configured)
-        $spUrl = Get-SharePointFileUrl -File $File
-        $TxtMetaSpUrl.Text = if ($spUrl) { $spUrl } else { "(SharePoint sync not configured)" }
-
-        $TxtComment.Text      = $File.Comment
-        $TxtTags.Text         = ($File.Tags -join ", ")
-        $TxtFileContent.Text  = "(Click 'Load Content' to preview and enable metadata editing)"
-        $TxtPreviewNote.Text  = " — click 'Load Content' above"
-        $TxtSaveStatus.Text   = ""
-
-        Set-Status "Selected: $($File.Name)"
-        Write-AppLog "File selected: $($File.FileRef)"
     }
 
     # ==========================================================================
@@ -2677,7 +2772,7 @@ Target : $($result.TargetPath)
                         if ($rawContent) {
                             $meta    = Read-AppMetadata $rawContent
                             $comment = $meta.Comment
-                            $tags    = @($meta.Tags)
+                            $tags    = [string[]]@($meta.Tags | Where-Object { $_ -ne $null } | ForEach-Object { "$_" })
                             $tagsRaw = ($tags -join ",")
                         }
                         $readCount++
@@ -2803,6 +2898,19 @@ Target : $($result.TargetPath)
         $vm = $FileListBox.SelectedItem
         if ($null -ne $vm -and $vm.PSObject.Properties["FileData"]) {
             Select-File $vm.FileData
+        }
+    })
+
+    # Single TreeView selection handler — covers Folder, Tag, and all future views.
+    # Per-item Add_Selected is NOT used because the Selected event bubbles: clicking
+    # a child item fires it on the child AND on every ancestor, with $s.Tag = $null
+    # on group headers, causing Select-File to receive $null and do nothing.
+    $FileTreeView.Add_SelectedItemChanged({
+        $selected = $FileTreeView.SelectedItem
+        if ($null -ne $selected -and $null -ne $selected.Tag -and
+            $selected.Tag -is [PSCustomObject] -and
+            $selected.Tag.PSObject.Properties["FileRef"]) {
+            Select-File $selected.Tag
         }
     })
 
