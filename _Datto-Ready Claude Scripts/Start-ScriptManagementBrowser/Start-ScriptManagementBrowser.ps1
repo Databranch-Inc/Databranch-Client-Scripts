@@ -32,7 +32,7 @@
 
 .NOTES
     File Name      : Start-ScriptManagementBrowser.ps1
-    Version        : 1.0.0.0
+    Version        : 1.0.5.0
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -61,6 +61,61 @@
         Full path : /sites/YourSite/IT Scripts/Published/Scripts
 
 .CHANGELOG
+    v1.0.5.0 - 2026-02-21 - Sam Kirsch
+        - Fixed: .Replace("\","/") calls inside the runspace script block were
+          corrupted by Python string processing during patching — backslashes were
+          eaten, producing .Replace("","/") which throws "value cannot be empty string".
+          Replaced all path-normalization .Replace() calls in the runspace with
+          PowerShell's -replace operator which is not subject to this escaping issue.
+          Affected: folder pre-creation pass (lines 584-585) and delta sync relPath
+          and fileRelDir calculations.
+
+    v1.0.4.0 - 2026-02-21 - Sam Kirsch
+        - Fixed: Add-PnPFile returns "Access denied" when the destination folder does
+          not exist in SharePoint (SharePoint's misleading error for missing path).
+          Added a folder pre-creation pass before the upload loop using
+          Resolve-PnPFolder, which creates the full folder chain for every unique
+          directory in the local repo. Handles arbitrarily deep nesting in one call
+          per folder. Is a no-op if the folder already exists.
+        - Added folder creation stats to sync log (Ensured=N, Errors=N).
+
+    v1.0.3.0 - 2026-02-21 - Sam Kirsch
+        - Fixed: Get-SharePointFileUrl still referenced SharePointLibrary and
+          SharePointSubfolder (old schema). Updated to use SharePointFolderPath.
+        - Note: Delete %APPDATA%\ScriptManagementBrowser\config.json if upgrading
+          from v1.0.0/v1.0.1 to force first-run setup with the new field schema.
+
+    v1.0.2.0 - 2026-02-21 - Sam Kirsch
+        - Fixed: Show-SettingsDialog rebuilt entirely using XAML + XamlReader::Parse()
+          + FindName(). Previous New-Object/::new() approaches for WPF controls both
+          fail at the nesting depth of a function-inside-function-inside-master-function
+          in PS7 when WPF assemblies are loaded. XAML parsing is the only reliable method.
+        - Fixed: Get-DefaultConfig changed from [ordered]@{} to plain @{} hashtable.
+          OrderedDictionary does not have a .Clone() method, causing Load-AppConfig to
+          throw on every startup and fall back to empty defaults.
+        - Fixed: Load-AppConfig now uses @($config.Keys) snapshot instead of
+          $config.Clone().Keys to safely enumerate keys during merge.
+        - Changed: SharePointLibrary + SharePointSubfolder fields replaced with a
+          single SharePointFolderPath field (full path within site, no leading slash,
+          e.g. Documents/Engineering Procedures/!GitScriptsRepo). Eliminates the
+          display-name vs internal-name confusion for SharePoint document libraries.
+        - Updated: Sync runspace path logic, Get-SharePointFileUrl, and
+          Test-SharePointConfig updated to use SharePointFolderPath.
+
+    v1.0.1.0 - 2026-02-21 - Sam Kirsch
+        - Fixed: Add-Field nested function in Show-SettingsDialog used [Type]::new()
+          for WPF controls, which resolves ambiguously inside nested PS7 function
+          scopes when WPF assemblies are loaded. Replaced with New-Object throughout
+          and used explicit [System.Windows.TextWrapping]::Wrap enum value.
+        - Fixed: $Window.Show() was called before ShowDialog() during first-run,
+          putting the window in a visible state and causing ShowDialog() to throw
+          "ShowDialog can be called only on hidden windows." Removed Show() entirely;
+          the settings dialog uses CenterScreen and needs no window owner.
+        - Fixed: Cancelling the first-run wizard now exits cleanly without writing
+          config.json and without attempting to call ShowDialog() on the main window.
+        - Fixed: Added $script:Config reload after first-run save so the main app
+          immediately has the correct values without requiring a restart.
+
     v1.0.0.0 - 2026-02-21 - Sam Kirsch
         - Initial release as Start-ScriptManagementBrowser
         - Replaces EngineersPowerApp (EngineersPowerApp_PS7_git.ps1)
@@ -99,7 +154,7 @@ function Start-ScriptManagementBrowser {
     # APP CONSTANTS
     # ==========================================================================
     $script:AppName       = "ScriptManagementBrowser"
-    $script:AppVersion    = "1.0.0.0"
+    $script:AppVersion    = "1.0.5.0"
     $script:AppDataDir    = "$env:APPDATA\ScriptManagementBrowser"
     $script:ConfigFile    = "$script:AppDataDir\config.json"
     $script:LogFile       = "$script:AppDataDir\app.log"
@@ -138,13 +193,17 @@ function Start-ScriptManagementBrowser {
     # CONFIG  (JSON persistence)
     # ==========================================================================
     function Get-DefaultConfig {
-        return [ordered]@{
-            GitRepoPath         = ""
-            SharePointSiteUrl   = ""   # e.g. https://databranch.sharepoint.com/sites/IT
-            SharePointLibrary   = ""   # e.g. IT Scripts
-            SharePointSubfolder = ""   # e.g. Published/Scripts  (no leading slash)
-            EntraClientId       = ""
-            SkipDeleteConfirm   = $false
+        # Plain hashtable (not [ordered]@{}) — OrderedDictionary has no .Clone() method,
+        # which caused a load failure in v1.0.0/v1.0.1. Keys iterated via @($config.Keys).
+        return @{
+            GitRepoPath          = ""
+            SharePointSiteUrl    = ""   # e.g. https://databranch.sharepoint.com
+            SharePointFolderPath = ""   # Full folder path within site, no leading slash
+                                        # e.g. Documents/Engineering Procedures/!GitScriptsRepo
+                                        # Get this from the SharePoint URL: decode the id= parameter,
+                                        # then drop the leading slash. Library name is the first segment.
+            EntraClientId        = ""
+            SkipDeleteConfirm    = $false
         }
     }
 
@@ -155,8 +214,9 @@ function Start-ScriptManagementBrowser {
         try {
             $raw    = Get-Content -Path $script:ConfigFile -Raw -Encoding UTF8 | ConvertFrom-Json
             $config = Get-DefaultConfig
-            # Merge loaded values over defaults (handles missing keys in old configs)
-            foreach ($key in $config.Clone().Keys) {
+            # Merge loaded values over defaults (handles missing keys in old configs).
+            # Use @($config.Keys) copy — hashtable keys cannot be enumerated while mutating.
+            foreach ($key in @($config.Keys)) {
                 if ($null -ne $raw.$key) {
                     $config[$key] = $raw.$key
                 }
@@ -374,8 +434,8 @@ function Start-ScriptManagementBrowser {
     function Test-SharePointConfig {
         $c = $script:Config
         return (
-            -not [string]::IsNullOrWhiteSpace($c.SharePointSiteUrl)   -and
-            -not [string]::IsNullOrWhiteSpace($c.SharePointLibrary)   -and
+            -not [string]::IsNullOrWhiteSpace($c.SharePointSiteUrl)      -and
+            -not [string]::IsNullOrWhiteSpace($c.SharePointFolderPath)   -and
             -not [string]::IsNullOrWhiteSpace($c.EntraClientId)
         )
     }
@@ -403,7 +463,7 @@ function Start-ScriptManagementBrowser {
         if (-not (Test-PnPModule))      { return }
         if (-not (Test-SharePointConfig)) {
             [System.Windows.MessageBox]::Show(
-                "SharePoint sync is not configured.`n`nPlease open Settings and fill in:`n  • SharePoint Site URL`n  • SharePoint Library name`n  • Entra Client ID",
+                "SharePoint sync is not configured.`n`nPlease open Settings and fill in:`n  • SharePoint Site URL`n  • SharePoint Folder Path`n  • Entra Client ID",
                 "Sync Not Configured",
                 [System.Windows.MessageBoxButton]::OK,
                 [System.Windows.MessageBoxImage]::Warning
@@ -434,13 +494,12 @@ function Start-ScriptManagementBrowser {
 
         # Capture all config values we need inside the runspace
         $rsConfig = @{
-            LogFile             = $script:LogFile
-            GitRepoPath         = $script:Config.GitRepoPath
-            SharePointSiteUrl   = $script:Config.SharePointSiteUrl
-            SharePointLibrary   = $script:Config.SharePointLibrary
-            SharePointSubfolder = $script:Config.SharePointSubfolder
-            EntraClientId       = $script:Config.EntraClientId
-            FileTypes           = $script:FileTypes
+            LogFile              = $script:LogFile
+            GitRepoPath          = $script:Config.GitRepoPath
+            SharePointSiteUrl    = $script:Config.SharePointSiteUrl
+            SharePointFolderPath = $script:Config.SharePointFolderPath
+            EntraClientId        = $script:Config.EntraClientId
+            FileTypes            = $script:FileTypes
         }
 
         $ps.AddScript({
@@ -475,20 +534,17 @@ function Start-ScriptManagementBrowser {
                 RS-Log "Connected successfully."
 
                 # ------------------------------------------------------------------
-                # Build server-relative folder path for the sync target
-                # e.g. /sites/IT/IT Scripts/Published/Scripts
-                # PnP expects the folder path as a server-relative URL
+                # Build server-relative folder path for the sync target.
+                # SharePointFolderPath is the full path within the site, no leading slash.
+                # e.g. "Documents/Engineering Procedures/!GitScriptsRepo"
+                # We prepend the site-relative path prefix to get a server-relative URL
+                # that PnP can use for Get-PnPFolderItem and Add-PnPFile.
                 # ------------------------------------------------------------------
                 $siteRelative = $rsConfig.SharePointSiteUrl -replace "https://[^/]+"
                 $siteRelative = $siteRelative.TrimEnd("/")
-                $libEncoded   = $rsConfig.SharePointLibrary   # PnP handles encoding
-                $subfolder    = $rsConfig.SharePointSubfolder.Trim("/")
-                $targetFolder = if ($subfolder) {
-                    "$siteRelative/$libEncoded/$subfolder"
-                } else {
-                    "$siteRelative/$libEncoded"
-                }
-                RS-Log "Sync target folder: $targetFolder"
+                $folderPath   = $rsConfig.SharePointFolderPath.Trim("/")
+                $targetFolder = "$siteRelative/$folderPath"
+                RS-Log "Sync target folder (server-relative): $targetFolder"
 
                 # ------------------------------------------------------------------
                 # Enumerate local Git repo files
@@ -521,7 +577,46 @@ function Start-ScriptManagementBrowser {
                 }
 
                 # ------------------------------------------------------------------
-                # Delta sync — compare local vs SharePoint
+                # FOLDER PRE-CREATION PASS
+                # Add-PnPFile does NOT create missing folders — it returns "Access denied"
+                # if the destination folder doesn't exist. We must ensure every unique
+                # folder path in the local repo exists in SharePoint before uploading.
+                #
+                # Resolve-PnPFolder creates the full folder chain in one call, handles
+                # deeply nested paths, and is a no-op if the folder already exists.
+                # We use the folder's SITE-relative path (without leading slash) as
+                # required by Resolve-PnPFolder's -SiteRelativePath parameter.
+                # ------------------------------------------------------------------
+                RS-Log "Building folder list from local repo..."
+                $uniqueFolders = $localFiles |
+                    ForEach-Object {
+                        # Use -replace operator (not .Replace()) — avoids backslash escaping
+                        # issues when this script block is marshalled into the runspace.
+                        $rel = ($_.FullName.Substring($rsConfig.GitRepoPath.Length).TrimStart('/\') -replace '\\','/')
+                        $dir = ([System.IO.Path]::GetDirectoryName($rel) -replace '\\','/')
+                        if ($dir) { "$folderPath/$dir" } else { $folderPath }
+                    } |
+                    Sort-Object -Unique
+
+                RS-Log "Unique folders to ensure exist: $($uniqueFolders.Count)"
+                $foldersCreated = 0
+                $folderErrors   = 0
+
+                foreach ($spFolderRelPath in $uniqueFolders) {
+                    try {
+                        # Resolve-PnPFolder expects a site-relative path with NO leading slash
+                        Resolve-PnPFolder -SiteRelativePath $spFolderRelPath -ErrorAction Stop | Out-Null
+                        $foldersCreated++
+                    } catch {
+                        $folderErrors++
+                        RS-Log "  ERROR ensuring folder '$spFolderRelPath': $_" "ERROR"
+                    }
+                }
+
+                RS-Log "Folder pass complete. Ensured=$foldersCreated Errors=$folderErrors"
+
+                # ------------------------------------------------------------------
+                # DELTA SYNC — compare local vs SharePoint
                 # ------------------------------------------------------------------
                 $uploaded = 0
                 $skipped  = 0
@@ -533,26 +628,20 @@ function Start-ScriptManagementBrowser {
 
                 foreach ($localFile in $localFiles) {
                     # Build the relative path from repo root, use forward slashes
-                    $relPath = $localFile.FullName.Substring($rsConfig.GitRepoPath.Length).TrimStart("\/").Replace("\","/")
+                    $relPath = ($localFile.FullName.Substring($rsConfig.GitRepoPath.Length).TrimStart('/\') -replace '\\','/')
 
                     # Build expected SP server-relative path
-                    $expectedSpPath = if ($subfolder) {
-                        "$siteRelative/$libEncoded/$subfolder/$relPath"
-                    } else {
-                        "$siteRelative/$libEncoded/$relPath"
-                    }
+                    $expectedSpPath = "$targetFolder/$relPath"
                     $expectedSpPathLower = $expectedSpPath.ToLower()
 
-                    # Determine SP target folder for this specific file
-                    $fileRelDir    = [System.IO.Path]::GetDirectoryName($relPath).Replace("\","/")
-                    $spUploadFolder = if ($subfolder -and $fileRelDir) {
+                    # Determine SP target folder for this specific file.
+                    # targetFolder is already the full server-relative path to the sync root.
+                    # Append the file's relative directory (if any) to get the upload destination.
+                    $fileRelDir     = ([System.IO.Path]::GetDirectoryName($relPath) -replace '\\','/')
+                    $spUploadFolder = if ($fileRelDir) {
                         "$targetFolder/$fileRelDir"
-                    } elseif ($subfolder) {
-                        $targetFolder
-                    } elseif ($fileRelDir) {
-                        "$siteRelative/$libEncoded/$fileRelDir"
                     } else {
-                        "$siteRelative/$libEncoded"
+                        $targetFolder
                     }
 
                     $needsUpload = $true
@@ -881,200 +970,164 @@ Target : $($result.TargetPath)
 
     # ==========================================================================
     # SETTINGS DIALOG  (first-run and on-demand)
+    #
+    # IMPORTANT ARCHITECTURE NOTE:
+    # This dialog is built entirely from XAML + XamlReader::Parse() + FindName(),
+    # identical to how the main window is built. This is the ONLY reliable approach
+    # for creating WPF controls inside deeply-nested PS7 functions.
+    #
+    # Both ::new() and New-Object for WPF types fail unpredictably when called inside
+    # a function that is itself inside another function inside the master function —
+    # PS7 resolves the type constructor to a wrong overload, returning an object that
+    # looks like the right type but has none of the expected WPF properties. The root
+    # cause is PS7's type resolution order at deep nesting depth when multiple WPF
+    # assemblies are loaded. XamlReader::Parse() bypasses this entirely.
     # ==========================================================================
     function Show-SettingsDialog {
         param([bool]$IsFirstRun = $false)
 
-        $dlg                       = [System.Windows.Window]::new()
-        $dlg.Title                 = if ($IsFirstRun) { "First-Run Setup — Script Management Browser" } else { "Settings" }
-        $dlg.Width                 = 580
-        $dlg.Height                = if ($IsFirstRun) { 580 } else { 620 }
-        $dlg.MinWidth              = 480
-        $dlg.WindowStartupLocation = "CenterScreen"
-        $dlg.Background            = "#1E1E2E"
-        $dlg.ResizeMode            = "NoResize"
-
-        if (-not $IsFirstRun) { $dlg.Owner = $Window }
-
-        $scroll                             = [System.Windows.Controls.ScrollViewer]::new()
-        $scroll.VerticalScrollBarVisibility = "Auto"
-        $dlg.Content                        = $scroll
-
-        $sp         = [System.Windows.Controls.StackPanel]::new()
-        $sp.Margin  = [System.Windows.Thickness]::new(24,20,24,20)
-        $scroll.Content = $sp
-
-        # Helper: add a label+textbox field pair
-        function Add-Field {
-            param([string]$Label, [string]$Value, [string]$Hint = "", [bool]$IsOptional = $false)
-            $outer = [System.Windows.Controls.StackPanel]::new()
-            $outer.Margin = [System.Windows.Thickness]::new(0,0,0,14)
-
-            $lbl          = [System.Windows.Controls.TextBlock]::new()
-            $lbl.Foreground = "#6272A4"
-            $lbl.FontSize   = 10
-            $lbl.FontWeight = "SemiBold"
-            $lbl.Text       = $Label.ToUpper() + $(if ($IsOptional) { "  (optional)" } else { "" })
-            $lbl.Margin     = [System.Windows.Thickness]::new(0,0,0,4)
-            $outer.Children.Add($lbl)
-
-            $tb             = [System.Windows.Controls.TextBox]::new()
-            $tb.Text        = $Value
-            $tb.Background  = "#2E2E45"
-            $tb.Foreground  = "#F8F8F2"
-            $tb.BorderBrush = "#44446A"
-            $tb.BorderThickness = [System.Windows.Thickness]::new(1)
-            $tb.Padding     = [System.Windows.Thickness]::new(10,7,10,7)
-            $tb.FontSize    = 12
-            $tb.FontFamily  = [System.Windows.Media.FontFamily]::new("Consolas")
-            $outer.Children.Add($tb)
-
-            if ($Hint) {
-                $hint           = [System.Windows.Controls.TextBlock]::new()
-                $hint.Text      = $Hint
-                $hint.Foreground = "#44446A"
-                $hint.FontSize  = 10
-                $hint.Margin    = [System.Windows.Thickness]::new(2,4,0,0)
-                $hint.TextWrapping = "Wrap"
-                $outer.Children.Add($hint)
-            }
-
-            $sp.Children.Add($outer)
-            return $tb
-        }
-
-        # Title
-        $title           = [System.Windows.Controls.TextBlock]::new()
-        $title.Text      = if ($IsFirstRun) { "Welcome! Let's get you set up." } else { "Settings" }
-        $title.Foreground = "#F8F8F2"
-        $title.FontSize   = 18
-        $title.FontWeight = "Bold"
-        $title.Margin     = [System.Windows.Thickness]::new(0,0,0,4)
-        $sp.Children.Add($title)
-
-        $subtitle           = [System.Windows.Controls.TextBlock]::new()
-        $subtitle.Text      = if ($IsFirstRun) {
-            "Configure your Git repository path and optional SharePoint sync settings. SharePoint fields are only required if you plan to use the Sync to SharePoint feature."
+        $titleText    = if ($IsFirstRun) { "Welcome! Let's get you set up." } else { "Settings" }
+        $subtitleText = if ($IsFirstRun) {
+            "Configure your Git repository and optional SharePoint sync settings. SharePoint fields are only needed for the Sync to SharePoint feature."
         } else {
             "Git repo path is required. SharePoint fields are only needed for sync."
         }
-        $subtitle.Foreground = "#6272A4"
-        $subtitle.FontSize   = 11
-        $subtitle.TextWrapping = "Wrap"
-        $subtitle.Margin     = [System.Windows.Thickness]::new(0,0,0,24)
-        $sp.Children.Add($subtitle)
+        $saveLabel    = if ($IsFirstRun) { "Save &amp; Launch" } else { "Save" }
+        $showCancel   = if ($IsFirstRun) { "Collapsed" } else { "Visible" }
+        $showReset    = if ((-not $IsFirstRun) -and ($script:Config.SkipDeleteConfirm -eq $true)) { "Visible" } else { "Collapsed" }
+        $winHeight    = if ($IsFirstRun) { "560" } else { "620" }
 
-        # Section: Git
-        $secGit           = [System.Windows.Controls.TextBlock]::new()
-        $secGit.Text      = "— GIT REPOSITORY"
-        $secGit.Foreground = "#7B9CFF"
-        $secGit.FontSize   = 11
-        $secGit.FontWeight = "SemiBold"
-        $secGit.Margin     = [System.Windows.Thickness]::new(0,0,0,12)
-        $sp.Children.Add($secGit)
+        $settingsXaml = @"
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Settings"
+    Height="$winHeight" Width="600" MinWidth="480"
+    WindowStartupLocation="CenterScreen"
+    Background="#1E1E2E"
+    ResizeMode="NoResize">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20,24,20">
 
-        $tbGit = Add-Field -Label "Git Repo Path" `
-                           -Value $script:Config.GitRepoPath `
-                           -Hint "Full path to your local repository root.  e.g.  C:\GitHubRepos\Databranch-Client-Scripts"
+            <TextBlock x:Name="TxtSettingsTitle"
+                       Foreground="#F8F8F2" FontSize="18" FontWeight="Bold" Margin="0,0,0,4"/>
+            <TextBlock x:Name="TxtSettingsSubtitle"
+                       Foreground="#6272A4" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,24"/>
 
-        # Section: SharePoint
-        $secSp           = [System.Windows.Controls.TextBlock]::new()
-        $secSp.Text      = "— SHAREPOINT SYNC  (optional)"
-        $secSp.Foreground = "#7B9CFF"
-        $secSp.FontSize   = 11
-        $secSp.FontWeight = "SemiBold"
-        $secSp.Margin     = [System.Windows.Thickness]::new(0,8,0,12)
-        $sp.Children.Add($secSp)
+            <!-- GIT SECTION -->
+            <TextBlock Text="&#x2014; GIT REPOSITORY"
+                       Foreground="#7B9CFF" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,12"/>
 
-        $tbSiteUrl = Add-Field -Label "SharePoint Site URL" `
-                               -Value $script:Config.SharePointSiteUrl `
-                               -Hint "Full URL to your SharePoint site.  e.g.  https://databranch.sharepoint.com/sites/IT" `
-                               -IsOptional $true
+            <StackPanel Margin="0,0,0,14">
+                <TextBlock Text="GIT REPO PATH" Foreground="#6272A4" FontSize="10"
+                           FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <TextBox x:Name="TxtGitPath" Background="#2E2E45" Foreground="#F8F8F2"
+                         BorderBrush="#44446A" BorderThickness="1" Padding="10,7"
+                         FontSize="12" FontFamily="Consolas"/>
+                <TextBlock Text="Full path to your local repository root.  e.g.  C:\GitHubRepos\Databranch-Client-Scripts"
+                           Foreground="#44446A" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
 
-        $tbLibrary = Add-Field -Label "SharePoint Library Name" `
-                               -Value $script:Config.SharePointLibrary `
-                               -Hint "Document library display name (not URL-encoded).  e.g.  IT Scripts" `
-                               -IsOptional $true
+            <!-- SHAREPOINT SECTION -->
+            <TextBlock Text="&#x2014; SHAREPOINT SYNC  (optional)"
+                       Foreground="#7B9CFF" FontSize="11" FontWeight="SemiBold" Margin="0,8,0,12"/>
 
-        $tbSubfolder = Add-Field -Label "SharePoint Subfolder Path" `
-                                 -Value $script:Config.SharePointSubfolder `
-                                 -Hint "Path within the library — no leading slash, use forward slashes.  e.g.  Published/Scripts`n(Leave blank to sync directly into the library root)" `
-                                 -IsOptional $true
+            <StackPanel Margin="0,0,0,14">
+                <TextBlock Text="SHAREPOINT SITE URL  (optional)" Foreground="#6272A4"
+                           FontSize="10" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <TextBox x:Name="TxtSpSiteUrl" Background="#2E2E45" Foreground="#F8F8F2"
+                         BorderBrush="#44446A" BorderThickness="1" Padding="10,7"
+                         FontSize="12" FontFamily="Consolas"/>
+                <TextBlock Text="Root URL of your SharePoint site.  e.g.  https://databranch.sharepoint.com  or  https://databranch.sharepoint.com/sites/IT"
+                           Foreground="#44446A" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
 
-        $tbClientId = Add-Field -Label "Entra App Client ID" `
-                                -Value $script:Config.EntraClientId `
-                                -Hint "Client ID from your PnP Entra app registration.`nTo create: Register-PnPEntraIDAppForInteractiveLogin -ApplicationName 'PnP.PowerShell' -Tenant 'databranch.onmicrosoft.com' -Interactive" `
-                                -IsOptional $true
+            <StackPanel Margin="0,0,0,14">
+                <TextBlock Text="SHAREPOINT FOLDER PATH  (optional)" Foreground="#6272A4"
+                           FontSize="10" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <TextBox x:Name="TxtSpFolderPath" Background="#2E2E45" Foreground="#F8F8F2"
+                         BorderBrush="#44446A" BorderThickness="1" Padding="10,7"
+                         FontSize="12" FontFamily="Consolas"/>
+                <TextBlock Foreground="#44446A" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap">
+                    <Run Text="Full folder path within your site. No leading slash. Library name is the first segment."/>
+                    <LineBreak/>
+                    <Run Text="Find it: navigate to the folder in SharePoint, copy the URL, decode the id= parameter value, drop the leading slash."/>
+                    <LineBreak/>
+                    <Run Text="e.g.  Documents/Engineering Procedures/!GitScriptsRepo" FontFamily="Consolas"/>
+                </TextBlock>
+            </StackPanel>
 
-        # Delete confirmation reset (only show when not first-run and SkipDeleteConfirm is true)
-        if (-not $IsFirstRun -and $script:Config.SkipDeleteConfirm -eq $true) {
-            $resetBorder         = [System.Windows.Controls.Border]::new()
-            $resetBorder.Background = "#252537"
-            $resetBorder.BorderBrush = "#FF5555"
-            $resetBorder.BorderThickness = [System.Windows.Thickness]::new(1)
-            $resetBorder.CornerRadius = [System.Windows.CornerRadius]::new(6)
-            $resetBorder.Padding = [System.Windows.Thickness]::new(14,10,14,10)
-            $resetBorder.Margin  = [System.Windows.Thickness]::new(0,8,0,14)
+            <StackPanel Margin="0,0,0,14">
+                <TextBlock Text="ENTRA APP CLIENT ID  (optional)" Foreground="#6272A4"
+                           FontSize="10" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <TextBox x:Name="TxtClientId" Background="#2E2E45" Foreground="#F8F8F2"
+                         BorderBrush="#44446A" BorderThickness="1" Padding="10,7"
+                         FontSize="12" FontFamily="Consolas"/>
+                <TextBlock Foreground="#44446A" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap">
+                    <Run Text="Client ID from your PnP Entra app registration. To create:"/>
+                    <LineBreak/>
+                    <Run Text="Register-PnPEntraIDAppForInteractiveLogin -ApplicationName 'PnP.PowerShell' -Tenant 'databranch.onmicrosoft.com' -Interactive"
+                         FontFamily="Consolas"/>
+                </TextBlock>
+            </StackPanel>
 
-            $resetSp = [System.Windows.Controls.StackPanel]::new()
-            $resetSp.Orientation = "Horizontal"
-            $resetBorder.Child = $resetSp
+            <!-- Delete confirmation reset banner (only shown when SkipDeleteConfirm = true) -->
+            <Border x:Name="PanelResetDeleteConfirm"
+                    Visibility="$showReset"
+                    Background="#252537" BorderBrush="#FF5555" BorderThickness="1"
+                    CornerRadius="6" Padding="14,10" Margin="0,8,0,14">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Delete confirmation is currently disabled.  "
+                               Foreground="#FFB86C" FontSize="11" VerticalAlignment="Center"/>
+                    <Button x:Name="BtnResetDeleteConfirm" Content="Re-enable"
+                            Background="#3A3A55" Foreground="#F8F8F2"
+                            Padding="10,4" FontSize="11" Cursor="Hand"
+                            BorderThickness="1" BorderBrush="#44446A"/>
+                </StackPanel>
+            </Border>
 
-            $resetLbl          = [System.Windows.Controls.TextBlock]::new()
-            $resetLbl.Text     = "Delete confirmation is currently disabled.  "
-            $resetLbl.Foreground = "#FFB86C"
-            $resetLbl.FontSize = 11
-            $resetLbl.VerticalAlignment = "Center"
+            <!-- Buttons -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <Button x:Name="BtnSettingsCancel" Content="Cancel"
+                        Width="80" Height="34" Margin="0,0,8,0"
+                        Background="#3A3A55" Foreground="#F8F8F2"
+                        BorderThickness="1" BorderBrush="#44446A"
+                        Cursor="Hand" Visibility="$showCancel"/>
+                <Button x:Name="BtnSettingsSave" Content="$saveLabel"
+                        Width="130" Height="34"
+                        Background="#7B9CFF" Foreground="#1E1E2E"
+                        FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
+            </StackPanel>
 
-            $resetBtn          = [System.Windows.Controls.Button]::new()
-            $resetBtn.Content  = "Re-enable"
-            $resetBtn.Background = "#3A3A55"
-            $resetBtn.Foreground = "#F8F8F2"
-            $resetBtn.Padding   = [System.Windows.Thickness]::new(10,4,10,4)
-            $resetBtn.FontSize  = 11
-            $resetBtn.Add_Click({
-                $script:Config.SkipDeleteConfirm = $false
-                Save-AppConfig -Config $script:Config
-                $resetBorder.Visibility = "Collapsed"
-                Write-AppLog "SkipDeleteConfirm reset to false by user"
-            })
+        </StackPanel>
+    </ScrollViewer>
+</Window>
+"@
 
-            $resetSp.Children.Add($resetLbl)
-            $resetSp.Children.Add($resetBtn)
-            $sp.Children.Add($resetBorder)
-        }
+        $dlg = [Windows.Markup.XamlReader]::Parse($settingsXaml)
 
-        # Buttons
-        $btnRow                     = [System.Windows.Controls.StackPanel]::new()
-        $btnRow.Orientation         = "Horizontal"
-        $btnRow.HorizontalAlignment = "Right"
-        $btnRow.Margin              = [System.Windows.Thickness]::new(0,16,0,0)
-        $sp.Children.Add($btnRow)
+        # Populate dynamic text (can't embed PS variables directly in XAML heredoc safely)
+        $dlg.FindName("TxtSettingsTitle").Text    = $titleText
+        $dlg.FindName("TxtSettingsSubtitle").Text = $subtitleText
 
-        $btnSave              = [System.Windows.Controls.Button]::new()
-        $btnSave.Content      = if ($IsFirstRun) { "Save & Launch" } else { "Save" }
-        $btnSave.Width        = 120
-        $btnSave.Height       = 34
-        $btnSave.Background   = "#7B9CFF"
-        $btnSave.Foreground   = "#1E1E2E"
-        $btnSave.FontWeight   = "SemiBold"
-        $btnSave.Margin       = [System.Windows.Thickness]::new(0,0,8,0)
+        # Pre-fill current config values
+        $dlg.FindName("TxtGitPath").Text      = $script:Config.GitRepoPath
+        $dlg.FindName("TxtSpSiteUrl").Text    = $script:Config.SharePointSiteUrl
+        $dlg.FindName("TxtSpFolderPath").Text = $script:Config.SharePointFolderPath
+        $dlg.FindName("TxtClientId").Text     = $script:Config.EntraClientId
 
-        if (-not $IsFirstRun) {
-            $btnCancel            = [System.Windows.Controls.Button]::new()
-            $btnCancel.Content    = "Cancel"
-            $btnCancel.Width      = 80
-            $btnCancel.Height     = 34
-            $btnCancel.Background = "#3A3A55"
-            $btnCancel.Foreground = "#F8F8F2"
-            $btnCancel.Add_Click({ $dlg.Close() })
-            $btnRow.Children.Add($btnCancel)
-        }
+        # Wire buttons
+        $dlg.FindName("BtnSettingsCancel").Add_Click({ $dlg.Close() })
 
-        $btnRow.Children.Add($btnSave)
+        $dlg.FindName("BtnResetDeleteConfirm").Add_Click({
+            $script:Config.SkipDeleteConfirm = $false
+            Save-AppConfig -Config $script:Config
+            $dlg.FindName("PanelResetDeleteConfirm").Visibility = "Collapsed"
+            Write-AppLog "SkipDeleteConfirm reset to false by user"
+        })
 
-        $btnSave.Add_Click({
-            $gitPath = $tbGit.Text.Trim()
+        $dlg.FindName("BtnSettingsSave").Add_Click({
+            $gitPath = $dlg.FindName("TxtGitPath").Text.Trim()
             if ([string]::IsNullOrWhiteSpace($gitPath)) {
                 [System.Windows.MessageBox]::Show(
                     "Git Repo Path is required.",
@@ -1084,11 +1137,10 @@ Target : $($result.TargetPath)
                 )
                 return
             }
-            $script:Config.GitRepoPath         = $gitPath
-            $script:Config.SharePointSiteUrl   = $tbSiteUrl.Text.Trim().TrimEnd("/")
-            $script:Config.SharePointLibrary   = $tbLibrary.Text.Trim()
-            $script:Config.SharePointSubfolder = $tbSubfolder.Text.Trim().Trim("/")
-            $script:Config.EntraClientId       = $tbClientId.Text.Trim()
+            $script:Config.GitRepoPath          = $gitPath
+            $script:Config.SharePointSiteUrl    = $dlg.FindName("TxtSpSiteUrl").Text.Trim().TrimEnd("/")
+            $script:Config.SharePointFolderPath = $dlg.FindName("TxtSpFolderPath").Text.Trim().Trim("/")
+            $script:Config.EntraClientId        = $dlg.FindName("TxtClientId").Text.Trim()
             Save-AppConfig -Config $script:Config
             $dlg.DialogResult = $true
             $dlg.Close()
@@ -1871,21 +1923,17 @@ Target : $($result.TargetPath)
         param([PSCustomObject]$File)
         $c = $script:Config
         if ([string]::IsNullOrWhiteSpace($c.SharePointSiteUrl) -or
-            [string]::IsNullOrWhiteSpace($c.SharePointLibrary)) {
+            [string]::IsNullOrWhiteSpace($c.SharePointFolderPath)) {
             return $null
         }
-        # Build relative path of file from repo root
-        $repoPath = $c.GitRepoPath.TrimEnd("\/")
-        $relPath  = $File.FileRef.Substring($repoPath.Length).TrimStart("\/").Replace("\","/")
-        $subfolder = $c.SharePointSubfolder.Trim("/")
-        $baseUrl  = $c.SharePointSiteUrl.TrimEnd("/")
-        $libPart  = [Uri]::EscapeUriString($c.SharePointLibrary)
-        if ($subfolder) {
-            $subPart = [Uri]::EscapeUriString($subfolder)
-            return "$baseUrl/$libPart/$subPart/$relPath"
-        } else {
-            return "$baseUrl/$libPart/$relPath"
-        }
+        # SharePointFolderPath = full path within site, no leading slash
+        # e.g. Documents/Engineering Procedures/!GitScriptsRepo
+        # Append the file's repo-relative path to build the full SharePoint URL.
+        $repoPath   = $c.GitRepoPath.TrimEnd("\/")
+        $relPath    = $File.FileRef.Substring($repoPath.Length).TrimStart("\/").Replace("\","/")
+        $baseUrl    = $c.SharePointSiteUrl.TrimEnd("/")
+        $folderPart = [Uri]::EscapeUriString($c.SharePointFolderPath.Trim("/"))
+        return "$baseUrl/$folderPart/$relPath"
     }
 
     function Update-ViewToggleStyle {
@@ -2567,22 +2615,27 @@ Target : $($result.TargetPath)
     $script:Config = Load-AppConfig
 
     # First-run check — if no git repo path is configured, show setup dialog
+    # First-run check — if no git repo path is configured, show setup dialog.
+    # IMPORTANT: Do NOT call $Window.Show() before ShowDialog() — doing so puts
+    # the window in a visible state and causes ShowDialog() to throw
+    # "ShowDialog can be called only on hidden windows."
+    # The settings dialog uses CenterScreen so it does not need a window owner.
     if ([string]::IsNullOrWhiteSpace($script:Config.GitRepoPath)) {
         Write-AppLog "No config found — showing first-run setup dialog"
-        # Show window first so settings dialog has an owner (or use CenterScreen)
-        $Window.Show()
         $configured = Show-SettingsDialog -IsFirstRun $true
         if (-not $configured) {
-            Write-AppLog "First-run setup cancelled — exiting"
-            $Window.Close()
+            # User closed/cancelled first-run wizard — exit cleanly, no config written
+            Write-AppLog "First-run setup cancelled by user — exiting without saving config"
             return
         }
+        # Reload config now that first-run save has written it
+        $script:Config = Load-AppConfig
     }
 
-    # Load from cache or scan
+    # Load from cache or trigger initial scan
     Start-AppLoad
 
-    # Show window (already shown if first-run, ShowDialog blocks otherwise)
+    # Show the main window — ShowDialog() blocks until the window is closed
     $Window.ShowDialog() | Out-Null
 
 } # End function Start-ScriptManagementBrowser
