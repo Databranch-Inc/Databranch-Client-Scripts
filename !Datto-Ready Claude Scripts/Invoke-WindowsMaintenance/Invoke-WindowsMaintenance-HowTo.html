@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoke-WindowsMaintenance — Operator How-To Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:           #0f1e35;
+    --navy-mid:       #1a3154;
+    --navy-light:     #1e4a7a;
+    --accent:         #2e8bff;
+    --accent-dim:     #1a5fbd;
+    --teal:           #00c9b1;
+    --white:          #f4f7fb;
+    --text:           #d0dce8;
+    --text-muted:     #8a9bb5;
+    --text-dim:       #5a6f8a;
+    --border:         #1e3a5a;
+    --border-mid:     #2a4f72;
+    --code-bg:        #0a1624;
+    --row-alt:        #0d1e30;
+    --success-bg:     #0a2418;
+    --success-border: #1a6640;
+    --warn-bg:        #1e1a08;
+    --warn-border:    #7a6010;
+    --note-bg:        #0a1a2e;
+    --note-border:    #1a4a7a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 260px;
+    min-height: 100vh;
+    background: #080f1a;
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .company {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-variant: small-caps;
+  }
+  .sidebar-logo .script-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--white);
+    margin-top: 6px;
+    word-break: break-all;
+  }
+  .sidebar-logo .doc-type {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  nav { padding: 16px 0 24px; }
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    padding: 14px 20px 6px;
+  }
+  .nav-link {
+    display: block;
+    padding: 7px 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-link:hover { color: var(--white); background: rgba(46,139,255,0.07); }
+  .nav-link.active {
+    color: var(--white);
+    background: var(--navy-light);
+    border-left-color: var(--accent);
+  }
+  .nav-link.sub {
+    padding-left: 36px;
+    font-size: 12px;
+  }
+
+  .main { margin-left: 260px; }
+
+  /* ── Cover ── */
+  .cover {
+    position: relative;
+    background: linear-gradient(145deg, #0a1828 0%, #0f2544 40%, #0a1e3a 100%);
+    padding: 64px 80px 56px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 340px; height: 340px;
+    background: radial-gradient(circle, rgba(46,139,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(0,201,177,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 14px;
+  }
+  .cover-title {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+  .cover-scriptname {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .cover-doctype {
+    font-size: 15px;
+    font-style: italic;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+  }
+  .cover-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+  }
+  .cover-meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .cover-meta-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+  .cover-meta-value {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .cover-meta-value.mono {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+  }
+
+  /* ── Content ── */
+  .content {
+    max-width: 860px;
+    padding: 56px 80px 80px;
+  }
+
+  .section { margin-bottom: 64px; }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--white);
+    border-bottom: 2px solid var(--navy-light);
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+  }
+  h1::before {
+    content: '// ';
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+    font-weight: 400;
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 28px 0 12px;
+  }
+  h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 20px 0 8px;
+  }
+  p { margin-bottom: 14px; }
+
+  /* ── Tables ── */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--navy-mid);
+    color: var(--text-muted);
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-mid);
+    text-align: left;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: rgba(46,139,255,0.05); }
+  td { padding: 10px 14px; vertical-align: top; }
+  td.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); white-space: nowrap; font-size: 12.5px; }
+  td.num { font-family: 'IBM Plex Mono', monospace; font-size: 18px; text-align: center; font-weight: 600; }
+
+  /* ── Code Blocks ── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 16px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    overflow-x: auto;
+    margin-bottom: 16px;
+    white-space: pre;
+    line-height: 1.6;
+  }
+  code.inline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 6px;
+    color: var(--accent);
+  }
+
+  /* ── Callouts ── */
+  .callout {
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .callout.note { background: var(--note-bg); border-left: 3px solid var(--note-border); }
+  .callout.tip  { background: var(--success-bg); border-left: 3px solid var(--success-border); }
+  .callout.warn { background: var(--warn-bg); border-left: 3px solid var(--warn-border); }
+  .callout-icon { font-size: 16px; line-height: 1.5; flex-shrink: 0; }
+  .callout-body { flex: 1; }
+  .callout-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .callout.note .callout-label { color: var(--accent); }
+  .callout.tip  .callout-label { color: #22c55e; }
+  .callout.warn .callout-label { color: #eab308; }
+  .callout-body p { margin-bottom: 0; font-size: 13.5px; }
+
+  /* ── Styled Lists ── */
+  ul.styled { list-style: none; padding-left: 0; margin-bottom: 16px; }
+  ul.styled li {
+    padding: 5px 0 5px 20px;
+    position: relative;
+    color: var(--text);
+  }
+  ul.styled li::before {
+    content: '▸';
+    color: var(--accent);
+    position: absolute;
+    left: 0;
+    font-size: 11px;
+    top: 7px;
+  }
+  ol.styled { list-style: none; padding-left: 0; counter-reset: ol-counter; margin-bottom: 16px; }
+  ol.styled li {
+    counter-increment: ol-counter;
+    padding: 5px 0 5px 36px;
+    position: relative;
+    color: var(--text);
+  }
+  ol.styled li::before {
+    content: counter(ol-counter);
+    position: absolute;
+    left: 0;
+    background: var(--navy-light);
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 5px;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+  .badge-blue  { background: rgba(46,139,255,0.15);  color: #60a5fa; }
+  .badge-teal  { background: rgba(0,201,177,0.15);   color: var(--teal); }
+  .badge-green { background: rgba(34,197,94,0.15);   color: #22c55e; }
+  .badge-amber { background: rgba(234,179,8,0.15);   color: #eab308; }
+  .badge-red   { background: rgba(239,68,68,0.15);   color: #ef4444; }
+
+  /* ── Step Blocks ── */
+  .step-block {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .step-header {
+    background: var(--navy-mid);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .step-num {
+    background: var(--navy-light);
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+  }
+  .step-body {
+    padding: 16px 18px;
+  }
+  .step-body p:last-child { margin-bottom: 0; }
+
+  /* ── Mode Cards ── */
+  .mode-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .mode-card {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .mode-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .mode-card-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ── Exit Code Pills ── */
+  .exit-codes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .exit-pill {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    min-width: 130px;
+    text-align: center;
+  }
+  .exit-pill .exit-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .exit-pill .exit-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .exit-pill .exit-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ── Console Prefix Legend ── */
+  .prefix-legend {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .prefix-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .prefix-row:last-child { border-bottom: none; }
+  .prefix-row:nth-child(even) { background: var(--row-alt); }
+  .prefix-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    width: 90px;
+    flex-shrink: 0;
+  }
+  .prefix-desc { font-size: 13px; color: var(--text); }
+
+  /* ── Env Var Table special ── */
+  .param-default {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* ── Footer ── */
+  .doc-footer {
+    border-top: 1px solid var(--border);
+    padding: 18px 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-left: 260px;
+  }
+  .doc-footer .footer-right {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* ── Print ── */
+  @media print {
+    .sidebar { display: none; }
+    .main, .doc-footer { margin-left: 0; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════════ -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="company">Databranch</div>
+    <div class="script-name">Invoke-WindowsMaintenance.ps1</div>
+    <div class="doc-type">Operator How-To Guide</div>
+  </div>
+  <nav>
+    <div class="nav-section-label">Contents</div>
+    <a class="nav-link" href="#overview">Overview</a>
+    <a class="nav-link" href="#what-it-does">What the Script Does</a>
+    <a class="nav-link" href="#prerequisites">Prerequisites</a>
+    <a class="nav-link sub" href="#prerequisites">Permissions</a>
+    <a class="nav-link sub" href="#prerequisites">Requirements</a>
+    <a class="nav-link" href="#running">Running the Script</a>
+    <a class="nav-link sub" href="#running">Execution Profiles</a>
+    <a class="nav-link sub" href="#running">Parameters</a>
+    <a class="nav-link sub" href="#running">Examples</a>
+    <a class="nav-link" href="#output">Reading the Output</a>
+    <a class="nav-link sub" href="#output">Log Files</a>
+    <a class="nav-link sub" href="#output">Exit Codes</a>
+    <a class="nav-link" href="#console">Console Output</a>
+    <a class="nav-link" href="#troubleshooting">Troubleshooting</a>
+    <a class="nav-link" href="#dattormm">Running via DattoRMM</a>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-eyebrow">Databranch Script Library</div>
+    <div class="cover-title">Windows Maintenance</div>
+    <div class="cover-scriptname">Invoke-WindowsMaintenance.ps1</div>
+    <div class="cover-doctype">Operator How-To Guide</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Version</div>
+        <div class="cover-meta-value mono">1.0.0.2</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Date</div>
+        <div class="cover-meta-value">February 21, 2026</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Author</div>
+        <div class="cover-meta-value">Sam Kirsch</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Company</div>
+        <div class="cover-meta-value">Databranch</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Audience</div>
+        <div class="cover-meta-value">Engineers / Operators</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="section" id="overview">
+      <h1>Overview</h1>
+      <p>
+        <code class="inline">Invoke-WindowsMaintenance.ps1</code> is a comprehensive, automated Windows system
+        integrity and maintenance script. It runs a structured sequence of built-in Windows repair and optimization
+        tools — SFC, DISM, CHKDSK, and drive optimization — on any Windows workstation or server, producing a
+        detailed log and a clear summary of every action taken and any follow-up required.
+      </p>
+      <p>
+        The script is fully automation-ready. It can be deployed silently through DattoRMM with no user interaction,
+        or run interactively by a technician from a terminal for a single machine. It never triggers a reboot
+        automatically — when a reboot is needed it flags it clearly and lets you decide when to schedule it.
+      </p>
+      <div class="callout note">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-body">
+          <div class="callout-label">Audience</div>
+          <p>This guide is for Databranch engineers and technicians who will run the script manually or configure
+          it for DattoRMM deployment. No PowerShell authoring knowledge is required.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WHAT IT DOES ── -->
+    <div class="section" id="what-it-does">
+      <h1>What the Script Does</h1>
+      <p>Each time it runs, the script performs the following actions in order:</p>
+      <ul class="styled">
+        <li><strong>Pre-flight checks</strong> — Verifies elevation, detects the OS type and build, enumerates all fixed volumes, identifies media types (HDD, SSD, virtual disk), and checks for dirty volume bits.</li>
+        <li><strong>SFC Pass 1</strong> — Runs <code class="inline">sfc /scannow</code> to scan and repair protected Windows system files.</li>
+        <li><strong>DISM health check and repair</strong> — Runs CheckHealth, ScanHealth, and (if corruption is detected) RestoreHealth to repair the Windows component store.</li>
+        <li><strong>SFC Pass 2 (post-DISM re-verify)</strong> — Runs SFC a second time after DISM to confirm all repairs were successful, or to catch any remaining issues that DISM's repair may have unblocked.</li>
+        <li><strong>CHKDSK per volume</strong> — Runs an online (no-reboot) CHKDSK scan on each targeted volume. If errors or a dirty bit are found, schedules an offline CHKDSK scan for the next reboot.</li>
+        <li><strong>Drive optimization</strong> — Defrags HDD volumes and runs retrim on SSD volumes. Skips virtual disks, dirty volumes, and volumes with insufficient free space. Disabled by default on Server profile.</li>
+        <li><strong>Summary and reboot recommendation</strong> — Outputs a consolidated run summary to the log and console, listing all phase results and any reasons a reboot is recommended.</li>
+      </ul>
+      <div class="callout tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body">
+          <div class="callout-label">Safe to run on active machines</div>
+          <p>The script never triggers a reboot and never performs destructive disk operations during the live run.
+          CHKDSK offline scans are only queued — they run on the next scheduled reboot.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PREREQUISITES ── -->
+    <div class="section" id="prerequisites">
+      <h1>Prerequisites</h1>
+
+      <h2>Permissions</h2>
+      <p>The script must run as a local Administrator or as SYSTEM (when deployed via DattoRMM or ScreenConnect Backstage). It will detect insufficient elevation at startup and exit with an error — it will not attempt to self-elevate.</p>
+
+      <h2>Software Requirements</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Requirement</th><th>Detail</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>PowerShell</td><td>Version 5.1 or newer (included in Windows 10 / Server 2016+)</td></tr>
+            <tr><td>Operating System</td><td>Windows 10, Windows 11, or Windows Server 2016 and newer recommended</td></tr>
+            <tr><td>External Modules</td><td>None — uses only built-in Windows tools and cmdlets</td></tr>
+            <tr><td>Internet Access</td><td>Required only if DISM RestoreHealth needs to download repair files from Windows Update</td></tr>
+            <tr><td>Disk Space</td><td>Minimal — only a small log file is written to <code class="inline">C:\Databranch\ScriptLogs\</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warn">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-body">
+          <div class="callout-label">DISM RestoreHealth and internet access</div>
+          <p>If DISM detects component store corruption and needs to repair it, it connects to Windows Update to download source files. If the machine has no internet access and no local Windows image source, RestoreHealth will fail. This is a known limitation — see the Troubleshooting section.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RUNNING ── -->
+    <div class="section" id="running">
+      <h1>Running the Script</h1>
+
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <div class="step-title">Open an elevated PowerShell session</div>
+        </div>
+        <div class="step-body">
+          <p>Right-click Windows PowerShell or Windows Terminal and select <strong>Run as administrator</strong>. The script will exit immediately if it detects it is not elevated.</p>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <div class="step-title">Navigate to the script directory</div>
+        </div>
+        <div class="step-body">
+          <div class="code-block">cd "C:\Path\To\Script"</div>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <div class="step-title">Choose an execution profile</div>
+        </div>
+        <div class="step-body">
+          <p>Select the profile that matches your target machine type. The profile controls which phases run by default and how conservative the script is.</p>
+          <div class="mode-cards">
+            <div class="mode-card">
+              <div class="mode-card-title"><span class="badge badge-blue">Workstation</span> Default</div>
+              <div class="mode-card-desc">Runs all phases. SFC, DISM, CHKDSK, and drive optimization all enabled. Suitable for endpoints and workstations.</div>
+            </div>
+            <div class="mode-card">
+              <div class="mode-card-title"><span class="badge badge-teal">Server</span> Conservative</div>
+              <div class="mode-card-desc">Runs SFC, DISM, and CHKDSK only. Drive optimization is disabled unless explicitly enabled. Extra-clear reboot warnings.</div>
+            </div>
+            <div class="mode-card">
+              <div class="mode-card-title"><span class="badge badge-amber">ServerAggressive</span> Full</div>
+              <div class="mode-card-desc">Same as Workstation but for server context. Enables optimization and component cleanup. Use during planned maintenance windows only.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num">4</div>
+          <div class="step-title">Run the script</div>
+        </div>
+        <div class="step-body">
+          <p>Run with defaults (Workstation profile, all volumes, all phases):</p>
+          <div class="code-block">.\Invoke-WindowsMaintenance.ps1</div>
+          <p>Run with Server profile:</p>
+          <div class="code-block">.\Invoke-WindowsMaintenance.ps1 -Profile Server</div>
+          <p>Target only the C: drive, skip optimization:</p>
+          <div class="code-block">.\Invoke-WindowsMaintenance.ps1 -TargetVolumes "C" -SkipOptimization</div>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num">5</div>
+          <div class="step-title">Wait for completion — this takes time</div>
+        </div>
+        <div class="step-body">
+          <p>SFC and DISM RestoreHealth can each take 10–30 minutes depending on the machine. CHKDSK and defrag times vary by volume size and health. Let the script run to completion — do not close the terminal.</p>
+          <p>When finished, the script prints a final summary banner: <strong>COMPLETED SUCCESSFULLY</strong>, <strong>COMPLETED — REBOOT RECOMMENDED</strong>, or <strong>COMPLETED WITH FAILURES</strong>.</p>
+        </div>
+      </div>
+
+      <h2>All Parameters</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">-Profile</td>
+              <td>String</td>
+              <td class="param-default">Workstation</td>
+              <td>Execution profile. Controls which phases are enabled by default. Valid values: <code class="inline">Workstation</code>, <code class="inline">Server</code>, <code class="inline">ServerAggressive</code>.</td>
+            </tr>
+            <tr>
+              <td class="mono">-SkipSFC</td>
+              <td>Switch</td>
+              <td class="param-default">Off</td>
+              <td>Skip both SFC passes entirely.</td>
+            </tr>
+            <tr>
+              <td class="mono">-SkipDISM</td>
+              <td>Switch</td>
+              <td class="param-default">Off</td>
+              <td>Skip all DISM phases.</td>
+            </tr>
+            <tr>
+              <td class="mono">-SkipCHKDSK</td>
+              <td>Switch</td>
+              <td class="param-default">Off</td>
+              <td>Skip CHKDSK scan and scheduling.</td>
+            </tr>
+            <tr>
+              <td class="mono">-SkipOptimization</td>
+              <td>Switch</td>
+              <td class="param-default">Off</td>
+              <td>Skip drive optimization phase.</td>
+            </tr>
+            <tr>
+              <td class="mono">-RunOptimization</td>
+              <td>Switch</td>
+              <td class="param-default">Off</td>
+              <td>Force-enable optimization even when the profile disables it (e.g., Server profile).</td>
+            </tr>
+            <tr>
+              <td class="mono">-RunComponentCleanup</td>
+              <td>Switch</td>
+              <td class="param-default">Off</td>
+              <td>Enable DISM WinSxS component cleanup. Off by default in all profiles. Not available in Server profile.</td>
+            </tr>
+            <tr>
+              <td class="mono">-TargetVolumes</td>
+              <td>String</td>
+              <td class="param-default">All fixed volumes</td>
+              <td>Comma-separated drive letters to target. Example: <code class="inline">"C,D"</code>. Defaults to all detected fixed NTFS/ReFS volumes.</td>
+            </tr>
+            <tr>
+              <td class="mono">-MinFreeSpacePct</td>
+              <td>Integer</td>
+              <td class="param-default">10</td>
+              <td>Minimum free space percentage required to allow defrag on HDD volumes. Volumes below this threshold are skipped.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Example Commands</h2>
+      <p>Full workstation maintenance, all defaults:</p>
+      <div class="code-block">.\Invoke-WindowsMaintenance.ps1</div>
+      <p>Conservative server run:</p>
+      <div class="code-block">.\Invoke-WindowsMaintenance.ps1 -Profile Server</div>
+      <p>Server with optimization and WinSxS cleanup during a maintenance window:</p>
+      <div class="code-block">.\Invoke-WindowsMaintenance.ps1 -Profile ServerAggressive -RunComponentCleanup</div>
+      <p>Workstation targeting only C:, skipping optimization:</p>
+      <div class="code-block">.\Invoke-WindowsMaintenance.ps1 -TargetVolumes "C" -SkipOptimization</div>
+      <p>Workstation with 15% free space floor for defrag and WinSxS cleanup:</p>
+      <div class="code-block">.\Invoke-WindowsMaintenance.ps1 -RunComponentCleanup -MinFreeSpacePct 15</div>
+      <p>SFC and DISM only — skip CHKDSK and optimization:</p>
+      <div class="code-block">.\Invoke-WindowsMaintenance.ps1 -SkipCHKDSK -SkipOptimization</div>
+    </div>
+
+    <!-- ── OUTPUT ── -->
+    <div class="section" id="output">
+      <h1>Reading the Output</h1>
+
+      <h2>Log Files</h2>
+      <p>Every run writes a timestamped log file to the machine's local disk:</p>
+      <div class="code-block">C:\Databranch\ScriptLogs\Invoke-WindowsMaintenance\Invoke-WindowsMaintenance_yyyy-MM-dd.log</div>
+      <p>The script keeps the 10 most recent log files and deletes older ones automatically. Each log file begins with a standard header block:</p>
+      <div class="code-block">===== Invoke-WindowsMaintenance v1.0.0.2 =====
+Site     : ClientName
+Hostname : MACHINENAME
+Run As   : DOMAIN\user
+Log File : C:\Databranch\ScriptLogs\Invoke-WindowsMaintenance\...</div>
+
+      <h2>Summary Block</h2>
+      <p>At the end of every run, the log and console both display a consolidated summary of all phase results:</p>
+      <div class="code-block">===== MAINTENANCE RUN SUMMARY =====
+Profile       : Workstation
+SFC Pass 1    : Clean
+DISM          : Clean
+SFC Pass 2    : Clean
+CHKDSK        : Completed
+Optimization  : Completed
+Exit Code     : 0</div>
+
+      <h2>Exit Codes</h2>
+      <p>The script uses a <strong>bitfield exit code</strong> — codes are added together when multiple conditions occur in the same run. This lets DattoRMM alert on the exact combination of issues without multiple monitors.</p>
+      <div class="exit-codes">
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#22c55e;">0</div>
+          <div class="exit-label">Success</div>
+          <div class="exit-desc">Clean run, no issues</div>
+        </div>
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#ef4444;">1</div>
+          <div class="exit-label">General Failure</div>
+          <div class="exit-desc">Unhandled exception</div>
+        </div>
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#eab308;">2</div>
+          <div class="exit-label">Reboot Recommended</div>
+          <div class="exit-desc">CHKDSK queued or repairs made</div>
+        </div>
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#eab308;">4</div>
+          <div class="exit-label">SFC Unrepairable</div>
+          <div class="exit-desc">Violations found, not fixed</div>
+        </div>
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#ef4444;">8</div>
+          <div class="exit-label">DISM Failed</div>
+          <div class="exit-desc">RestoreHealth unsuccessful</div>
+        </div>
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#eab308;">16</div>
+          <div class="exit-label">CHKDSK Sched Failed</div>
+          <div class="exit-desc">Could not queue offline scan</div>
+        </div>
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#eab308;">32</div>
+          <div class="exit-label">Optimization Failed</div>
+          <div class="exit-desc">Defrag/retrim error</div>
+        </div>
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#60a5fa;">64</div>
+          <div class="exit-label">Pre-flight Warning</div>
+          <div class="exit-desc">Non-fatal — low space, dirty bit</div>
+        </div>
+      </div>
+      <div class="callout note">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-body">
+          <div class="callout-label">Decoding combined codes</div>
+          <p>Example: exit code <strong>26</strong> = 8 (DISM failed) + 16 (CHKDSK scheduling failed) + 2 (reboot recommended). Code 1 is always standalone and is never combined with others.</p>
+        </div>
+      </div>
+
+      <h2>Reboot Recommendation Block</h2>
+      <p>When any phase determines a reboot is needed, the script collects all reasons and prints a consolidated block at the end of the run — both in the log and as a yellow banner on the console. No reboot is ever triggered automatically.</p>
+      <div class="code-block">!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  *** REBOOT RECOMMENDED ***
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  - CHKDSK offline scan queued for C: (online scan found errors)
+  - SFC Pass 1 repaired corrupted system files
+  No automatic reboot triggered.</div>
+    </div>
+
+    <!-- ── CONSOLE OUTPUT ── -->
+    <div class="section" id="console">
+      <h1>Console Output</h1>
+      <p>When run interactively in a terminal, the script outputs colored, structured status messages in addition to the structured log. Each message is prefixed with a severity tag in the appropriate color.</p>
+      <div class="prefix-legend">
+        <div class="prefix-row">
+          <div class="prefix-tag" style="color:#60a5fa;">[INFO]</div>
+          <div class="prefix-desc">General progress — phase starting, step in progress</div>
+        </div>
+        <div class="prefix-row">
+          <div class="prefix-tag" style="color:#22c55e;">[SUCCESS]</div>
+          <div class="prefix-desc">A key step completed cleanly</div>
+        </div>
+        <div class="prefix-row">
+          <div class="prefix-tag" style="color:#eab308;">[WARN]</div>
+          <div class="prefix-desc">Non-fatal issue — something was skipped, or a reboot is flagged</div>
+        </div>
+        <div class="prefix-row">
+          <div class="prefix-tag" style="color:#ef4444;">[ERROR]</div>
+          <div class="prefix-desc">A phase failed or an exception occurred</div>
+        </div>
+        <div class="prefix-row">
+          <div class="prefix-tag" style="color:#a78bfa;">[DEBUG]</div>
+          <div class="prefix-desc">Detailed technical output — command results, exit codes, variable values</div>
+        </div>
+      </div>
+      <div class="callout tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body">
+          <div class="callout-label">Colored output is terminal-only</div>
+          <p>When running via DattoRMM, the colored console output is automatically suppressed — only the structured log entries appear in the job output. This is by design and requires no configuration.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TROUBLESHOOTING ── -->
+    <div class="section" id="troubleshooting">
+      <h1>Troubleshooting</h1>
+
+      <h2>DISM RestoreHealth failed</h2>
+      <p>This usually means Windows Update could not be reached to download repair files, or the component store is too damaged to repair online. Try the following:</p>
+      <ul class="styled">
+        <li>Verify the machine has internet access and can reach Windows Update.</li>
+        <li>Run the Windows Update troubleshooter and then re-run the script.</li>
+        <li>If the machine is offline or air-gapped, provide a local Windows image source using the <code class="inline">/Source</code> DISM argument — this requires a manual DISM run outside this script.</li>
+        <li>In severe cases, an in-place upgrade repair or OS reinstall may be required.</li>
+      </ul>
+
+      <h2>SFC reports violations that cannot be repaired</h2>
+      <p>SFC exit code 4 means corruption was found but not fixed. This almost always means the component store itself is corrupted — run DISM RestoreHealth first (it may need to be run manually if the script already tried and failed), then re-run SFC. If SFC still cannot repair after a successful DISM restore, escalate.</p>
+
+      <h2>CHKDSK scheduling failed</h2>
+      <p>This can occur if the registry write to <code class="inline">BootExecute</code> fails (permissions issue), or if the volume is locked or managed by a third-party tool. Check that the script is running as SYSTEM or a full local Administrator. Exit code bit 16 is set when this occurs.</p>
+
+      <h2>Drive optimization shows Unknown media type</h2>
+      <p>On some machines — particularly those with RAID controllers, NVMe adapters without proper drivers, or unusual storage configurations — the script cannot reliably determine whether a volume is HDD or SSD. When media type is unknown, optimization is skipped with a warning rather than risking running a full defrag on an SSD. Review the pre-flight section of the log to see what was detected, and run optimization manually if appropriate.</p>
+
+      <h2>Script exits immediately with elevation error</h2>
+      <p>The script must be run from an elevated (Administrator) PowerShell session or as SYSTEM via DattoRMM. Right-click PowerShell and choose Run as Administrator, then try again.</p>
+
+      <h2>WinSxS cleanup is blocked on Server profile</h2>
+      <p>Component cleanup (<code class="inline">-RunComponentCleanup</code>) is intentionally blocked on the Server profile because <code class="inline">/StartComponentCleanup /ResetBase</code> is irreversible — it removes the ability to roll back installed updates. To allow cleanup on a server, use <code class="inline">-Profile ServerAggressive</code> and schedule it during a maintenance window.</p>
+
+      <h2>Run takes over an hour</h2>
+      <p>DISM RestoreHealth can take 20–45 minutes when downloading from Windows Update on a slow connection. CHKDSK and defrag on large or degraded drives can also be lengthy. This is normal. Check the log file to confirm the script is still making progress.</p>
+    </div>
+
+    <!-- ── DATTORMM ── -->
+    <div class="section" id="dattormm">
+      <h1>Running via DattoRMM</h1>
+      <p>The script is fully DattoRMM-compatible. When deployed as a component, it reads configuration from DattoRMM environment variables and writes all output to the job's stdout log. No manual parameter entry is required for standard deployments.</p>
+
+      <h2>DattoRMM Environment Variables</h2>
+      <p>These variables map directly to script parameters. Set them in the DattoRMM component configuration. Variables prefixed <code class="inline">CS_</code> are built-in Datto variables available automatically.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Environment Variable</th><th>Maps To</th><th>Example</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">CS_PROFILE_NAME</td><td>Site name in log header</td><td>Auto-populated by Datto</td></tr>
+            <tr><td class="mono">CS_HOSTNAME</td><td>Hostname in log header</td><td>Auto-populated by Datto</td></tr>
+            <tr><td class="mono">WM_Profile</td><td><code class="inline">-Profile</code></td><td><code class="inline">Server</code></td></tr>
+            <tr><td class="mono">WM_SkipSFC</td><td><code class="inline">-SkipSFC</code></td><td><code class="inline">true</code></td></tr>
+            <tr><td class="mono">WM_SkipDISM</td><td><code class="inline">-SkipDISM</code></td><td><code class="inline">true</code></td></tr>
+            <tr><td class="mono">WM_SkipCHKDSK</td><td><code class="inline">-SkipCHKDSK</code></td><td><code class="inline">true</code></td></tr>
+            <tr><td class="mono">WM_SkipOptimization</td><td><code class="inline">-SkipOptimization</code></td><td><code class="inline">true</code></td></tr>
+            <tr><td class="mono">WM_RunOptimization</td><td><code class="inline">-RunOptimization</code></td><td><code class="inline">true</code></td></tr>
+            <tr><td class="mono">WM_RunComponentCleanup</td><td><code class="inline">-RunComponentCleanup</code></td><td><code class="inline">true</code></td></tr>
+            <tr><td class="mono">WM_TargetVolumes</td><td><code class="inline">-TargetVolumes</code></td><td><code class="inline">C,D</code></td></tr>
+            <tr><td class="mono">WM_MinFreeSpacePct</td><td><code class="inline">-MinFreeSpacePct</code></td><td><code class="inline">15</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Exit Codes for DattoRMM Alerting</h2>
+      <p>Configure DattoRMM monitors on the following exit code values. Remember codes are additive — a single run with both DISM failure and CHKDSK scheduling failure exits with <strong>26</strong> (8 + 16 + 2).</p>
+      <div class="exit-codes">
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#22c55e;">0</div>
+          <div class="exit-label">Success</div>
+        </div>
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#eab308;">2</div>
+          <div class="exit-label">Reboot Needed</div>
+        </div>
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#ef4444;">8</div>
+          <div class="exit-label">DISM Failed</div>
+        </div>
+        <div class="exit-pill">
+          <div class="exit-num" style="color:#ef4444;">1</div>
+          <div class="exit-label">Script Error</div>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-body">
+          <div class="callout-label">Timeout considerations</div>
+          <p>Set your DattoRMM component timeout to at least <strong>90 minutes</strong> for workstations and <strong>120 minutes</strong> for servers to allow DISM RestoreHealth and CHKDSK adequate time to complete on degraded systems.</p>
+        </div>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-icon">🔧</div>
+        <div class="callout-body">
+          <div class="callout-label">Reboots via DattoRMM</div>
+          <p>This script never reboots the machine. When a reboot is recommended (exit code bit 2), use a separate DattoRMM reboot component in the same job sequence, triggered conditionally on exit code, to schedule the reboot at a controlled time.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div class="doc-footer">
+  <span>Databranch — Confidential</span>
+  <span class="footer-right">Invoke-WindowsMaintenance.ps1 | v1.0.0.2 | February 2026</span>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
