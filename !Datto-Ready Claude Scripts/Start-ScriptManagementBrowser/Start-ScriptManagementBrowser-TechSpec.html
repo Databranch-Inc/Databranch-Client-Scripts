@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Script Management Browser — Technical Specification</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+  :root {
+    --navy:           #0D1520;
+    --navy-mid:       #111C2E;
+    --navy-light:     #162238;
+    --navy-card:      #1D2E48;
+    --accent:         #2E8BFF;
+    --accent-dim:     #1A6FD4;
+    --red:            #C0404A;
+    --red-dim:        #8B2030;
+    --white:          #F0F4FF;
+    --text:           #A8BDD8;
+    --text-muted:     #607090;
+    --text-dim:       #3A5070;
+    --border:         #213A58;
+    --border-mid:     #2A4A70;
+    --code-bg:        #060E1A;
+    --row-alt:        #0D1520;
+    --success-bg:     #0A2818;
+    --success-border: #1A5030;
+    --warn-bg:        #1E1800;
+    --warn-border:    #6A4800;
+    --note-bg:        #091828;
+    --note-border:    #1A3A6A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--navy); color: var(--text); font-size: 14px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover::before, .cover::after { display: none; }
+    body { background: white; color: black; }
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ============================================================ LAYOUT */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+    background: #080C14; border-right: 1px solid var(--border);
+    overflow-y: auto; z-index: 100; display: flex; flex-direction: column;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .company {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--red); font-variant: small-caps;
+    margin-bottom: 6px;
+  }
+  .sidebar-logo .script-name {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    color: var(--white); margin-bottom: 4px; line-height: 1.4;
+  }
+  .sidebar-logo .doc-type {
+    font-size: 11px; color: var(--text-muted); font-style: italic;
+  }
+
+  nav { padding: 16px 0 24px; flex: 1; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-dim);
+    padding: 12px 20px 6px; display: block;
+  }
+  .nav-link {
+    display: block; padding: 7px 20px; font-size: 13px;
+    color: var(--text-muted); text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .nav-link:hover { color: var(--white); background: var(--navy-mid); }
+  .nav-link.active { color: var(--white); background: var(--navy-light); border-left-color: var(--red); }
+  .nav-link.sub { padding-left: 32px; font-size: 12px; }
+
+  .main { margin-left: 260px; }
+
+  /* ============================================================ COVER */
+  .cover {
+    position: relative; overflow: hidden;
+    background: linear-gradient(145deg, #080C14 0%, #0D1B30 40%, #080C14 100%);
+    padding: 64px 80px 56px; border-bottom: 1px solid var(--border);
+  }
+  .cover::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 400px; height: 400px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(30,144,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover::after {
+    content: ''; position: absolute; bottom: -60px; left: 120px;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(192,64,74,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover-eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--red); margin-bottom: 16px;
+  }
+  .cover-title {
+    font-size: 42px; font-weight: 700; color: var(--white);
+    line-height: 1.1; margin-bottom: 10px;
+  }
+  .cover-script {
+    font-family: 'IBM Plex Mono', monospace; font-size: 16px;
+    color: var(--accent); margin-bottom: 6px;
+  }
+  .cover-doctype {
+    font-size: 15px; font-style: italic; color: var(--text-muted);
+    margin-bottom: 32px;
+  }
+  .cover-meta {
+    display: flex; flex-wrap: wrap; gap: 28px;
+    padding-top: 24px; border-top: 1px solid var(--border);
+  }
+  .cover-meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .cover-meta-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+  .cover-meta-value { font-size: 14px; color: var(--text); }
+  .cover-meta-value.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+
+  /* ============================================================ CONTENT */
+  .content { max-width: 900px; padding: 56px 80px 80px; }
+
+  .section { margin-bottom: 64px; }
+
+  h1 {
+    font-size: 26px; font-weight: 700; color: var(--white);
+    border-bottom: 2px solid var(--navy-light);
+    padding-bottom: 12px; margin-bottom: 24px;
+  }
+  h1::before {
+    content: '//  ';
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent); font-size: 20px;
+  }
+  h2 { font-size: 18px; font-weight: 600; color: var(--accent); margin: 28px 0 12px; }
+  h3 {
+    font-size: 12px; font-weight: 700; color: var(--red);
+    text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 8px;
+  }
+  p { color: var(--text); font-size: 14px; line-height: 1.7; margin-bottom: 14px; }
+  strong { color: var(--white); font-weight: 600; }
+
+  /* ============================================================ CODE */
+  .code-block {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: 16px 20px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    color: #A8BDD8; overflow-x: auto; margin: 14px 0 18px;
+    line-height: 1.6; white-space: pre;
+  }
+  code.inline {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;
+    background: var(--code-bg); color: var(--accent);
+    border: 1px solid var(--border); border-radius: 3px;
+    padding: 2px 6px;
+  }
+  .comment  { color: #3A6A50; }
+  .keyword  { color: #C084FC; }
+  .string   { color: #86EFAC; }
+  .var      { color: #FDE68A; }
+
+  /* ============================================================ TABLES */
+  .table-wrap {
+    overflow-x: auto; border-radius: 8px;
+    border: 1px solid var(--border); margin: 14px 0 20px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--navy-mid); color: var(--text-muted);
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em;
+    text-transform: uppercase; padding: 10px 14px; text-align: left;
+    border-bottom: 1px solid var(--border-mid);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: var(--navy-mid); }
+  td { padding: 10px 14px; vertical-align: top; font-size: 13px; }
+  td.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); white-space: nowrap; }
+  td.num  { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 700; text-align: center; }
+
+  /* ============================================================ CALLOUTS */
+  .callout {
+    display: flex; gap: 14px; padding: 14px 16px;
+    border-radius: 8px; margin: 16px 0;
+  }
+  .callout.note { background: var(--note-bg); border-left: 3px solid #1E6ABF; }
+  .callout.tip  { background: var(--success-bg); border-left: 3px solid var(--success-border); }
+  .callout.warn { background: var(--warn-bg); border-left: 3px solid var(--warn-border); }
+  .callout-icon { font-size: 18px; line-height: 1.4; flex-shrink: 0; }
+  .callout-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .callout.note  .callout-label { color: var(--accent); }
+  .callout.tip   .callout-label { color: #22C55E; }
+  .callout.warn  .callout-label { color: #E8A020; }
+  .callout-text  { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+  /* ============================================================ BADGES */
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 10px; line-height: 1.6;
+  }
+  .badge-blue  { background: rgba(46,139,255,0.15); color: #4A8FD4; border: 1px solid rgba(46,139,255,0.25); }
+  .badge-red   { background: rgba(192,64,74,0.15);  color: #C0404A; border: 1px solid rgba(192,64,74,0.25); }
+  .badge-green { background: rgba(34,197,94,0.12);  color: #22C55E; border: 1px solid rgba(34,197,94,0.2); }
+  .badge-amber { background: rgba(232,160,32,0.12); color: #E8A020; border: 1px solid rgba(232,160,32,0.2); }
+  .badge-muted { background: rgba(96,112,144,0.15); color: #607090; border: 1px solid rgba(96,112,144,0.2); }
+  .badge-purple{ background: rgba(192,132,252,0.12);color: #C084FC; border: 1px solid rgba(192,132,252,0.2); }
+
+  /* ============================================================ LISTS */
+  ul.styled { list-style: none; padding: 0; margin: 10px 0 16px; }
+  ul.styled li {
+    padding: 5px 0 5px 18px; position: relative;
+    font-size: 13px; color: var(--text); line-height: 1.6;
+  }
+  ul.styled li::before { content: '▸'; color: var(--accent); position: absolute; left: 0; }
+
+  /* ============================================================ ARCH GRID */
+  .arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+  .arch-card {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+  }
+  .arch-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .arch-fn { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--accent); }
+  .arch-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 4px;
+  }
+  .arch-tag.infra      { background: rgba(96,112,144,0.2);  color: #607090; }
+  .arch-tag.collection { background: rgba(46,139,255,0.15); color: #4A8FD4; }
+  .arch-tag.ui         { background: rgba(192,64,74,0.15);  color: #C0404A; }
+  .arch-tag.output     { background: rgba(34,197,94,0.12);  color: #22C55E; }
+  .arch-tag.sync       { background: rgba(232,160,32,0.12); color: #E8A020; }
+  .arch-tag.dialog     { background: rgba(192,132,252,0.12);color: #C084FC; }
+  .arch-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ============================================================ FLOW */
+  .flow { margin: 14px 0; }
+  .flow-step {
+    display: flex; gap: 14px; margin-bottom: 4px; position: relative;
+  }
+  .flow-step:not(:last-child)::after {
+    content: ''; position: absolute; left: 13px; top: 32px;
+    width: 2px; height: calc(100% - 16px);
+    background: var(--border);
+  }
+  .flow-num {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    background: var(--navy-light); border: 2px solid var(--accent);
+    color: var(--accent); font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .flow-content { padding-bottom: 16px; flex: 1; }
+  .flow-title { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+  .flow-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .flow-badge {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    background: rgba(46,139,255,0.15); color: #4A8FD4;
+    padding: 1px 6px; border-radius: 4px; margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* ============================================================ SEV GRID */
+  .sev-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 14px 0; }
+  .sev-cell {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px;
+  }
+  .sev-level { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .sev-stream { font-size: 10px; color: var(--text-dim); margin-bottom: 6px; font-family: 'IBM Plex Mono', monospace; }
+  .sev-desc  { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ============================================================ VERSION HISTORY */
+  .version-entry {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 8px; margin-bottom: 12px; overflow: hidden;
+  }
+  .version-header {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--navy-light); padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .version-num { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 700; color: var(--accent); }
+  .version-meta { font-size: 12px; color: var(--text-muted); }
+  .version-author { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+  .version-body { padding: 14px 18px; }
+  .version-body ul { list-style: none; padding: 0; }
+  .version-body ul li {
+    padding: 4px 0 4px 18px; position: relative;
+    font-size: 13px; color: var(--text); line-height: 1.5;
+  }
+  .version-body ul li::before { content: '▸'; color: var(--accent); position: absolute; left: 0; }
+
+  /* ============================================================ EXIT CODES */
+  .exit-codes { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0; }
+  .exit-pill {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; min-width: 140px; text-align: center;
+  }
+  .exit-num   { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+  .exit-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .exit-desc  { font-size: 11px; color: var(--text-muted); }
+  .exit-pill.success .exit-num { color: #22C55E; } .exit-pill.success .exit-label { color: #22C55E; }
+  .exit-pill.error   .exit-num { color: #C84040; } .exit-pill.error   .exit-label { color: #C84040; }
+
+  /* ============================================================ FOOTER */
+  .doc-footer {
+    margin-left: 260px; padding: 18px 80px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text-dim);
+  }
+  .doc-footer .version { font-family: 'IBM Plex Mono', monospace; }
+</style>
+</head>
+<body>
+
+<!-- ================================================================ SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="company">Databranch</div>
+    <div class="script-name">Start-ScriptManagementBrowser.ps1</div>
+    <div class="doc-type">Technical Specification</div>
+  </div>
+  <nav>
+    <span class="nav-section-label">Sections</span>
+    <a class="nav-link" href="#purpose">1. Purpose &amp; Scope</a>
+    <a class="nav-link" href="#architecture">2. Script Architecture</a>
+    <a class="nav-link sub" href="#architecture">Function Map</a>
+    <a class="nav-link" href="#config">3. Configuration</a>
+    <a class="nav-link sub" href="#config">Config Schema</a>
+    <a class="nav-link sub" href="#constants">Script Constants</a>
+    <a class="nav-link" href="#startup">4. Startup &amp; Cache</a>
+    <a class="nav-link sub" href="#startup">Cold Start Flow</a>
+    <a class="nav-link sub" href="#cache-schema">Cache Schema</a>
+    <a class="nav-link" href="#ui">5. WPF UI Architecture</a>
+    <a class="nav-link sub" href="#ui">XAML Approach</a>
+    <a class="nav-link sub" href="#design-tokens">Design Tokens</a>
+    <a class="nav-link sub" href="#views">View Modes</a>
+    <a class="nav-link" href="#metadata">6. Metadata System</a>
+    <a class="nav-link sub" href="#metadata">Storage Format</a>
+    <a class="nav-link sub" href="#read-write">Read / Write Flow</a>
+    <a class="nav-link" href="#sync">7. SharePoint Sync</a>
+    <a class="nav-link sub" href="#sync">Runspace Model</a>
+    <a class="nav-link sub" href="#sync-flow">Sync Flow</a>
+    <a class="nav-link sub" href="#path-sanitization">Path Sanitization</a>
+    <a class="nav-link sub" href="#delta">Delta Algorithm</a>
+    <a class="nav-link" href="#logging">8. Logging</a>
+    <a class="nav-link" href="#errors">9. Error Handling</a>
+    <a class="nav-link" href="#limitations">10. Known Limitations</a>
+    <a class="nav-link" href="#changelog">11. Version History</a>
+  </nav>
+</div>
+
+<!-- ================================================================ MAIN -->
+<div class="main">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-eyebrow">Databranch Script Library</div>
+  <div class="cover-title">Script Management Browser</div>
+  <div class="cover-script">Start-ScriptManagementBrowser.ps1</div>
+  <div class="cover-doctype">Technical Specification</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Version</span>
+      <span class="cover-meta-value mono">v1.0.8.0</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Date</span>
+      <span class="cover-meta-value">February 22, 2026</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Author</span>
+      <span class="cover-meta-value">Sam Kirsch</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">PS Minimum</span>
+      <span class="cover-meta-value mono">7.0</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Run Context</span>
+      <span class="cover-meta-value">Interactive / Domain User</span>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- ================================================================ 1. PURPOSE -->
+<div class="section" id="purpose">
+  <h1>1. Purpose and Scope</h1>
+  <p>Start-ScriptManagementBrowser is a WPF desktop application built in PowerShell 7 that replaces the legacy <code class="inline">EngineersPowerApp_PS7_git.ps1</code>. It provides a structured browsing, search, metadata editing, and SharePoint distribution interface for the Databranch PowerShell script library stored in a local Git repository.</p>
+  <p>The application treats Git as the single source of truth. SharePoint is a read-only distribution mirror. The sync is strictly one-way (Git → SharePoint) and is never reversible from within the app.</p>
+  <h3>Replaces</h3>
+  <ul class="styled">
+    <li><code class="inline">EngineersPowerApp_PS7_git.ps1</code> — legacy flat-script browser with hardcoded SharePoint paths and no delta sync.</li>
+  </ul>
+  <h3>Out of Scope</h3>
+  <ul class="styled">
+    <li>Git operations (commit, push, pull) — handled externally by the engineer's Git client.</li>
+    <li>Script execution — the app opens scripts in VSCode; it does not run them.</li>
+    <li>Two-way SharePoint sync — SharePoint is never a source of record.</li>
+  </ul>
+</div>
+
+<!-- ================================================================ 2. ARCHITECTURE -->
+<div class="section" id="architecture">
+  <h1>2. Script Architecture</h1>
+  <p>The entire application is wrapped in a single master function <code class="inline">Start-ScriptManagementBrowser</code> matching the file name, per the Databranch Script Library standard. All inner functions are nested within the master function scope. Script-scoped variables (<code class="inline">$script:</code>) are used for shared application state.</p>
+  <ul class="styled">
+    <li>All WPF controls are instantiated via <code class="inline">[Windows.Markup.XamlReader]::Parse()</code> — never via <code class="inline">New-Object</code> inside nested function scopes (PS7 type resolution breaks at deep nesting depth).</li>
+    <li>The settings dialog uses its own self-contained XAML heredoc, also parsed via <code class="inline">XamlReader::Parse()</code>.</li>
+    <li>The SharePoint sync runs in a dedicated PowerShell runspace to prevent UI blocking.</li>
+    <li>A <code class="inline">DispatcherTimer</code> polls the runspace result and updates the UI thread safely.</li>
+  </ul>
+
+  <h2>Function Map</h2>
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Write-AppLog</div><div class="arch-tag infra">Infra</div></div>
+      <div class="arch-desc">Writes timestamped log entries to app.log. Thread-safe (single-threaded UI). Severity: INFO, WARN, ERROR.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Get-DefaultConfig</div><div class="arch-tag infra">Infra</div></div>
+      <div class="arch-desc">Returns a plain hashtable of default config values. Uses <code class="inline">@{}</code>, not <code class="inline">[ordered]@{}</code> — OrderedDictionary has no <code class="inline">.Clone()</code>.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Load-AppConfig</div><div class="arch-tag infra">Infra</div></div>
+      <div class="arch-desc">Loads config.json and merges over defaults. Uses <code class="inline">@($config.Keys)</code> snapshot enumeration to avoid mutation-during-iteration.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Save-AppConfig</div><div class="arch-tag infra">Infra</div></div>
+      <div class="arch-desc">Serializes the config hashtable to config.json via ConvertTo-Json.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Save-GitCache / Load-GitCache</div><div class="arch-tag infra">Infra</div></div>
+      <div class="arch-desc">Persists and restores the file index to git-cache.json. Cache includes file metadata and any comments/tags loaded in prior sessions.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Read-AppMetadata</div><div class="arch-tag collection">Collection</div></div>
+      <div class="arch-desc">Parses a script file's text content to extract <code class="inline">##SCRIPTMGMT#COMMENT#</code> and <code class="inline">##SCRIPTMGMT#TAGS#</code> lines. Falls back to legacy <code class="inline">##ENGINEERSPOWERAPP#</code> prefixes.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Write-AppMetadata</div><div class="arch-tag output">Output</div></div>
+      <div class="arch-desc">Writes comment and tag lines back into a script file. Replaces existing lines in-place or appends at the end if not present.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Test-PnPModule</div><div class="arch-tag infra">Infra</div></div>
+      <div class="arch-desc">Verifies PnP.PowerShell module is installed. Returns bool. Called before any sync attempt.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Test-SharePointConfig</div><div class="arch-tag infra">Infra</div></div>
+      <div class="arch-desc">Validates that all three SP config fields are populated. Returns bool with human-readable error string.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Get-FileMD5</div><div class="arch-tag collection">Collection</div></div>
+      <div class="arch-desc">Computes MD5 hash of a local file using <code class="inline">System.Security.Cryptography.MD5</code>. Used for tiebreaker comparison when timestamps differ.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Start-SharePointSync</div><div class="arch-tag sync">Sync</div></div>
+      <div class="arch-desc">Orchestrates sync: validates config, starts the runspace, launches a DispatcherTimer to poll completion, handles summary dialog and orphan deletion.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Show-DeleteConfirmationDialog</div><div class="arch-tag dialog">Dialog</div></div>
+      <div class="arch-desc">Code-behind WPF dialog listing SharePoint orphan files for user confirmation before deletion. Includes "skip future confirmations" checkbox.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Show-SettingsDialog</div><div class="arch-tag dialog">Dialog</div></div>
+      <div class="arch-desc">XAML-based settings dialog. Handles both first-run and settings-change flows. Returns <code class="inline">$true</code> if user saved, <code class="inline">$false</code> if cancelled.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Set-Status / Show-Loading / Hide-Loading</div><div class="arch-tag ui">UI</div></div>
+      <div class="arch-desc">Status bar text/color control and loading overlay management. <code class="inline">Show-Loading</code> accepts primary and sub-message strings.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Update-ViewToggleStyle</div><div class="arch-tag ui">UI</div></div>
+      <div class="arch-desc">Updates the A-Z / Folder / Tags toggle button backgrounds. Active = Brand Red Soft (<code class="inline">#C0404A</code>). Inactive = transparent.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">New-FileViewModel</div><div class="arch-tag ui">UI</div></div>
+      <div class="arch-desc">Projects a file PSObject into a display-ready viewmodel with <code class="inline">ExtIcon</code>, <code class="inline">ExtColor</code>, <code class="inline">SubInfo</code> properties for the ListBox DataTemplate.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Update-FileList</div><div class="arch-tag ui">UI</div></div>
+      <div class="arch-desc">Re-renders the file list based on current search text and view mode. Called after scan, cache load, and search text changes.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Invoke-AlphaView / Invoke-FolderView / Invoke-TagView</div><div class="arch-tag ui">UI</div></div>
+      <div class="arch-desc">Populate the ListBox or TreeView for each view mode. AlphaView and FolderView use the ListBox. TagView uses the TreeView with grouped header items.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Select-File</div><div class="arch-tag ui">UI</div></div>
+      <div class="arch-desc">Drives the entire right-panel detail view update when a file is selected. Populates all metadata fields and clears the content preview.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Invoke-LoadFileContent</div><div class="arch-tag collection">Collection</div></div>
+      <div class="arch-desc">Reads the selected file from disk, extracts metadata via <code class="inline">Read-AppMetadata</code>, and populates the comment, tag, and preview fields. Sets <code class="inline">ContentLoaded = $true</code>.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Save-FileMetadata</div><div class="arch-tag output">Output</div></div>
+      <div class="arch-desc">Reads current file content, calls <code class="inline">Write-AppMetadata</code>, writes result back to disk. Updates in-memory file object and saves cache.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Invoke-RenameFile</div><div class="arch-tag output">Output</div></div>
+      <div class="arch-desc">Shows rename dialog, validates new name, calls <code class="inline">Rename-Item</code>, updates the in-memory file object, refreshes the file list and detail panel.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Open-InVSCode</div><div class="arch-tag output">Output</div></div>
+      <div class="arch-desc">Invokes <code class="inline">code.exe</code> via <code class="inline">Start-Process</code> with the file's full path. Validates file still exists before invoking.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Get-SharePointFileUrl</div><div class="arch-tag sync">Sync</div></div>
+      <div class="arch-desc">Constructs the SharePoint web URL for a given file using the site URL, folder path, and sanitized relative file path. Used for the Copy SP URL button and the SP URL metadata card.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Start-GitScan</div><div class="arch-tag collection">Collection</div></div>
+      <div class="arch-desc">Scans the Git repo with <code class="inline">Get-ChildItem -Include *.ps1,*.bat</code>. Merges cache to preserve existing comment/tag data. Saves updated cache.</div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-header"><div class="arch-fn">Start-AppLoad</div><div class="arch-tag infra">Infra</div></div>
+      <div class="arch-desc">Startup function. Loads cache for instant display. Detects first-run (empty GitRepoPath) and triggers Settings dialog. Prompts for rescan if cache is stale (&gt;30 min).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ 3. CONFIG -->
+<div class="section" id="config">
+  <h1>3. Configuration</h1>
+
+  <h2>Config Schema</h2>
+  <p>Configuration is persisted as a UTF-8 JSON file at <code class="inline">%APPDATA%\ScriptManagementBrowser\config.json</code>. All values are strings except <code class="inline">SkipDeleteConfirm</code>.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">GitRepoPath</td><td>String</td><td><em>empty</em></td><td>Full local path to the Git repository root.</td></tr>
+        <tr><td class="mono">SharePointSiteUrl</td><td>String</td><td><em>empty</em></td><td>SharePoint tenant root URL. E.g. <code class="inline">https://databranch.sharepoint.com</code></td></tr>
+        <tr><td class="mono">SharePointFolderPath</td><td>String</td><td><em>empty</em></td><td>Site-relative folder path, no leading slash. E.g. <code class="inline">Shared Documents/Engineering Procedures/GitScriptsRepo</code></td></tr>
+        <tr><td class="mono">EntraClientId</td><td>String</td><td><em>empty</em></td><td>GUID of the Entra app registration for PnP authentication.</td></tr>
+        <tr><td class="mono">SkipDeleteConfirm</td><td>Boolean</td><td><code class="inline">$false</code></td><td>When true, SharePoint orphan deletions proceed without confirmation dialog.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Load merges incoming JSON over defaults using <code class="inline">@($config.Keys)</code> snapshot iteration to handle schema migrations gracefully — new keys added in future versions get their default values without failing on older config files.</p>
+
+  <h2 id="constants">Script Constants</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Constant</th><th>Value</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">$script:AppName</td><td class="mono">ScriptManagementBrowser</td><td>Used in AppData directory name and log headers.</td></tr>
+        <tr><td class="mono">$script:AppVersion</td><td class="mono">1.0.8.0</td><td>Displayed in title bar version badge and document footer.</td></tr>
+        <tr><td class="mono">$script:AppDataDir</td><td class="mono">%APPDATA%\ScriptManagementBrowser</td><td>Root for all persistent app data.</td></tr>
+        <tr><td class="mono">$script:ConfigFile</td><td class="mono">AppDataDir\config.json</td><td>Configuration persistence.</td></tr>
+        <tr><td class="mono">$script:LogFile</td><td class="mono">AppDataDir\app.log</td><td>Persistent operation log.</td></tr>
+        <tr><td class="mono">$script:GitCacheFile</td><td class="mono">AppDataDir\git-cache.json</td><td>File index cache for fast startup.</td></tr>
+        <tr><td class="mono">$script:FileTypes</td><td class="mono">@("*.ps1", "*.bat")</td><td>Extension filter for the browser file list display (Refresh scan). Note: Sync uses no filter — all files are synced.</td></tr>
+        <tr><td class="mono">$script:CommentPrefix</td><td class="mono">##SCRIPTMGMT#COMMENT#</td><td>In-file comment line prefix.</td></tr>
+        <tr><td class="mono">$script:TagPrefix</td><td class="mono">##SCRIPTMGMT#TAGS#</td><td>In-file tag line prefix.</td></tr>
+        <tr><td class="mono">$script:LegacyCommentPrefix</td><td class="mono">##ENGINEERSPOWERAPP#COMMENT#</td><td>Legacy prefix from EngineersPowerApp. Still recognized on read.</td></tr>
+        <tr><td class="mono">$script:LegacyTagPrefix</td><td class="mono">##ENGINEERSPOWERAPP#TAGS#</td><td>Legacy prefix from EngineersPowerApp. Still recognized on read.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout note">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-body">
+      <div class="callout-label">Browser vs. Sync File Filters</div>
+      <div class="callout-text">The browser file list (<code class="inline">$script:FileTypes</code>) only shows <code class="inline">.ps1</code> and <code class="inline">.bat</code> files. SharePoint sync uses <code class="inline">Get-ChildItem -Recurse -File</code> with no filter, syncing <em>all</em> file types including documentation. This distinction is intentional — the browser is script-focused while sync is a true full-repo mirror.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ 4. STARTUP -->
+<div class="section" id="startup">
+  <h1>4. Startup and Cache</h1>
+
+  <h2>Cold Start Flow</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content">
+        <div class="flow-title">Load Config <span class="flow-badge">Load-AppConfig</span></div>
+        <div class="flow-desc">Reads config.json. Merges over defaults. On failure, defaults are used silently and a WARN is logged.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content">
+        <div class="flow-title">Parse XAML and Create Window <span class="flow-badge">XamlReader::Parse</span></div>
+        <div class="flow-desc">The main XAML heredoc is parsed. All named controls are retrieved via <code class="inline">FindName()</code>. Event handlers are wired.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content">
+        <div class="flow-title">Start-AppLoad <span class="flow-badge">Startup</span></div>
+        <div class="flow-desc">Called before window is shown. Attempts to load git-cache.json. If found and non-empty, populates the file list immediately (instant startup). If GitRepoPath is empty, shows Settings dialog first. If cache is older than 30 minutes, prompts for rescan.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-content">
+        <div class="flow-title">Window.ShowDialog()</div>
+        <div class="flow-desc">Main window enters its message loop. All subsequent operations are event-driven.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 id="cache-schema">Git Cache Schema</h2>
+  <p>The cache is a JSON object with a timestamp and a files array. Each file entry is a PSCustomObject projected to JSON:</p>
+  <div class="code-block">{
+  "Timestamp": "2026-02-22T10:30:00",
+  "Files": [
+    {
+      "Name":       "Get-ADUserReport.ps1",
+      "FileRef":    "C:\\GitHubRepos\\...\\Get-ADUserReport.ps1",
+      "Library":    "AD",
+      "FolderPath": "C:\\GitHubRepos\\...\\AD",
+      "Created":    "2025-06-01T...",
+      "Modified":   "2026-02-10T...",
+      "SizeBytes":  14320,
+      "Extension":  ".ps1",
+      "Comment":    "Pulls all AD users with last logon",
+      "Tags":       ["audit", "ad"],
+      "TagsRaw":    "audit, ad",
+      "ContentLoaded": false
+    }
+  ]
+}</div>
+  <p>On rescan, existing cache entries are merged by <code class="inline">FileRef</code> key to preserve any <code class="inline">Comment</code>, <code class="inline">Tags</code>, and <code class="inline">TagsRaw</code> values loaded in prior sessions, even if the file timestamp has changed.</p>
+</div>
+
+<!-- ================================================================ 5. UI ARCHITECTURE -->
+<div class="section" id="ui">
+  <h1>5. WPF UI Architecture</h1>
+
+  <h2>XAML Approach</h2>
+  <p>All WPF controls are defined in XAML strings and parsed via <code class="inline">[Windows.Markup.XamlReader]::Parse()</code>. This is the only reliable approach for instantiating WPF controls when the calling code is a function nested inside another function inside the master function. At that nesting depth in PS7, both <code class="inline">[Type]::new()</code> and <code class="inline">New-Object</code> resolve types incorrectly, producing objects with no WPF properties.</p>
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-label">Never Use New-Object for WPF Controls Inside Nested Functions</div>
+      <div class="callout-text">If future dialogs or controls are added, always use <code class="inline">XamlReader::Parse()</code> to build them. <code class="inline">New-Object System.Windows.Controls.*</code> fails silently at deep nesting depth — properties appear to set without error, but the resulting object has no WPF layout behavior. The delete confirmation dialog and rename dialog currently use code-behind <code class="inline">New-Object</code> calls because they were written before this was discovered and still function because they are at shallower nesting depth; all new dialogs should use XAML.</div>
+    </div>
+  </div>
+
+  <h2 id="design-tokens">Design Tokens (XAML Resources)</h2>
+  <p>All colors are defined as named <code class="inline">SolidColorBrush</code> resources in <code class="inline">Window.Resources</code> following the Databranch Design System (Databranch_UIDesignSpec.html v1.0.0):</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Resource Key</th><th>Hex</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">BgDeep</td><td class="mono">#0D1520</td><td>App background (Base surface)</td></tr>
+        <tr><td class="mono">BgPanel</td><td class="mono">#111C2E</td><td>Sidebar, title bar, cards (Raised surface)</td></tr>
+        <tr><td class="mono">BgCard</td><td class="mono">#162238</td><td>Content cards, splitter (Card surface)</td></tr>
+        <tr><td class="mono">BgHover</td><td class="mono">#1D2E48</td><td>Button hover, elevated elements</td></tr>
+        <tr><td class="mono">BgSelected</td><td class="mono">#243558</td><td>Selected/pressed overlay states</td></tr>
+        <tr><td class="mono">AccentBlue</td><td class="mono">#2E8BFF</td><td>Brand Blue Bright — interactive affordances, focus rings</td></tr>
+        <tr><td class="mono">AccentGreen</td><td class="mono">#22C55E</td><td>Success semantic — status confirmations</td></tr>
+        <tr><td class="mono">AccentOrange</td><td class="mono">#E8A020</td><td>Warning semantic — amber alerts</td></tr>
+        <tr><td class="mono">AccentRed</td><td class="mono">#C84040</td><td>Error semantic — failure states (distinct from Brand Red)</td></tr>
+        <tr><td class="mono">TextPrimary</td><td class="mono">#F0F4FF</td><td>Primary text — headings, file names</td></tr>
+        <tr><td class="mono">TextSecond</td><td class="mono">#A8BDD8</td><td>Secondary text — metadata values</td></tr>
+        <tr><td class="mono">TextMuted</td><td class="mono">#607090</td><td>Muted — labels, hints, status bar default</td></tr>
+        <tr><td class="mono">BorderColor</td><td class="mono">#213A58</td><td>Standard panel and card borders</td></tr>
+        <tr><td class="mono">PS1Color</td><td class="mono">#4A8FD4</td><td>PS1 file type badge (blue-pale, purple retired)</td></tr>
+        <tr><td class="mono">BatColor</td><td class="mono">#E8A020</td><td>BAT file type badge (amber)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Button styles: <code class="inline">AppButton</code> (standard), <code class="inline">AccentButton</code> (Brand Red Soft <code class="inline">#C0404A</code> — primary actions), <code class="inline">SyncButton</code> (Brand Blue <code class="inline">#2E8BFF</code> — sync action).</p>
+
+  <h2 id="views">View Mode Architecture</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Mode</th><th>Control</th><th>Function</th><th>Active Indicator</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>A-Z</td><td class="mono">FileListBox (ListBox)</td><td class="mono">Invoke-AlphaView</td>
+          <td>Toggle button background: Brand Red Soft (<code class="inline">#C0404A</code>)</td>
+        </tr>
+        <tr>
+          <td>Folder</td><td class="mono">FileListBox (ListBox)</td><td class="mono">Invoke-FolderView</td>
+          <td>Toggle button background: Brand Red Soft (<code class="inline">#C0404A</code>)</td>
+        </tr>
+        <tr>
+          <td>Tags</td><td class="mono">FileTreeView (TreeView)</td><td class="mono">Invoke-TagView</td>
+          <td>Toggle button background: Brand Red Soft (<code class="inline">#C0404A</code>)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>AlphaView and FolderView share <code class="inline">FileListBox</code> visibility with <code class="inline">FileTreeView</code> hidden. TagView hides the ListBox and shows the TreeView. The ListBox uses <code class="inline">VirtualizingPanel.IsVirtualizing="True"</code> with Recycling mode for performance on large repos.</p>
+  <p>File selection in all three views flows through <code class="inline">Select-File</code>, which takes a file PSObject passed as the control's <code class="inline">.Tag</code> property. Selected file highlighting uses <code class="inline">#162238</code> background with a <code class="inline">#2E8BFF</code> left border (blue for file selection per design spec).</p>
+</div>
+
+<!-- ================================================================ 6. METADATA -->
+<div class="section" id="metadata">
+  <h1>6. Metadata System</h1>
+
+  <h2>In-File Storage Format</h2>
+  <p>Comments and tags are stored as special lines inside the script file itself. This ensures metadata travels with the file through Git. The lines use a double-hash prefix pattern to distinguish them from normal PowerShell comments:</p>
+  <div class="code-block"><span class="comment">##SCRIPTMGMT#COMMENT# This script collects AD user inventory for audit purposes.</span>
+<span class="comment">##SCRIPTMGMT#TAGS# audit, ad, inventory, reporting</span></div>
+  <p>Both lines can appear anywhere in the file but are conventionally placed near the top. Each prefix appears at most once — duplicate lines are ignored; only the first occurrence is read.</p>
+
+  <h3>Legacy Prefix Support</h3>
+  <p>The legacy prefixes from the predecessor application (<code class="inline">##ENGINEERSPOWERAPP#COMMENT#</code> and <code class="inline">##ENGINEERSPOWERAPP#TAGS#</code>) are recognized on read but never written. When a file with legacy prefixes is saved, the new prefixes replace them.</p>
+
+  <h2 id="read-write">Read / Write Flow</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content">
+        <div class="flow-title">Load Content <span class="flow-badge">Invoke-LoadFileContent</span></div>
+        <div class="flow-desc">Reads file via <code class="inline">Get-Content -Raw</code>. Calls <code class="inline">Read-AppMetadata</code> to extract comment and tag strings. Populates UI fields. Sets <code class="inline">ContentLoaded = $true</code> on the file object.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content">
+        <div class="flow-title">User Edits Fields</div>
+        <div class="flow-desc">TxtComment and TxtTags fields are editable TextBox controls. Quick-tag buttons append to TxtTags with comma separation via <code class="inline">Add-QuickTag</code>.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content">
+        <div class="flow-title">Save <span class="flow-badge">Save-FileMetadata</span></div>
+        <div class="flow-desc">Re-reads current file content (not cached). Calls <code class="inline">Write-AppMetadata</code> to inject the new comment and tag lines. Writes the modified content back to disk via <code class="inline">Set-Content -Encoding UTF8</code>. Updates the in-memory file object and persists the cache.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-label">No Load = Overwrite Risk</div>
+      <div class="callout-text">If the user saves without first loading content, <code class="inline">Write-AppMetadata</code> will operate on whatever is in the TxtComment and TxtTags fields — which may be blank, overwriting existing metadata in the file. The UI displays a reminder note beneath both fields, but there is no blocking guard on save.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ 7. SYNC -->
+<div class="section" id="sync">
+  <h1>7. SharePoint Sync Engine</h1>
+
+  <h2>Runspace Model</h2>
+  <p>The sync operation runs entirely in a dedicated PowerShell runspace to prevent blocking the WPF UI thread. A configuration snapshot (<code class="inline">$rsConfig</code> hashtable) is passed to the runspace via <code class="inline">AddArgument()</code>. The runspace imports <code class="inline">PnP.PowerShell</code> independently. A <code class="inline">DispatcherTimer</code> (500ms interval) polls <code class="inline">IsCompleted</code> on the async handle. When complete, the timer callback marshals the result back to the UI thread for status updates and dialogs.</p>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-label">Path Normalization in Runspace Script Blocks</div>
+      <div class="callout-text">All path-normalization operations inside the runspace script block use the PowerShell <code class="inline">-replace</code> operator (<code class="inline">-replace '\\','/'</code>) rather than the <code class="inline">.Replace()</code> string method. When a script block is serialized and deserialized into a runspace, string literals containing backslashes are subject to escaping issues with <code class="inline">.Replace("\\","/")</code> that cause the <code class="inline">oldValue</code> argument to arrive as an empty string, throwing a runtime exception. The <code class="inline">-replace</code> operator is immune to this.</div>
+    </div>
+  </div>
+
+  <h2 id="sync-flow">Sync Flow</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content">
+        <div class="flow-title">Pre-flight Validation</div>
+        <div class="flow-desc">Checks PnP module installed, all SP config fields populated, Git repo path valid.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content">
+        <div class="flow-title">Connect to SharePoint <span class="flow-badge">Connect-PnPOnline</span></div>
+        <div class="flow-desc">Interactive authentication using the configured Entra Client ID. Session is scoped to the runspace lifetime.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content">
+        <div class="flow-title">Enumerate Local Files</div>
+        <div class="flow-desc"><code class="inline">Get-ChildItem -Recurse -File</code> with no extension filter. All file types are included.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-content">
+        <div class="flow-title">Enumerate SharePoint Files <span class="flow-badge">Get-PnPFolderItem</span></div>
+        <div class="flow-desc">Recursive enumeration of the target SP folder. Results stored in a hashtable keyed by lowercased server-relative path. Failure is non-fatal (folder may not exist yet).</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">5</div>
+      <div class="flow-content">
+        <div class="flow-title">Ancestor Path Diagnostic</div>
+        <div class="flow-desc">Walks each segment of the target folder path and calls <code class="inline">Get-PnPFolder</code> on each. Logs OK/MISS per segment. This identifies where the folder chain breaks when sync fails.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">6</div>
+      <div class="flow-content">
+        <div class="flow-title">Folder Pre-Creation Pass <span class="flow-badge">Resolve-PnPFolder</span></div>
+        <div class="flow-desc">Builds a deduplicated sorted list of all unique folder paths in the local repo. Calls <code class="inline">Resolve-PnPFolder -SiteRelativePath</code> for each. Creates missing folders recursively in one call per path. Aborts after 3 consecutive errors.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">7</div>
+      <div class="flow-content">
+        <div class="flow-title">Delta Sync Loop</div>
+        <div class="flow-desc">For each local file: applies path sanitization, checks SP existence by path, compares timestamps (2s tolerance), falls back to MD5 hash comparison on mismatch. Uploads only when needed via <code class="inline">Add-PnPFile -Stream</code>.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">8</div>
+      <div class="flow-content">
+        <div class="flow-title">Orphan Detection</div>
+        <div class="flow-desc">SP paths not matched during the delta loop are collected as orphan candidates. Returned to the UI thread for confirmation dialog before deletion.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 id="path-sanitization">Path Sanitization</h2>
+  <p>SharePoint blocks folder and file names that begin with <code class="inline">!</code> or <code class="inline">.</code> characters, returning a misleading "Access denied" error. The sync runspace applies sanitization to all SP destination paths via two helper functions:</p>
+  <div class="code-block"><span class="keyword">function</span> <span class="var">Sanitize-SpSegment</span> {
+    <span class="keyword">param</span>([string]<span class="var">$Segment</span>)
+    <span class="comment"># Replace one or more leading ! or . characters with a single -</span>
+    <span class="keyword">return</span> <span class="var">$Segment</span> -replace <span class="string">'^[!.]+'</span>, <span class="string">'-'</span>
+}
+
+<span class="keyword">function</span> <span class="var">Sanitize-SpPath</span> {
+    <span class="keyword">param</span>([string]<span class="var">$RelPath</span>)
+    <span class="var">$segments</span>  = <span class="var">$RelPath</span> -split <span class="string">'/'</span>
+    <span class="var">$sanitized</span> = <span class="var">$segments</span> | <span class="keyword">ForEach-Object</span> { <span class="var">Sanitize-SpSegment</span> <span class="var">$_</span> }
+    <span class="keyword">return</span> <span class="var">$sanitized</span> -join <span class="string">'/'</span>
+}</div>
+  <p>Sanitization is applied to: the folder pre-creation path list, the expected SP path for delta comparison, the upload destination folder (<code class="inline">$spUploadFolder</code>), and the file name (<code class="inline">$spFileName</code>). Local file paths are never modified. The mapping is logged when a path differs: <code class="inline">Path mapped: !Archive/file.ps1 -> -Archive/file.ps1</code>.</p>
+
+  <h2 id="delta">Delta Comparison Algorithm</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Scenario</th><th>Decision</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr><td>File not in SP</td><td><span class="badge badge-amber">UPLOAD</span></td><td>New file — always upload.</td></tr>
+        <tr><td>Timestamps match (within 2s)</td><td><span class="badge badge-blue">SKIP</span></td><td>Files are identical. SharePoint modifies timestamps on upload, so a 2-second tolerance is used.</td></tr>
+        <tr><td>Timestamps differ, MD5 matches</td><td><span class="badge badge-blue">SKIP</span></td><td>Timestamps differ but content is identical (e.g. re-uploaded without changes).</td></tr>
+        <tr><td>Timestamps differ, MD5 differs</td><td><span class="badge badge-amber">UPLOAD</span></td><td>Content has changed — upload new version.</td></tr>
+        <tr><td>MD5 check fails (SP download error)</td><td><span class="badge badge-amber">UPLOAD</span></td><td>Cannot verify — err on side of uploading.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ================================================================ 8. LOGGING -->
+<div class="section" id="logging">
+  <h1>8. Logging Architecture</h1>
+
+  <p>The application uses a single <code class="inline">Write-AppLog</code> function that writes timestamped entries to <code class="inline">%APPDATA%\ScriptManagementBrowser\app.log</code>. There is no rotation — the log grows indefinitely. All operations are logged including config loads, scans, file metadata saves, renames, and full sync runspace output.</p>
+
+  <div class="sev-grid">
+    <div class="sev-cell">
+      <div class="sev-level" style="color:#4AB4FF;">INFO</div>
+      <div class="sev-stream">Add-Content</div>
+      <div class="sev-desc">Normal progress, startup events, scan results, sync steps.</div>
+    </div>
+    <div class="sev-cell">
+      <div class="sev-level" style="color:#E8A020;">WARN</div>
+      <div class="sev-stream">Add-Content</div>
+      <div class="sev-desc">Non-fatal issues — cache miss, config fallback, SP folder not found (retried).</div>
+    </div>
+    <div class="sev-cell">
+      <div class="sev-level" style="color:#FF4444;">ERROR</div>
+      <div class="sev-stream">Add-Content</div>
+      <div class="sev-desc">Failures — upload errors, file write failures, fatal sync errors.</div>
+    </div>
+  </div>
+
+  <h3>Log Entry Format</h3>
+  <div class="code-block">[2026-02-22 10:30:01] [INFO] Config loaded from C:\Users\adminsk\AppData\Roaming\ScriptManagementBrowser\config.json
+[2026-02-22 10:30:01] [INFO] Git cache loaded: 190 files (cached 2/22/2026 9:00 AM)
+[2026-02-22 10:30:14] [INFO] SharePoint sync started. Repo: C:\GitHubRepos\Databranch-Client-Scripts
+[2026-02-22 10:30:14] [INFO] [SYNC] Importing PnP.PowerShell...
+[2026-02-22 10:30:14] [INFO] [SYNC] Connected successfully.
+[2026-02-22 10:30:16] [INFO] [SYNC] Unique folders to ensure exist: 54
+[2026-02-22 10:30:18] [INFO] [SYNC] Folder pass complete. Ensured=54 Errors=0
+[2026-02-22 10:30:45] [INFO] [SYNC] Sync scan complete. Uploaded=190 Skipped=0 Errors=0 ToDelete=0</div>
+
+  <p>Sync runspace messages are prefixed with <code class="inline">[SYNC]</code> inside the INFO/WARN/ERROR brackets to distinguish them from UI-thread log entries.</p>
+
+  <div class="callout note">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-body">
+      <div class="callout-label">This App Has No Console Output</div>
+      <div class="callout-text">Unlike the Databranch PowerShell script library's dual-output pattern (Write-Log + Write-Console), this application is a WPF GUI and has no meaningful console output. All diagnostic information is in the log file. The status bar at the bottom of the window shows brief status messages only.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ 9. ERRORS -->
+<div class="section" id="errors">
+  <h1>9. Error Handling</h1>
+
+  <p>The application uses per-operation try/catch throughout. Fatal errors show a MessageBox and log at ERROR level. Non-fatal errors log at WARN and continue. The sync runspace returns a result hashtable with a <code class="inline">Success</code> boolean and optional <code class="inline">Error</code> string that is surfaced to the user on failure.</p>
+
+  <h2>Exit Codes</h2>
+  <p>As a GUI application, Start-ScriptManagementBrowser does not define exit codes in the DattoRMM sense. The process exits with code 0 on normal close.</p>
+  <div class="exit-codes">
+    <div class="exit-pill success"><div class="exit-num">0</div><div class="exit-label">Normal Exit</div><div class="exit-desc">Window closed by user.</div></div>
+    <div class="exit-pill error"><div class="exit-num">1</div><div class="exit-label">Fatal Error</div><div class="exit-desc">Unhandled exception in master function or WPF assembly load failure.</div></div>
+  </div>
+
+  <h2>Known Runtime Exceptions and Resolutions</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Exception</th><th>Root Cause</th><th>Resolution</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>"The property 'Text' cannot be found on this object"</td>
+          <td>WPF control instantiated via <code class="inline">New-Object</code> inside a deeply nested function. PS7 type resolution returns wrong overload.</td>
+          <td>Use <code class="inline">XamlReader::Parse()</code> for all new dialogs. Fixed in v1.0.2.0.</td>
+        </tr>
+        <tr>
+          <td>"Method invocation failed… OrderedDictionary does not contain a method named 'Clone'"</td>
+          <td><code class="inline">Get-DefaultConfig</code> returned <code class="inline">[ordered]@{}</code>. OrderedDictionary has no <code class="inline">.Clone()</code>.</td>
+          <td>Changed to plain <code class="inline">@{}</code>. Keys enumerated via <code class="inline">@($config.Keys)</code>. Fixed in v1.0.2.0.</td>
+        </tr>
+        <tr>
+          <td>"The value cannot be an empty string (Parameter 'oldValue')"</td>
+          <td><code class="inline">.Replace("\\","/")</code> inside runspace script block — backslash eaten during script block serialization, producing empty first argument.</td>
+          <td>Use <code class="inline">-replace '\\','/'</code> operator instead of <code class="inline">.Replace()</code> in all runspace path normalization. Fixed in v1.0.5.0.</td>
+        </tr>
+        <tr>
+          <td>"Access denied" from Resolve-PnPFolder</td>
+          <td>Target folder path contains <code class="inline">!</code> or <code class="inline">.</code> as first character of any segment. SharePoint blocks these characters in paths even with FullControl permissions.</td>
+          <td><code class="inline">Sanitize-SpPath</code> replaces leading <code class="inline">!</code> and <code class="inline">.</code> with <code class="inline">-</code> on all SP destination paths. Fixed in v1.0.6.0.</td>
+        </tr>
+        <tr>
+          <td>"Invalid URI: The Authority/Host could not be parsed"</td>
+          <td>Full browser URL pasted into <code class="inline">SharePointFolderPath</code> config field.</td>
+          <td>Edit <code class="inline">config.json</code> and replace with decoded site-relative path. No code fix — user configuration error.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ================================================================ 10. LIMITATIONS -->
+<div class="section" id="limitations">
+  <h1>10. Known Limitations</h1>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Limitation</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Browser shows .ps1 and .bat only</td>
+          <td>The file browser UI filters to <code class="inline">*.ps1</code> and <code class="inline">*.bat</code> only. Documentation files (.md, .html, .docx) in the repo are synced to SharePoint but not displayed in the browser. A future enhancement could add a file type filter toggle.</td>
+        </tr>
+        <tr>
+          <td>No log rotation</td>
+          <td>app.log grows indefinitely. In high-use environments or after many large syncs the file may become unwieldy. A future enhancement should implement 10-file rotation matching the standard script library pattern.</td>
+        </tr>
+        <tr>
+          <td>Sync uploads one file at a time</td>
+          <td>PnP.PowerShell's <code class="inline">Add-PnPFile</code> is called sequentially. First sync of a large repo is slow. Parallelizing uploads within the existing runspace is possible but adds complexity and SharePoint throttling risk.</td>
+        </tr>
+        <tr>
+          <td>Rename does not git mv</td>
+          <td>Invoke-RenameFile calls <code class="inline">Rename-Item</code> on disk only. Git tracks this as a delete + add, not a rename, losing file history. Engineers should use <code class="inline">git mv</code> in their Git client for renames that need to preserve history.</td>
+        </tr>
+        <tr>
+          <td>SP URL construction is static</td>
+          <td><code class="inline">Get-SharePointFileUrl</code> builds URLs by string concatenation. It does not verify the file actually exists in SharePoint. The URL is best-effort for sharing purposes and may be stale if sync has not been run recently.</td>
+        </tr>
+        <tr>
+          <td>Single config, no profiles</td>
+          <td>The app supports one Git repo and one SharePoint target at a time. Engineers managing multiple repos need to update Settings each time or maintain separate config.json files.</td>
+        </tr>
+        <tr>
+          <td>Delete confirmation and rename dialogs use New-Object</td>
+          <td>These two dialogs were built before the XAML-only rule was established. They work at their current nesting depth but should be migrated to <code class="inline">XamlReader::Parse()</code> in a future cleanup pass for consistency.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ================================================================ 11. CHANGELOG -->
+<div class="section" id="changelog">
+  <h1>11. Version History</h1>
+
+  <div class="version-entry">
+    <div class="version-header">
+      <div class="version-num">v1.0.8.0</div>
+      <div class="version-meta">February 22, 2026</div>
+      <div class="version-author">Sam Kirsch</div>
+    </div>
+    <div class="version-body"><ul>
+      <li>SharePoint sync now performs a true full-repo scan with no file type filter. All files synced regardless of extension (.md, .html, .docx, .pdf, etc.).</li>
+      <li>Full UI color redesign applying Databranch Design System (UIDesignSpec.html v1.0.0). Surface stack replaced: purple-dark → navy-dark. Primary actions now use Brand Red Soft (#C0404A). Sync button changed to Brand Blue (#2E8BFF). Interactive blue updated from periwinkle #7B9CFF to #2E8BFF. Active view toggle uses Brand Red Soft as nav identity anchor. Selected file uses blue left border per spec. PS1 badge color purple #BD93F9 retired, replaced with blue-pale #4A8FD4. All tag chip colors aligned to semantic palette.</li>
+    </ul></div>
+  </div>
+
+  <div class="version-entry">
+    <div class="version-header">
+      <div class="version-num">v1.0.7.0</div>
+      <div class="version-meta">February 21, 2026</div>
+      <div class="version-author">Sam Kirsch</div>
+    </div>
+    <div class="version-body"><ul>
+      <li>Added ancestor path diagnostic in folder pre-creation pass. Walks each segment of the root target path and logs OK/MISS for each, exposing exactly where the SharePoint folder chain breaks.</li>
+      <li>Folder pre-creation pass now aborts after 3 consecutive errors rather than attempting all 54+ folders when the root is inaccessible.</li>
+    </ul></div>
+  </div>
+
+  <div class="version-entry">
+    <div class="version-header">
+      <div class="version-num">v1.0.6.0</div>
+      <div class="version-meta">February 21, 2026</div>
+      <div class="version-author">Sam Kirsch</div>
+    </div>
+    <div class="version-body"><ul>
+      <li>Added SharePoint path sanitization. Leading ! and . on any path segment replaced with - before constructing SP destination paths. Local Git repo paths unchanged. Sanitize-SpPath and Sanitize-SpSegment helper functions added to sync runspace.</li>
+      <li>Sanitization applied to folder pre-creation list, delta sync expected path, upload folder, and file name.</li>
+    </ul></div>
+  </div>
+
+  <div class="version-entry">
+    <div class="version-header">
+      <div class="version-num">v1.0.5.0</div>
+      <div class="version-meta">February 21, 2026</div>
+      <div class="version-author">Sam Kirsch</div>
+    </div>
+    <div class="version-body"><ul>
+      <li>Fixed: .Replace("\\","/") calls inside the runspace script block were corrupted by Python string processing during patching — backslashes eaten, producing .Replace("","/") which throws "value cannot be empty string". Replaced all path-normalization .Replace() calls in the runspace with -replace operator.</li>
+    </ul></div>
+  </div>
+
+  <div class="version-entry">
+    <div class="version-header">
+      <div class="version-num">v1.0.4.0</div>
+      <div class="version-meta">February 21, 2026</div>
+      <div class="version-author">Sam Kirsch</div>
+    </div>
+    <div class="version-body"><ul>
+      <li>Added folder pre-creation pass before upload loop using Resolve-PnPFolder. Creates all missing SharePoint folders before uploads begin. Handles arbitrarily deep nesting. No-op if folder already exists.</li>
+      <li>Added folder creation stats to sync log (Ensured=N Errors=N).</li>
+    </ul></div>
+  </div>
+
+  <div class="version-entry">
+    <div class="version-header">
+      <div class="version-num">v1.0.3.0</div>
+      <div class="version-meta">February 21, 2026</div>
+      <div class="version-author">Sam Kirsch</div>
+    </div>
+    <div class="version-body"><ul>
+      <li>Fixed: SharePointFolderPath config schema migration — collapsed Library + Subfolder two-field approach into single SharePointFolderPath field. Eliminates display-name vs URL-name confusion.</li>
+      <li>Removed orphaned Get-SharePointFileUrl body left by incomplete v1.0.2.0 patch.</li>
+    </ul></div>
+  </div>
+
+  <div class="version-entry">
+    <div class="version-header">
+      <div class="version-num">v1.0.2.0</div>
+      <div class="version-meta">February 21, 2026</div>
+      <div class="version-author">Sam Kirsch</div>
+    </div>
+    <div class="version-body"><ul>
+      <li>Fixed: Show-SettingsDialog completely rewritten using XamlReader::Parse(). Eliminated Add-Field nested function which triggered PS7 type resolution failure at deep nesting depth.</li>
+      <li>Fixed: Get-DefaultConfig changed from [ordered]@{} to plain @{}. OrderedDictionary has no .Clone() method causing config load failure.</li>
+      <li>Fixed: Load-AppConfig enumeration changed from $config.Clone().Keys to @($config.Keys) snapshot.</li>
+    </ul></div>
+  </div>
+
+  <div class="version-entry">
+    <div class="version-header">
+      <div class="version-num">v1.0.1.0</div>
+      <div class="version-meta">February 21, 2026</div>
+      <div class="version-author">Sam Kirsch</div>
+    </div>
+    <div class="version-body"><ul>
+      <li>Fixed: $Window.Show() before ShowDialog() caused visibility conflict — window appeared briefly then disappeared. Changed to ShowDialog() only.</li>
+      <li>Fixed: First-run cancel behavior — cancelling Settings dialog on first run now exits gracefully instead of opening main window in unconfigured state.</li>
+    </ul></div>
+  </div>
+
+  <div class="version-entry">
+    <div class="version-header">
+      <div class="version-num">v1.0.0.0</div>
+      <div class="version-meta">February 21, 2026</div>
+      <div class="version-author">Sam Kirsch</div>
+    </div>
+    <div class="version-body"><ul>
+      <li>Initial release. Full rewrite of EngineersPowerApp as Start-ScriptManagementBrowser.</li>
+      <li>Git as single source of truth with one-way Git → SharePoint sync via PnP.PowerShell.</li>
+      <li>Three view modes: A-Z, Folder tree, Tags grouped.</li>
+      <li>In-file comment and tag metadata system with ##SCRIPTMGMT# prefix.</li>
+      <li>Delta sync with timestamp + MD5 comparison, orphan detection, delete confirmation.</li>
+      <li>DispatcherTimer-based runspace polling for non-blocking sync UI.</li>
+      <li>Persistent config.json and git-cache.json under %APPDATA%\ScriptManagementBrowser.</li>
+      <li>2,593 lines. Full XAML-parsed WPF UI with Databranch design system (v1 purple-dark).</li>
+    </ul></div>
+  </div>
+
+</div><!-- /changelog -->
+
+</div><!-- /content -->
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div>Databranch &mdash; Internal Use &mdash; Confidential</div>
+  <div class="version">Start-ScriptManagementBrowser.ps1 &nbsp;|&nbsp; v1.0.8.0 &nbsp;|&nbsp; February 2026</div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Script Management Browser — Operator How-To Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+  :root {
+    --navy:           #0D1520;
+    --navy-mid:       #111C2E;
+    --navy-light:     #162238;
+    --navy-card:      #1D2E48;
+    --accent:         #2E8BFF;
+    --accent-dim:     #1A6FD4;
+    --red:            #C0404A;
+    --red-dim:        #8B2030;
+    --white:          #F0F4FF;
+    --text:           #A8BDD8;
+    --text-muted:     #607090;
+    --text-dim:       #3A5070;
+    --border:         #213A58;
+    --border-mid:     #2A4A70;
+    --code-bg:        #060E1A;
+    --row-alt:        #0D1520;
+    --success-bg:     #0A2818;
+    --success-border: #1A5030;
+    --warn-bg:        #1E1800;
+    --warn-border:    #6A4800;
+    --note-bg:        #091828;
+    --note-border:    #1A3A6A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--navy); color: var(--text); font-size: 14px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .cover::before, .cover::after { display: none; }
+    body { background: white; color: black; }
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ============================================================ LAYOUT */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+    background: #080C14; border-right: 1px solid var(--border);
+    overflow-y: auto; z-index: 100; display: flex; flex-direction: column;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .company {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--red); font-variant: small-caps;
+    margin-bottom: 6px;
+  }
+  .sidebar-logo .script-name {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    color: var(--white); margin-bottom: 4px; line-height: 1.4;
+  }
+  .sidebar-logo .doc-type {
+    font-size: 11px; color: var(--text-muted); font-style: italic;
+  }
+
+  nav { padding: 16px 0 24px; flex: 1; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-dim);
+    padding: 12px 20px 6px; display: block;
+  }
+  .nav-link {
+    display: block; padding: 7px 20px; font-size: 13px;
+    color: var(--text-muted); text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .nav-link:hover { color: var(--white); background: var(--navy-mid); }
+  .nav-link.active { color: var(--white); background: var(--navy-light); border-left-color: var(--red); }
+  .nav-link.sub { padding-left: 32px; font-size: 12px; }
+
+  .main { margin-left: 260px; }
+
+  /* ============================================================ COVER */
+  .cover {
+    position: relative; overflow: hidden;
+    background: linear-gradient(145deg, #080C14 0%, #0D1B30 40%, #080C14 100%);
+    padding: 64px 80px 56px; border-bottom: 1px solid var(--border);
+  }
+  .cover::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 400px; height: 400px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(30,144,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover::after {
+    content: ''; position: absolute; bottom: -60px; left: 120px;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(192,64,74,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover-eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--red); margin-bottom: 16px;
+  }
+  .cover-title {
+    font-size: 42px; font-weight: 700; color: var(--white);
+    line-height: 1.1; margin-bottom: 10px;
+  }
+  .cover-script {
+    font-family: 'IBM Plex Mono', monospace; font-size: 16px;
+    color: var(--accent); margin-bottom: 6px;
+  }
+  .cover-doctype {
+    font-size: 15px; font-style: italic; color: var(--text-muted);
+    margin-bottom: 32px;
+  }
+  .cover-meta {
+    display: flex; flex-wrap: wrap; gap: 28px;
+    padding-top: 24px; border-top: 1px solid var(--border);
+  }
+  .cover-meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .cover-meta-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+  .cover-meta-value { font-size: 14px; color: var(--text); }
+  .cover-meta-value.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+
+  /* ============================================================ CONTENT */
+  .content {
+    max-width: 860px; padding: 56px 80px 80px;
+  }
+
+  .section { margin-bottom: 64px; }
+
+  h1 {
+    font-size: 26px; font-weight: 700; color: var(--white);
+    border-bottom: 2px solid var(--navy-light);
+    padding-bottom: 12px; margin-bottom: 24px;
+  }
+  h1::before {
+    content: '//  ';
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent); font-size: 20px;
+  }
+  h2 { font-size: 18px; font-weight: 600; color: var(--accent); margin: 28px 0 12px; }
+  h3 {
+    font-size: 12px; font-weight: 700; color: var(--red);
+    text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 8px;
+  }
+  p { color: var(--text); font-size: 14px; line-height: 1.7; margin-bottom: 14px; }
+  strong { color: var(--white); font-weight: 600; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ============================================================ CODE */
+  .code-block {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: 16px 20px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    color: #A8BDD8; overflow-x: auto; margin: 14px 0 18px;
+    line-height: 1.6; white-space: pre;
+  }
+  code.inline {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;
+    background: var(--code-bg); color: var(--accent);
+    border: 1px solid var(--border); border-radius: 3px;
+    padding: 2px 6px;
+  }
+
+  /* ============================================================ TABLES */
+  .table-wrap {
+    overflow-x: auto; border-radius: 8px;
+    border: 1px solid var(--border); margin: 14px 0 20px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--navy-mid); color: var(--text-muted);
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em;
+    text-transform: uppercase; padding: 10px 14px; text-align: left;
+    border-bottom: 1px solid var(--border-mid);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: var(--navy-mid); }
+  td { padding: 10px 14px; vertical-align: top; font-size: 13px; }
+  td.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); white-space: nowrap; }
+
+  /* ============================================================ CALLOUTS */
+  .callout {
+    display: flex; gap: 14px; padding: 14px 16px;
+    border-radius: 8px; margin: 16px 0;
+  }
+  .callout.note { background: var(--note-bg); border-left: 3px solid #1E6ABF; }
+  .callout.tip  { background: var(--success-bg); border-left: 3px solid var(--success-border); }
+  .callout.warn { background: var(--warn-bg); border-left: 3px solid var(--warn-border); }
+  .callout-icon { font-size: 18px; line-height: 1.4; flex-shrink: 0; }
+  .callout-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .callout.note  .callout-label { color: var(--accent); }
+  .callout.tip   .callout-label { color: #22C55E; }
+  .callout.warn  .callout-label { color: #E8A020; }
+  .callout-text  { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+  /* ============================================================ BADGES */
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 10px; line-height: 1.6;
+  }
+  .badge-blue  { background: rgba(46,139,255,0.15); color: #4A8FD4; border: 1px solid rgba(46,139,255,0.25); }
+  .badge-red   { background: rgba(192,64,74,0.15);  color: #C0404A; border: 1px solid rgba(192,64,74,0.25); }
+  .badge-green { background: rgba(34,197,94,0.12);  color: #22C55E; border: 1px solid rgba(34,197,94,0.2); }
+  .badge-amber { background: rgba(232,160,32,0.12); color: #E8A020; border: 1px solid rgba(232,160,32,0.2); }
+  .badge-muted { background: rgba(96,112,144,0.15); color: #607090; border: 1px solid rgba(96,112,144,0.2); }
+
+  /* ============================================================ LISTS */
+  ul.styled { list-style: none; padding: 0; margin: 10px 0 16px; }
+  ul.styled li {
+    padding: 5px 0 5px 18px; position: relative;
+    font-size: 13px; color: var(--text); line-height: 1.6;
+  }
+  ul.styled li::before { content: '▸'; color: var(--accent); position: absolute; left: 0; }
+
+  ol.styled { list-style: none; padding: 0; margin: 10px 0 16px; counter-reset: ol-counter; }
+  ol.styled li {
+    padding: 6px 0 6px 42px; position: relative;
+    font-size: 13px; color: var(--text); line-height: 1.6;
+    counter-increment: ol-counter;
+  }
+  ol.styled li::before {
+    content: counter(ol-counter);
+    position: absolute; left: 0; top: 6px;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--navy-light); color: var(--accent);
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ============================================================ STEP BLOCKS */
+  .step-block {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 8px; margin: 16px 0; overflow: hidden;
+  }
+  .step-header {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--navy-light); padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--red); color: var(--white);
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-title { font-size: 14px; font-weight: 600; color: var(--white); }
+  .step-body { padding: 16px 18px; }
+  .step-body p { margin-bottom: 10px; }
+  .step-body p:last-child { margin-bottom: 0; }
+
+  /* ============================================================ MODE CARDS */
+  .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  .mode-card {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 18px;
+  }
+  .mode-card-title { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 8px; }
+  .mode-card-desc { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+  /* ============================================================ CONSOLE PREFIX LEGEND */
+  .prefix-legend {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden; margin: 14px 0;
+  }
+  .prefix-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+  }
+  .prefix-row:last-child { border-bottom: none; }
+  .prefix-row:nth-child(even) { background: rgba(255,255,255,0.02); }
+  .prefix-tag {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    font-weight: 600; min-width: 90px; flex-shrink: 0;
+  }
+  .prefix-desc { font-size: 13px; color: var(--text); }
+
+  /* ============================================================ EXIT CODES */
+  .exit-codes { display: flex; gap: 12px; flex-wrap: wrap; margin: 14px 0; }
+  .exit-pill {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; min-width: 140px;
+    text-align: center;
+  }
+  .exit-num { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+  .exit-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .exit-desc { font-size: 11px; color: var(--text-muted); }
+  .exit-pill.success .exit-num { color: #22C55E; }
+  .exit-pill.success .exit-label { color: #22C55E; }
+  .exit-pill.warn    .exit-num { color: #E8A020; }
+  .exit-pill.warn    .exit-label { color: #E8A020; }
+  .exit-pill.error   .exit-num { color: #C84040; }
+  .exit-pill.error   .exit-label { color: #C84040; }
+
+  /* ============================================================ FOOTER */
+  .doc-footer {
+    margin-left: 260px; padding: 18px 80px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text-dim);
+  }
+  .doc-footer .version { font-family: 'IBM Plex Mono', monospace; }
+</style>
+</head>
+<body>
+
+<!-- ================================================================ SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="company">Databranch</div>
+    <div class="script-name">Start-ScriptManagementBrowser.ps1</div>
+    <div class="doc-type">Operator How-To Guide</div>
+  </div>
+  <nav>
+    <span class="nav-section-label">Contents</span>
+    <a class="nav-link" href="#overview">Overview</a>
+    <a class="nav-link" href="#what-it-does">What the App Does</a>
+    <a class="nav-link" href="#prerequisites">Prerequisites</a>
+    <a class="nav-link sub" href="#prerequisites">Permissions</a>
+    <a class="nav-link sub" href="#prereq-software">Software</a>
+    <a class="nav-link" href="#first-run">First-Run Setup</a>
+    <a class="nav-link sub" href="#first-run">Launch</a>
+    <a class="nav-link sub" href="#settings-fields">Settings Fields</a>
+    <a class="nav-link sub" href="#sharepoint-path">SharePoint Path Guide</a>
+    <a class="nav-link" href="#using">Using the Browser</a>
+    <a class="nav-link sub" href="#using">Browsing Files</a>
+    <a class="nav-link sub" href="#view-modes">View Modes</a>
+    <a class="nav-link sub" href="#file-detail">File Detail Panel</a>
+    <a class="nav-link sub" href="#metadata">Comments &amp; Tags</a>
+    <a class="nav-link" href="#sync">Syncing to SharePoint</a>
+    <a class="nav-link sub" href="#sync">Running a Sync</a>
+    <a class="nav-link sub" href="#sync-log">Reading Sync Results</a>
+    <a class="nav-link sub" href="#orphans">Orphaned File Deletions</a>
+    <a class="nav-link" href="#console">Log File</a>
+    <a class="nav-link" href="#troubleshooting">Troubleshooting</a>
+  </nav>
+</div>
+
+<!-- ================================================================ MAIN -->
+<div class="main">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-eyebrow">Databranch Script Library</div>
+  <div class="cover-title">Script Management Browser</div>
+  <div class="cover-script">Start-ScriptManagementBrowser.ps1</div>
+  <div class="cover-doctype">Operator How-To Guide</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Version</span>
+      <span class="cover-meta-value mono">v1.0.8.0</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Date</span>
+      <span class="cover-meta-value">February 22, 2026</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Author</span>
+      <span class="cover-meta-value">Sam Kirsch</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Company</span>
+      <span class="cover-meta-value">Databranch</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Audience</span>
+      <span class="cover-meta-value">Engineers / Operators</span>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- ================================================================ OVERVIEW -->
+<div class="section" id="overview">
+  <h1>Overview</h1>
+  <p>Script Management Browser is a WPF desktop application that provides a structured, searchable interface for browsing and managing the Databranch PowerShell script library stored in a local Git repository. It allows engineers to quickly find scripts, view metadata, add comments and tags, open files in VSCode, and sync the full library to SharePoint for team-wide access.</p>
+
+  <div class="callout note">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-body">
+      <div class="callout-label">Audience</div>
+      <div class="callout-text">This guide is written for Databranch engineers and technicians. It assumes you have a local Git clone of the script repository and know how to open a PowerShell terminal. No scripting knowledge is required to use the browser.</div>
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-label">Git is the Source of Truth</div>
+      <div class="callout-text">This app reads directly from your local Git repository — it does not maintain a separate copy of scripts. SharePoint sync is strictly one-way: Git → SharePoint. Never edit scripts in SharePoint.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ WHAT IT DOES -->
+<div class="section" id="what-it-does">
+  <h1>What the App Does</h1>
+  <ul class="styled">
+    <li>Scans your local Git repository and builds a searchable index of all script files (<code class="inline">.ps1</code>, <code class="inline">.bat</code>) and documentation files.</li>
+    <li>Displays scripts in three view modes: alphabetical, by folder, or grouped by tag.</li>
+    <li>Allows you to search across file names, comments, and tags in real time.</li>
+    <li>Shows per-file metadata: creation date, modified date, type, size, folder, and SharePoint URL.</li>
+    <li>Allows loading file content for preview and in-place comment and tag editing.</li>
+    <li>Allows renaming script files directly from the app (renames the actual file on disk).</li>
+    <li>Copies a file's local path or SharePoint URL to the clipboard for sharing.</li>
+    <li>Opens any script in Visual Studio Code with one click.</li>
+    <li>Performs a true delta sync of the full repository to a SharePoint folder, uploading only changed files, and flagging or removing orphaned SharePoint files.</li>
+    <li>Caches the file index locally so the app starts instantly even before you click Refresh.</li>
+    <li>Logs all operations to a persistent app log at <code class="inline">%APPDATA%\ScriptManagementBrowser\app.log</code>.</li>
+  </ul>
+</div>
+
+<!-- ================================================================ PREREQUISITES -->
+<div class="section" id="prerequisites">
+  <h1>Prerequisites</h1>
+
+  <h2>Permissions</h2>
+  <p>To use the browser and sync features you need:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Requirement</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Local Git repository</td>
+          <td>A cloned copy of the Databranch script library. Read access to all files in the repo folder is required. Write access is needed to save comments and tags to files, and to rename files.</td>
+        </tr>
+        <tr>
+          <td>SharePoint access (sync only)</td>
+          <td>Your account must have write permission to the target SharePoint folder. The app uses an Entra registered application (PnP.PowerShell) with delegated permissions — your session credentials are used when you authenticate.</td>
+        </tr>
+        <tr>
+          <td>VSCode (optional)</td>
+          <td>Required only for the <strong>Open in VSCode</strong> feature. VSCode must be in your system PATH (<code class="inline">code</code> command).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="prereq-software">Software Requirements</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>Requirement</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>PowerShell</td>
+          <td class="mono">7.0+</td>
+          <td>Required for WPF and runspace support. The script uses PS7 for its WPF rendering.</td>
+        </tr>
+        <tr>
+          <td>PnP.PowerShell</td>
+          <td>Latest</td>
+          <td>Required only for SharePoint sync. Install via: <code class="inline">Install-Module PnP.PowerShell -Scope CurrentUser</code></td>
+        </tr>
+        <tr>
+          <td>Entra App Registration</td>
+          <td>Client ID configured</td>
+          <td>Required for SharePoint sync authentication. See the Settings section for how to configure the Client ID.</td>
+        </tr>
+        <tr>
+          <td>Visual Studio Code</td>
+          <td>Optional</td>
+          <td>Required for Open in VSCode. Must be accessible via <code class="inline">code</code> in PATH.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-label">PowerShell 5.1 Not Supported</div>
+      <div class="callout-text">This application requires PowerShell 7 or later. Do not attempt to run it with Windows PowerShell (5.1). The WPF rendering and runspace architecture depend on PS7 features.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ FIRST RUN -->
+<div class="section" id="first-run">
+  <h1>First-Run Setup</h1>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">Launch the Application</div>
+    </div>
+    <div class="step-body">
+      <p>Open a PowerShell 7 terminal and run:</p>
+      <div class="code-block">pwsh -File "C:\Path\To\Start-ScriptManagementBrowser.ps1"</div>
+      <p>The first time you run the app, the <strong>Settings</strong> dialog will open automatically before the main window appears.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">Configure the Git Repository Path</div>
+    </div>
+    <div class="step-body">
+      <p>In the Settings dialog, enter the full path to your local Git repository in the <strong>Git Repository Path</strong> field.</p>
+      <div class="code-block">C:\GitHubRepos\Databranch-Client-Scripts</div>
+      <p>This is the only required field. If you do not need SharePoint sync, click <strong>Save &amp; Open Repository</strong> and skip to step 5.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title">Configure SharePoint Sync (Optional)</div>
+    </div>
+    <div class="step-body">
+      <p>Fill in the three SharePoint fields to enable sync. See <a href="#settings-fields">Settings Fields</a> below for detailed guidance on each field.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title">Save and Open</div>
+    </div>
+    <div class="step-body">
+      <p>Click <strong>Save &amp; Open Repository</strong>. The app will scan your repository and populate the file list. This takes a few seconds for large repos. Subsequent launches load from cache instantly.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div class="step-title">Verify the File List</div>
+    </div>
+    <div class="step-body">
+      <p>The left panel should now show your script files. The file count appears at the bottom of the panel. If you see "No files loaded," check that the repository path is correct in Settings and click <strong>[R] Refresh</strong>.</p>
+    </div>
+  </div>
+
+  <h2 id="settings-fields">Settings Fields Reference</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Field</th><th>Required</th><th>Example</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">Git Repository Path</td>
+          <td><span class="badge badge-red">Required</span></td>
+          <td class="mono">C:\GitHubRepos\Databranch-Client-Scripts</td>
+          <td>Full local path to the root of your Git repository.</td>
+        </tr>
+        <tr>
+          <td class="mono">SharePoint Site URL</td>
+          <td><span class="badge badge-muted">Optional</span></td>
+          <td class="mono">https://databranch.sharepoint.com</td>
+          <td>Root URL of your SharePoint tenant. No trailing slash.</td>
+        </tr>
+        <tr>
+          <td class="mono">SharePoint Folder Path</td>
+          <td><span class="badge badge-muted">Optional</span></td>
+          <td class="mono">Shared Documents/Engineering Procedures/GitScriptsRepo</td>
+          <td>Full folder path within the site. No leading slash. Library name is the first segment. <strong>Do not paste a browser URL here.</strong></td>
+        </tr>
+        <tr>
+          <td class="mono">Entra App Client ID</td>
+          <td><span class="badge badge-muted">Optional</span></td>
+          <td class="mono">7f52b5b7-3b41-44b2-b332-118d6824b23d</td>
+          <td>GUID of the Entra app registration used for PnP authentication.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="sharepoint-path">How to Find Your SharePoint Folder Path</h2>
+  <p>The SharePoint Folder Path field expects a <strong>site-relative path</strong>, not a browser URL. To find it:</p>
+  <ol class="styled">
+    <li>Navigate to the target folder in SharePoint in your browser.</li>
+    <li>Look at the URL. Find the <code class="inline">id=</code> parameter. It will look like: <code class="inline">id=%2FShared%20Documents%2FEngineering%20Procedures%2FGitScriptsRepo</code></li>
+    <li>Decode the URL-encoded value (replace <code class="inline">%2F</code> with <code class="inline">/</code> and <code class="inline">%20</code> with a space).</li>
+    <li>Drop the leading slash: <code class="inline">Shared Documents/Engineering Procedures/GitScriptsRepo</code></li>
+    <li>Paste that into the SharePoint Folder Path field.</li>
+  </ol>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-label">Do Not Paste Browser URLs</div>
+      <div class="callout-text">Pasting the full browser URL (starting with <code class="inline">https://</code>) into the SharePoint Folder Path field will cause all sync operations to fail with an "Invalid URI" error. The field expects only the decoded path portion after the site URL.</div>
+    </div>
+  </div>
+
+  <div class="callout note">
+    <div class="callout-icon">🔧</div>
+    <div class="callout-body">
+      <div class="callout-label">Target Folder Must Exist</div>
+      <div class="callout-text">The root target folder (e.g. <code class="inline">GitScriptsRepo</code>) must already exist in SharePoint before running a sync. Sub-folders are created automatically during sync. Create the root folder manually in SharePoint the first time.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ USING -->
+<div class="section" id="using">
+  <h1>Using the Browser</h1>
+
+  <h2>Browsing and Searching Files</h2>
+  <p>The left panel is the file browser. Type in the search box at the top to filter files in real time — the search matches against file names, folder paths, comments, and tags simultaneously. Clear the search with the <strong>X</strong> button.</p>
+
+  <h2 id="view-modes">View Modes</h2>
+  <p>Three view modes are available via the toggle buttons above the file list:</p>
+  <div class="mode-cards">
+    <div class="mode-card">
+      <div class="mode-card-title"><span class="badge badge-red">A-Z</span> Alphabetical</div>
+      <div class="mode-card-desc">All script files sorted alphabetically by file name. This is the default view and the fastest way to find a script by name.</div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-card-title"><span class="badge badge-blue">[/] Folder</span> Folder Tree</div>
+      <div class="mode-card-desc">Files organized into a tree grouped by their repository folder path. Useful when you know roughly where a script lives in the folder hierarchy.</div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-card-title"><span class="badge badge-blue">[#] Tags</span> By Tag</div>
+      <div class="mode-card-desc">Files grouped by their assigned tags. Ungrouped files (no tags) appear at the top. Use this view to find all scripts in a category.</div>
+    </div>
+  </div>
+
+  <h2 id="file-detail">File Detail Panel</h2>
+  <p>Click any file in the list to open its detail view in the right panel. The detail panel shows:</p>
+  <ul class="styled">
+    <li><strong>File header</strong> — File name, type badge, folder path, and Rename button.</li>
+    <li><strong>Metadata cards</strong> — Created date, modified date, file type, size, folder path, top-level folder (Library), and SharePoint URL (if sync is configured).</li>
+    <li><strong>Action buttons</strong> — Open in VSCode, Load Content, Copy Local Path, Copy SP URL.</li>
+    <li><strong>Comment field</strong> — Editable free-text comment stored inside the script file.</li>
+    <li><strong>Tags field</strong> — Comma-separated tags stored inside the script file. Quick-add buttons for common categories.</li>
+    <li><strong>File preview</strong> — Read-only file content view (loads after clicking Load Content).</li>
+  </ul>
+
+  <h2 id="metadata">Editing Comments and Tags</h2>
+  <p>Comments and tags are stored <strong>directly inside the script file</strong> as special comment lines. This means they travel with the file through Git and are preserved across team clones.</p>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">Select a File and Load Content</div>
+    </div>
+    <div class="step-body">
+      <p>Click a file in the list, then click <strong>[L] Load Content</strong>. This reads the file from disk and populates the comment and tag fields with any existing values.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">Edit Comment and/or Tags</div>
+    </div>
+    <div class="step-body">
+      <p>Type your comment in the Comment field. Add tags in the Tags field as a comma-separated list, or use the quick-add buttons (automation, maintenance, deployment, monitoring, security, utility).</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title">Save to File</div>
+    </div>
+    <div class="step-body">
+      <p>Click <strong>[Save] Save Comment &amp; Tags to File</strong>. The app writes the values into the script file. A green confirmation message appears briefly. Commit the change to Git to share it with the team.</p>
+    </div>
+  </div>
+
+  <div class="callout note">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-body">
+      <div class="callout-label">Load Content First</div>
+      <div class="callout-text">Always click Load Content before saving. If you save without loading first, any existing comment or tag in the file will be overwritten with whatever is currently in the field (which may be blank).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ SYNC -->
+<div class="section" id="sync">
+  <h1>Syncing to SharePoint</h1>
+
+  <p>The Sync feature performs a one-way push from your local Git repository to SharePoint. It compares files by timestamp and MD5 hash, uploads only changed or new files, and optionally removes files from SharePoint that no longer exist in the repository.</p>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-label">One-Way Only</div>
+      <div class="callout-text">Sync only moves data from Git → SharePoint. It never modifies your local files. SharePoint is a read-only distribution mirror — all edits happen in Git.</div>
+    </div>
+  </div>
+
+  <h2>Running a Sync</h2>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">Ensure Settings Are Configured</div>
+    </div>
+    <div class="step-body">
+      <p>Open Settings (<strong>[=] Settings</strong>) and confirm the SharePoint Site URL, SharePoint Folder Path, and Entra App Client ID are all filled in. Refer to <a href="#settings-fields">Settings Fields</a> above.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">Click Sync to SharePoint</div>
+    </div>
+    <div class="step-body">
+      <p>Click the <strong>[^] Sync to SharePoint</strong> button in the title bar. A loading overlay appears. The sync runs in the background and will not freeze the UI.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title">Authenticate When Prompted</div>
+    </div>
+    <div class="step-body">
+      <p>A browser window (or interactive auth prompt) will open for PnP authentication. Sign in with your Microsoft 365 credentials. The window will close automatically after successful authentication.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title">Wait for Completion</div>
+    </div>
+    <div class="step-body">
+      <p>The first sync of a large repository may take several minutes as all files are uploaded. Subsequent syncs are much faster because only changed files are transferred. The status bar updates when sync is complete.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div class="step-title">Review the Summary</div>
+    </div>
+    <div class="step-body">
+      <p>A summary dialog appears showing: files uploaded, files skipped (unchanged), files deleted, and any errors. Review errors and check the app log for details.</p>
+    </div>
+  </div>
+
+  <h2 id="sync-log">Reading Sync Results</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Result</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Uploaded</strong></td><td>File was new or changed and was successfully pushed to SharePoint.</td></tr>
+        <tr><td><strong>Skipped</strong></td><td>File exists in SharePoint and is identical to the local copy (by timestamp or MD5 hash). No action taken.</td></tr>
+        <tr><td><strong>Deleted</strong></td><td>File existed in SharePoint but was not found in the local repository. Removed from SharePoint (after confirmation).</td></tr>
+        <tr><td><strong>Errors</strong></td><td>Files that could not be uploaded or deleted. Check the app log for specific error messages.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="orphans">Orphaned File Deletions</h2>
+  <p>When the sync detects files in SharePoint that do not exist in your local repository, it will show a <strong>Delete Confirmation</strong> dialog listing those files before taking any action. Review the list carefully — these could be files you deleted from the repo intentionally, or files added directly to SharePoint.</p>
+  <p>If you click <strong>Skip Deletions</strong>, the orphaned files are left in SharePoint. You can optionally check <em>Skip this confirmation in future syncs</em> — if you later want to re-enable the confirmation, go to Settings and click <strong>Re-enable delete confirmation</strong>.</p>
+</div>
+
+<!-- ================================================================ LOG FILE -->
+<div class="section" id="console">
+  <h1>Log File</h1>
+
+  <p>All app activity is written to a persistent log file at:</p>
+  <div class="code-block">%APPDATA%\ScriptManagementBrowser\app.log</div>
+  <p>Which resolves to a path like:</p>
+  <div class="code-block">C:\Users\adminsk\AppData\Roaming\ScriptManagementBrowser\app.log</div>
+  <p>The log uses timestamped entries with severity prefixes:</p>
+
+  <div class="prefix-legend">
+    <div class="prefix-row">
+      <span class="prefix-tag" style="color:#4AB4FF;">[INFO]</span>
+      <span class="prefix-desc">Normal progress — startup, config loads, scan results, sync steps.</span>
+    </div>
+    <div class="prefix-row">
+      <span class="prefix-tag" style="color:#E8A020;">[WARN]</span>
+      <span class="prefix-desc">Non-fatal issues — cache not found, config key missing, SP enumeration failed but will retry.</span>
+    </div>
+    <div class="prefix-row">
+      <span class="prefix-tag" style="color:#FF4444;">[ERROR]</span>
+      <span class="prefix-desc">Failures — upload errors, file write failures, sync fatal errors.</span>
+    </div>
+  </div>
+
+  <p>The log is retained as a single rolling file. When troubleshooting sync issues, look for <code class="inline">[SYNC]</code> prefixed lines which show the full detail of the sync runspace operations.</p>
+</div>
+
+<!-- ================================================================ TROUBLESHOOTING -->
+<div class="section" id="troubleshooting">
+  <h1>Troubleshooting</h1>
+
+  <h2>The file list is empty after launch</h2>
+  <p>The app loaded from cache but found no files. Click <strong>[R] Refresh</strong> to re-scan. If the file count is still zero, open Settings and verify the Git Repository Path points to the correct folder and that it contains <code class="inline">.ps1</code> or <code class="inline">.bat</code> files.</p>
+
+  <h2>Settings opens instead of the main window on launch</h2>
+  <p>This is expected behavior on first run, or if the Git Repository Path is empty. Configure the path and save to proceed.</p>
+
+  <h2>Sync fails with "Access denied"</h2>
+  <p>This typically means one of two things:</p>
+  <ul class="styled">
+    <li><strong>Target folder does not exist:</strong> The root sync folder (e.g. <code class="inline">GitScriptsRepo</code>) must be created manually in SharePoint before the first sync. Sub-folders are created automatically.</li>
+    <li><strong>Insufficient permissions:</strong> Ensure the Entra app registration has <code class="inline">AllSites.FullControl</code> (delegated) permission, and that admin consent has been granted in the Azure portal.</li>
+  </ul>
+
+  <h2>Sync fails with "Invalid URI"</h2>
+  <p>You have pasted a browser URL into the SharePoint Folder Path field. Open Settings and replace the value with the decoded site-relative path only. See <a href="#sharepoint-path">How to Find Your SharePoint Folder Path</a>.</p>
+
+  <h2>Sync connects but uploads 0 files</h2>
+  <p>Check that the SharePoint Folder Path is correct and the root folder exists. Also review the app log for <code class="inline">[SYNC]</code> lines showing folder creation errors or ancestor path diagnostic output. A <code class="inline">[MISS]</code> entry in the ancestor diagnostic means a parent folder in the path chain does not exist in SharePoint.</p>
+
+  <h2>Comments or tags did not save</h2>
+  <p>Ensure you clicked <strong>[L] Load Content</strong> before editing and saving. If you saved without loading, the existing values in the file may have been overwritten. Re-load the file to verify current content. Also confirm you have write permission to the local repository folder.</p>
+
+  <h2>Open in VSCode does nothing</h2>
+  <p>Verify Visual Studio Code is installed and the <code class="inline">code</code> command works in a terminal. If VSCode is installed but not in PATH, you can add it manually: in VSCode, open the Command Palette (<code class="inline">Ctrl+Shift+P</code>) and run <strong>Shell Command: Install 'code' command in PATH</strong>.</p>
+
+  <h2>The app window opens but appears blank or crashes immediately</h2>
+  <p>This is almost always a PowerShell version issue. Confirm you are launching with <code class="inline">pwsh</code> (PowerShell 7) not <code class="inline">powershell</code> (Windows PowerShell 5.1). Check the PS version: <code class="inline">$PSVersionTable.PSVersion</code> should show 7.x or higher.</p>
+
+  <h2>Config file location</h2>
+  <p>If you need to edit settings manually, the config file is a JSON file at:</p>
+  <div class="code-block">%APPDATA%\ScriptManagementBrowser\config.json</div>
+  <p>Open in any text editor. Valid keys: <code class="inline">GitRepoPath</code>, <code class="inline">SharePointSiteUrl</code>, <code class="inline">SharePointFolderPath</code>, <code class="inline">EntraClientId</code>, <code class="inline">SkipDeleteConfirm</code>.</p>
+</div>
+
+</div><!-- /content -->
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div>Databranch &mdash; Internal Use &mdash; Confidential</div>
+  <div class="version">Start-ScriptManagementBrowser.ps1 &nbsp;|&nbsp; v1.0.8.0 &nbsp;|&nbsp; February 2026</div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

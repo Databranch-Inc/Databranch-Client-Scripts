@@ -36,36 +36,62 @@ Source: https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&
 ```
 
 ### Color Palette (CSS Variables)
+
+All CSS variables must use the following tokens, derived from `Databranch_UIDesignSpec.html`.
+No other color values should appear in documentation HTML files.
+
 ```css
---navy:           #0f1e35   /* Page background */
---navy-mid:       #1a3154   /* Sidebar, table headers, step headers */
---navy-light:     #1e4a7a   /* Active nav, h1 border, flow step numbers */
---accent:         #2e8bff   /* Primary blue — links, h2, code left border, h1 :: prefix */
---accent-dim:     #1a5fbd   /* Hover states */
---teal:           #00c9b1   /* Company label, h3, architecture tags */
---white:          #f4f7fb   /* Headings, strong text, cover title */
---text:           #d0dce8   /* Body text */
---text-muted:     #8a9bb5   /* Secondary text, table headers */
---text-dim:       #5a6f8a   /* Nav section labels, footer text */
---border:         #1e3a5a   /* Standard borders */
---border-mid:     #2a4f72   /* Table header bottom border */
---code-bg:        #0a1624   /* Code blocks, inline code background */
---row-alt:        #0d1e30   /* Alternating table rows */
---success-bg:     #0a2418   /* Tip callout background */
---success-border: #1a6640   /* Tip callout border */
---warn-bg:        #1e1a08   /* Warning callout background */
---warn-border:    #7a6010   /* Warning callout border */
---note-bg:        #0a1a2e   /* Note callout background */
---note-border:    #1a4a7a   /* Note callout border */
+/* Surface Layers */
+--surface-void:       #080C14   /* Sidebar background */
+--surface-base:       #0D1520   /* Page/window background */
+--surface-raised:     #111C2E   /* Cover block dark base, alternating rows */
+--surface-card:       #162238   /* Table headers, step headers, card backgrounds */
+--surface-elevated:   #1D2E48   /* Active nav background, h1 border */
+
+/* Brand Accents */
+--brand-red-soft:     #C0404A   /* Active nav left border, cover eyebrow, h1 :: prefix */
+--brand-red-pale:     #D07080   /* h3 headings, secondary accent labels */
+--brand-blue-bright:  #2E8BFF   /* Links, h2, focus, accent buttons, meta value highlights */
+--brand-blue-mid:     #1A6FD4   /* Hover states for blue elements */
+
+/* Text */
+--text-primary:       #F0F4FF   /* Headings, strong text, cover title */
+--text-secondary:     #A8BDD8   /* Body text */
+--text-muted:         #607090   /* Secondary text, table headers, field labels */
+--text-dim:           #3A5070   /* Nav section labels, footer text, placeholder */
+
+/* Borders */
+--border-default:     #213A58   /* Standard borders */
+--border-mid:         #2A4A70   /* Table header bottom border, emphasized borders */
+
+/* Code */
+--code-bg:            #060E1A   /* Code blocks, inline code background */
+
+/* Rows */
+--row-alt:            #111C2E   /* Alternating table rows (same as surface-raised) */
+
+/* Status / Callouts */
+--status-success:     #22C55E
+--status-success-bg:  #0A2818
+--status-success-bd:  #1A5030
+--status-warn:        #E8A020
+--status-warn-bg:     #1E1800
+--status-warn-bd:     #6A4800
+--status-error:       #C84040
+--status-error-bg:    #200A0A
+--status-error-bd:    #6A1818
+--status-info:        #2E8BFF
+--status-info-bg:     #091828
+--status-info-bd:     #1A3A6A
 ```
 
 ### Severity / Status Colors (used in-content, not as CSS variables)
 ```
-INFO    : #60a5fa   (blue)
-SUCCESS : #22c55e   (green)
-DEBUG   : #a78bfa   (purple)
-WARN    : #eab308   (amber)
-ERROR   : #ef4444   (red)
+INFO    : #4AB4FF   (cyan-blue)
+SUCCESS : #22C55E   (green)
+DEBUG   : #C084FC   (magenta-purple)
+WARN    : #E8A020   (amber)
+ERROR   : #C84040   (red — matches brand red family)
 ```
 
 ---
@@ -86,27 +112,28 @@ ERROR   : #ef4444   (red)
 ```
 
 ### Sidebar
-- Fixed position, full height, scrollable, `#080f1a` background
-- Logo block: `DATABRANCH` in teal uppercase small-caps, script name in white, doc type subtitle in muted
-- Nav links: 13px, hover highlights, active state = accent left border + navy-light background
+- Fixed position, full height, scrollable, `var(--surface-void)` (`#080C14`) background
+- Logo block: `DATABRANCH` in `--brand-red-soft` uppercase small-caps, script name in `--text-primary`, doc type subtitle in `--text-muted`
+- Nav links: 13px, hover: `--surface-card` background + `--text-primary`. Active state = **`--brand-red-soft` 2px left border** + `--surface-elevated` background (NOT blue — see UIDesignSpec §13)
 - Sub-links: `.nav-link.sub` — indented 24px, 12px font
 - Nav section labels: 10px, uppercase, letter-spaced, `--text-dim`
 
 ### Cover Block
-- Gradient: `linear-gradient(145deg, #0a1828 0%, #0f2544 40%, #0a1e3a 100%)`
-- Two decorative radial gradients (pseudo-elements): blue glow top-right, teal glow bottom-left
-- Eyebrow: `Databranch Script Library` — 11px, teal, uppercase, letter-spaced
-- Title: Script's human-readable name — 42px, bold, white
-- Script name: monospace, 16px, accent blue (e.g. `Start-EventLogCollection.ps1`)
-- Doc type: italic, muted, 15px (e.g. `Operator How-To Guide` / `Technical Specification`)
-- Meta row: flex row of labeled values — Version (mono/accent), Date, Author, Company, + doc-specific fields
+- Gradient: `linear-gradient(145deg, #060E1A 0%, #0D1F3A 40%, #0A1828 100%)`
+- Two decorative radial gradients (pseudo-elements): blue glow (`rgba(30,144,255,0.07)`) top-right, red glow (`rgba(176,16,32,0.06)`) bottom-left — **teal glow is retired**
+- Eyebrow: `Databranch Script Library` — 11px, `--brand-red-soft`, uppercase, letter-spaced — **not teal**
+- Title: Script's human-readable name — 42px, bold, `--text-primary`
+- Script name: monospace, 16px, `--brand-blue-bright` (e.g. `Start-EventLogCollection.ps1`)
+- Doc type: italic, `--text-muted`, 15px (e.g. `Operator How-To Guide` / `Technical Specification`)
+- Meta row: flex row of labeled values — Version (`--brand-blue-bright` mono), Date, Author, Company, + doc-specific fields
 
 ### Content Typography
 ```
-h1  : 26px bold white, border-bottom 2px navy-light, prefix: '//  ' in accent mono
-h2  : 18px semibold accent blue
-h3  : 12px bold teal, uppercase, letter-spaced
-p   : var(--text), 14px line-height 1.7, margin-bottom 14px
+h1  : 26px bold --text-primary, border-bottom 2px --surface-elevated,
+      prefix: '//  ' in --brand-red-soft mono  (NOT blue)
+h2  : 18px semibold --brand-blue-bright
+h3  : 12px bold --brand-red-pale, uppercase, letter-spaced  (NOT teal)
+p   : var(--text-secondary), 14px line-height 1.7, margin-bottom 14px
 ```
 
 ### Footer
@@ -122,8 +149,9 @@ All components below are used in both document types. CSS definitions are identi
 
 ### Code Blocks
 ```
-.code-block  : dark background (#0a1624), border with 3px accent-blue left edge,
+.code-block  : dark background (--code-bg / #060E1A), border with 3px --brand-red-soft left edge,
                IBM Plex Mono 13px, horizontal scrollable
+               NOTE: Left-edge accent is RED, not blue. See UIDesignSpec §11 Design Decision Record.
 code.inline  : same background, inline with border, 12.5px
 ```
 Syntax highlighting classes (TechSpec only, used sparingly):
@@ -135,7 +163,7 @@ Syntax highlighting classes (TechSpec only, used sparingly):
 - Wrapped in `.table-wrap` (overflow, rounded border)
 - Alternating row colors, hover highlight
 - `thead th`: uppercase, 10.5-11px, letter-spaced, muted
-- `td.mono`: monospace, accent blue, no-wrap
+- `td.mono`: monospace, `--brand-blue-bright`, no-wrap
 - `td.num`: large mono, centered (used for exit codes in TechSpec)
 
 ### Callout Boxes
@@ -147,15 +175,21 @@ Three variants, all use `.callout` base with emoji icon and labeled body:
 ```
 
 ### Badges
-Inline chips in `.badge` with color variants:
+Inline chips in `.badge` with color variants. Teal variant is retired — use blue or muted instead:
 ```
-.badge-blue   .badge-teal   .badge-green   .badge-amber   .badge-red
+.badge-blue    background: rgba(46,139,255,0.15)  text: #4AB4FF   border: rgba(46,139,255,0.3)
+.badge-red     background: rgba(176,16,32,0.15)   text: #D07080   border: rgba(176,16,32,0.3)
+.badge-green   background: rgba(34,197,94,0.12)   text: #22C55E   border: rgba(34,197,94,0.25)
+.badge-amber   background: rgba(232,160,32,0.12)  text: #E8A020   border: rgba(232,160,32,0.25)
+.badge-purple  background: rgba(192,132,252,0.12) text: #C084FC   border: rgba(192,132,252,0.25)
+.badge-muted   background: rgba(96,112,144,0.15)  text: #607090   border: rgba(96,112,144,0.25)
 ```
+All badges: IBM Plex Mono, 10.5–11px, weight 600, letter-spacing 0.05em, border-radius 4px, padding 2px 9px.
 
 ### Styled Lists
 ```
-ul.styled  — custom bullet ▸ in accent blue
-ol.styled  — numbered circles with navy-light background, accent number
+ul.styled  — custom bullet ▸ in --brand-red-soft (NOT blue)
+ol.styled  — numbered circles with --surface-elevated background, --brand-blue-bright number
 ```
 
 ### Exit Code Pills (`.exit-codes` / `.exit-pill`)
@@ -303,7 +337,8 @@ Bordered block with alternating row backgrounds, `.prefix-tag` in severity color
   </div>
 </div>
 ```
-Tag color variants: `discovery` (teal), `collection` (blue), `infra` (muted), `output` (green).
+Tag color variants: `discovery` (blue-pale / #4A8FD4), `collection` (blue / #2E8BFF), `infra` (muted / #607090), `output` (green / #22C55E).
+Note: The `discovery` tag previously used teal (#00c9b1). Teal is retired from the design system — use blue-pale instead.
 
 **Flow Diagrams** (`.flow`, vertical):
 ```html
@@ -322,7 +357,7 @@ Tag color variants: `discovery` (teal), `collection` (blue), `infra` (muted), `o
 ```html
 <div class="sev-grid">
   <div class="sev-cell">
-    <div class="sev-level" style="color:#60a5fa;">INFO</div>
+    <div class="sev-level" style="color:#4AB4FF;">INFO</div>
     <div class="sev-stream">Write-Output</div>
     <div class="sev-desc">Description.</div>
   </div>
