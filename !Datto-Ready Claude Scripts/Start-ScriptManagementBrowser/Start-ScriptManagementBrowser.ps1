@@ -32,7 +32,7 @@
 
 .NOTES
     File Name      : Start-ScriptManagementBrowser.ps1
-    Version        : 1.0.8.0
+    Version        : 1.0.9.0
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -61,6 +61,31 @@
         Full path : /sites/YourSite/IT Scripts/Published/Scripts
 
 .CHANGELOG
+    v1.0.9.0 - 2026-02-22 - Sam Kirsch
+        - Fixed: Git repository scan now reads every .ps1/.bat file's content at
+          scan time to extract embedded comments and tags. Previously tags were only
+          populated on individual file load clicks, causing Untagged count to be wrong
+          and Tag view to show everything as untagged. Files unchanged since last scan
+          are served from cache for speed.
+        - Fixed: Untagged count in Tag view now correctly counts from $script:AllFiles
+          (all files) rather than $Files (filtered set), eliminating the bug where
+          only 9 files appeared as untagged out of 190.
+        - Added: Pinned tags in Tag view navigation sidebar. isApp, isFunction, and
+          isMigrated always appear at the top of the tag list even when 0 files have
+          those tags. These use Brand Blue color to distinguish from regular tags.
+        - Added: Negative virtual groups at the bottom of the Tag view, below Untagged:
+          NotMigrated (files lacking isMigrated tag) and NotFunction (files lacking
+          isFunction tag). Expand collapsed by default, use Brand Red to indicate
+          scripts needing attention.
+        - Added: isApp, isFunction, isMigrated, and PowerShell 7 quick-add tag buttons.
+          Pinned tags (isApp, isFunction, isMigrated) use Brand Red; PowerShell 7 uses
+          Brand Blue.
+        - Fixed: New-FileViewModel ExtColor corrected from old purple #BD93F9 to #4A8FD4
+          and from #FFB86C to #E8A020 (matching the design system update from v1.0.8.0).
+        - Fixed: Invoke-FolderView text colors updated to match design system navy tokens.
+        - Refactored: Invoke-TagView extracted New-TagTreeItem and New-TagGroupHeader
+          helpers to eliminate repetition across pinned/regular/untagged/negative sections.
+
     v1.0.8.0 - 2026-02-22 - Sam Kirsch
         - Changed: SharePoint sync now performs a TRUE full-repo scan using
           Get-ChildItem with no file type filter. All files synced regardless
@@ -192,7 +217,7 @@ function Start-ScriptManagementBrowser {
     # APP CONSTANTS
     # ==========================================================================
     $script:AppName       = "ScriptManagementBrowser"
-    $script:AppVersion    = "1.0.8.0"
+    $script:AppVersion    = "1.0.9.0"
     $script:AppDataDir    = "$env:APPDATA\ScriptManagementBrowser"
     $script:ConfigFile    = "$script:AppDataDir\config.json"
     $script:LogFile       = "$script:AppDataDir\app.log"
@@ -1807,15 +1832,27 @@ Target : $($result.TargetPath)
                                 <TextBox x:Name="TxtTags" Style="{StaticResource AppTextBox}"
                                          Height="36" VerticalContentAlignment="Center"
                                          Text="" FontFamily="Consolas" FontSize="12"/>
-                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <WrapPanel Margin="0,8,0,0">
                                     <TextBlock Text="Quick add:" FontSize="10" Foreground="#607090"
-                                               VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                               VerticalAlignment="Center" Margin="0,0,4,4"/>
+                                    <Button x:Name="BtnTagIsApp"       Content="isApp"
+                                            Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
+                                            Foreground="#C0404A" BorderBrush="#C0404A" Margin="0,0,6,0"/>
+                                    <Button x:Name="BtnTagIsFunction"  Content="isFunction"
+                                            Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
+                                            Foreground="#C0404A" BorderBrush="#C0404A" Margin="0,0,6,0"/>
+                                    <Button x:Name="BtnTagIsMigrated"  Content="isMigrated"
+                                            Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
+                                            Foreground="#22C55E" BorderBrush="#22C55E" Margin="0,0,6,0"/>
+                                    <Button x:Name="BtnTagPS7"         Content="PowerShell 7"
+                                            Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
+                                            Foreground="#2E8BFF" BorderBrush="#2E8BFF" Margin="0,0,6,0"/>
                                     <Button x:Name="BtnTagAutomation"  Content="automation"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
                                             Foreground="#4A8FD4" BorderBrush="#4A8FD4" Margin="0,0,6,0"/>
                                     <Button x:Name="BtnTagMaintenance" Content="maintenance"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
-                                            Foreground="#22C55E" BorderBrush="#22C55E" Margin="0,0,6,0"/>
+                                            Foreground="#A8BDD8" BorderBrush="#A8BDD8" Margin="0,0,6,0"/>
                                     <Button x:Name="BtnTagDeploy"      Content="deployment"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
                                             Foreground="#E8A020" BorderBrush="#E8A020" Margin="0,0,6,0"/>
@@ -1827,8 +1864,8 @@ Target : $($result.TargetPath)
                                             Foreground="#C84040" BorderBrush="#C84040" Margin="0,0,6,0"/>
                                     <Button x:Name="BtnTagUtil"        Content="utility"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
-                                            Foreground="#2E8BFF" BorderBrush="#2E8BFF"/>
-                                </StackPanel>
+                                            Foreground="#2E8BFF" BorderBrush="#2E8BFF" Margin="0,0,6,0"/>
+                                </WrapPanel>
                                 <TextBlock Text="Comma-separated. Load file content first to see existing tags."
                                            FontSize="10" Foreground="#607090" Margin="0,6,0,0"/>
                             </StackPanel>
@@ -2060,7 +2097,7 @@ Target : $($result.TargetPath)
         }
         $ext   = $File.Extension.ToLower()
         $icon  = if ($ext -eq ".ps1") { "PS1" } else { "BAT" }
-        $color = if ($ext -eq ".ps1") { "#BD93F9" } else { "#FFB86C" }
+        $color = if ($ext -eq ".ps1") { "#4A8FD4" } else { "#E8A020" }
         $sub   = "$($File.Library) | $(if($File.Modified){$File.Modified.ToString('MM/dd/yy')}else{'-'})"
         return [PSCustomObject]@{
             FileData = $File
@@ -2124,7 +2161,7 @@ Target : $($result.TargetPath)
         foreach ($group in $grouped) {
             $header            = New-Object System.Windows.Controls.TreeViewItem
             $header.Header     = "[/] $($group.Name)"
-            $header.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xA0,0xA0,0xC0)
+            $header.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xA8,0xBD,0xD8)
             $header.IsExpanded = $true
 
             foreach ($f in ($group.Group | Sort-Object Name)) {
@@ -2143,7 +2180,7 @@ Target : $($result.TargetPath)
 
                 $nameLbl           = New-Object System.Windows.Controls.TextBlock
                 $nameLbl.Text      = $f.Name
-                $nameLbl.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xF8,0xF8,0xF2)
+                $nameLbl.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xF0,0xF4,0xFF)
 
                 $sp.Children.Add($extLbl)
                 $sp.Children.Add($nameLbl)
@@ -2157,62 +2194,126 @@ Target : $($result.TargetPath)
         }
     }
 
+    # Tags that always appear in the Tag view even if no scripts have them
+    $script:PinnedTags    = @("isApp", "isFunction", "isMigrated")
+    # Negative virtual groups shown below Untagged
+    # Key = display label, Value = scriptblock that returns $true if file BELONGS in this group
+    $script:NegativeGroups = [ordered]@{
+        "NotMigrated" = { param($f) ($f.Tags -notcontains "isMigrated") }
+        "NotFunction"  = { param($f) ($f.Tags -notcontains "isFunction") }
+    }
+
+    function New-TagTreeItem {
+        param($File, [string]$NameOverride = "")
+        $item    = New-Object System.Windows.Controls.TreeViewItem
+        $vm      = New-FileViewModel $File
+        $sp      = New-Object System.Windows.Controls.StackPanel
+        $sp.Orientation = "Horizontal"
+        $extLbl            = New-Object System.Windows.Controls.TextBlock
+        $extLbl.Text       = $vm.ExtIcon
+        $extLbl.Foreground = [System.Windows.Media.SolidColorBrush](
+            [System.Windows.Media.ColorConverter]::ConvertFromString($vm.ExtColor))
+        $extLbl.Margin     = [System.Windows.Thickness]::new(0,0,8,0)
+        $extLbl.FontSize   = 10
+        $nameLbl           = New-Object System.Windows.Controls.TextBlock
+        $nameLbl.Text      = if ($NameOverride) { $NameOverride } else { $File.Name }
+        $nameLbl.Foreground = [System.Windows.Media.SolidColorBrush](
+            [System.Windows.Media.ColorConverter]::ConvertFromString("#F0F4FF"))
+        $sp.Children.Add($extLbl)
+        $sp.Children.Add($nameLbl)
+        $item.Header = $sp
+        $item.Tag    = $File
+        $item.Add_Selected({ param($s,$e) Select-File $s.Tag })
+        return $item
+    }
+
+    function New-TagGroupHeader {
+        param([string]$Label, [string]$HexColor, [bool]$Expanded = $true)
+        $header            = New-Object System.Windows.Controls.TreeViewItem
+        $header.Header     = $Label
+        $header.Foreground = [System.Windows.Media.SolidColorBrush](
+            [System.Windows.Media.ColorConverter]::ConvertFromString($HexColor))
+        $header.IsExpanded = $Expanded
+        return $header
+    }
+
     function Invoke-TagView {
         param($Files)
         $FileListBox.Visibility  = "Collapsed"
         $FileTreeView.Visibility = "Visible"
         $FileTreeView.Items.Clear()
 
-        $tagged   = $Files | Where-Object { $_.Tags -and $_.Tags.Count -gt 0 }
-        $untagged = $Files | Where-Object { -not $_.Tags -or $_.Tags.Count -eq 0 }
+        # Use ALL files for counts so untagged/negative counts are accurate
+        # regardless of current search filter
+        $allForCounts = $script:AllFiles
 
+        # Build tag map from the filtered display set
         $tagMap = @{}
-        foreach ($f in $tagged) {
+        foreach ($f in $Files) {
+            if (-not $f.Tags -or $f.Tags.Count -eq 0) { continue }
             foreach ($tag in $f.Tags) {
-                if (-not $tagMap.ContainsKey($tag)) {
-                    $tagMap[$tag] = [System.Collections.Generic.List[PSObject]]::new()
+                $t = $tag.Trim()
+                if ([string]::IsNullOrEmpty($t)) { continue }
+                if (-not $tagMap.ContainsKey($t)) {
+                    $tagMap[$t] = [System.Collections.Generic.List[PSObject]]::new()
                 }
-                $tagMap[$tag].Add($f)
+                $tagMap[$t].Add($f)
             }
         }
 
-        foreach ($tag in ($tagMap.Keys | Sort-Object)) {
-            $header            = New-Object System.Windows.Controls.TreeViewItem
-            $header.Header     = "[#] $tag ($($tagMap[$tag].Count))"
-            $header.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xBD,0x93,0xF9)
-            $header.IsExpanded = $true
+        # -------------------------------------------------------
+        # SECTION 1: Pinned tags — always shown, even if 0 files
+        # -------------------------------------------------------
+        foreach ($pinnedTag in $script:PinnedTags) {
+            $filesWithTag = if ($tagMap.ContainsKey($pinnedTag)) { $tagMap[$pinnedTag] } else { @() }
+            $countAll     = @($allForCounts | Where-Object { $_.Tags -contains $pinnedTag }).Count
+            $header = New-TagGroupHeader "[#] $pinnedTag ($countAll)" "#2E8BFF" $true
+            foreach ($f in ($filesWithTag | Sort-Object Name)) {
+                $header.Items.Add((New-TagTreeItem $f))
+            }
+            $FileTreeView.Items.Add($header)
+        }
 
+        # -------------------------------------------------------
+        # SECTION 2: All other regular tags (sorted, excluding pinned)
+        # -------------------------------------------------------
+        foreach ($tag in ($tagMap.Keys | Where-Object { $_ -notin $script:PinnedTags } | Sort-Object)) {
+            $header = New-TagGroupHeader "[#] $tag ($($tagMap[$tag].Count))" "#A8BDD8" $true
             foreach ($f in ($tagMap[$tag] | Sort-Object Name)) {
-                $item    = New-Object System.Windows.Controls.TreeViewItem
-                $vm      = New-FileViewModel $f
-                $nameLbl = New-Object System.Windows.Controls.TextBlock
-                $nameLbl.Text      = "  $($vm.ExtIcon)  $($f.Name)"
-                $nameLbl.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xF8,0xF8,0xF2)
-                $item.Header = $nameLbl
-                $item.Tag    = $f
-                $item.Add_Selected({ param($s,$e) Select-File $s.Tag })
-                $header.Items.Add($item)
+                $header.Items.Add((New-TagTreeItem $f))
             }
             $FileTreeView.Items.Add($header)
         }
 
-        if ($untagged.Count -gt 0) {
-            $header            = New-Object System.Windows.Controls.TreeViewItem
-            $header.Header     = "[ ] Untagged ($($untagged.Count))"
-            $header.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0x62,0x72,0xA4)
-            $header.IsExpanded = $false
-            foreach ($f in ($untagged | Sort-Object Name)) {
-                $item    = New-Object System.Windows.Controls.TreeViewItem
-                $vm      = New-FileViewModel $f
-                $nameLbl = New-Object System.Windows.Controls.TextBlock
-                $nameLbl.Text      = "  $($vm.ExtIcon)  $($f.Name)"
-                $nameLbl.Foreground = [System.Windows.Media.SolidColorBrush][System.Windows.Media.Color]::FromRgb(0xA0,0xA0,0xC0)
-                $item.Header = $nameLbl
-                $item.Tag    = $f
-                $item.Add_Selected({ param($s,$e) Select-File $s.Tag })
-                $header.Items.Add($item)
+        # -------------------------------------------------------
+        # SECTION 3: Untagged — count from ALL files, display from filtered
+        # -------------------------------------------------------
+        $untaggedAll      = @($allForCounts | Where-Object { -not $_.Tags -or $_.Tags.Count -eq 0 })
+        $untaggedFiltered = @($Files        | Where-Object { -not $_.Tags -or $_.Tags.Count -eq 0 })
+        $countLabel       = if ($Files.Count -eq $allForCounts.Count) {
+            "[ ] Untagged ($($untaggedAll.Count))"
+        } else {
+            "[ ] Untagged ($($untaggedFiltered.Count) shown / $($untaggedAll.Count) total)"
+        }
+        $untaggedHeader = New-TagGroupHeader $countLabel "#607090" $false
+        foreach ($f in ($untaggedFiltered | Sort-Object Name)) {
+            $untaggedHeader.Items.Add((New-TagTreeItem $f))
+        }
+        $FileTreeView.Items.Add($untaggedHeader)
+
+        # -------------------------------------------------------
+        # SECTION 4: Negative virtual groups (bottom of list)
+        # -------------------------------------------------------
+        foreach ($groupName in $script:NegativeGroups.Keys) {
+            $predicate   = $script:NegativeGroups[$groupName]
+            $groupAllFiles = @($allForCounts | Where-Object { & $predicate $_ })
+            $groupFiltered = @($Files        | Where-Object { & $predicate $_ })
+            $negLabel    = "[-] $groupName ($($groupAllFiles.Count))"
+            $negHeader   = New-TagGroupHeader $negLabel "#C0404A" $false
+            foreach ($f in ($groupFiltered | Sort-Object Name)) {
+                $negHeader.Items.Add((New-TagTreeItem $f))
             }
-            $FileTreeView.Items.Add($header)
+            $FileTreeView.Items.Add($negHeader)
         }
     }
 
@@ -2531,9 +2632,70 @@ Target : $($result.TargetPath)
         try {
             $found = Get-ChildItem -Path $repoPath -Recurse -Include $script:FileTypes -File -ErrorAction Stop
 
-            $allFiles = [System.Collections.Generic.List[PSObject]]::new()
+            # Load existing cache to seed comment/tag data (avoids re-reading unchanged files)
+            $existingCache = Load-GitCache
+            $cacheMap = @{}
+            if ($null -ne $existingCache) {
+                foreach ($cf in $existingCache.Files) {
+                    if (-not [string]::IsNullOrEmpty($cf.FileRef)) { $cacheMap[$cf.FileRef] = $cf }
+                }
+            }
+
+            $allFiles   = [System.Collections.Generic.List[PSObject]]::new()
+            $readCount  = 0
+            $cacheCount = 0
+
             foreach ($f in $found) {
                 $relFolder = $f.DirectoryName.Replace($repoPath,"").TrimStart("\/")
+                $ext       = $f.Extension.ToLower()
+
+                # Determine comment/tags:
+                # Priority 1 — read from file now (always accurate)
+                # Priority 2 — cached value from prior session (for non-.ps1/.bat files)
+                $comment = ""
+                $tags    = @()
+                $tagsRaw = ""
+
+                $cached = $cacheMap[$f.FullName]
+                $fileModified = $f.LastWriteTime
+
+                # Check if cache is still fresh for this file (same modified time)
+                $cacheStillFresh = ($null -ne $cached) -and
+                                   ($cached.Modified -ne $null) -and
+                                   ([datetime]$cached.Modified -ge $fileModified.AddSeconds(-2))
+
+                if ($cacheStillFresh -and -not [string]::IsNullOrEmpty($cached.TagsRaw)) {
+                    # Use cache — file hasn't changed
+                    $comment  = if ($cached.Comment) { $cached.Comment } else { "" }
+                    $tags     = if ($cached.Tags)    { @($cached.Tags) } else { @() }
+                    $tagsRaw  = if ($cached.TagsRaw) { $cached.TagsRaw } else { "" }
+                    $cacheCount++
+                } elseif ($ext -eq ".ps1" -or $ext -eq ".bat") {
+                    # Read the file to extract metadata
+                    try {
+                        $rawContent = Get-Content -Path $f.FullName -Raw -Encoding UTF8 -ErrorAction Stop
+                        if ($rawContent) {
+                            $meta    = Read-AppMetadata $rawContent
+                            $comment = $meta.Comment
+                            $tags    = @($meta.Tags)
+                            $tagsRaw = ($tags -join ",")
+                        }
+                        $readCount++
+                    } catch {
+                        Write-AppLog "Metadata read error on $($f.Name): $_" "WARN"
+                        if ($null -ne $cached) {
+                            $comment = if ($cached.Comment) { $cached.Comment } else { "" }
+                            $tags    = if ($cached.Tags)    { @($cached.Tags) } else { @() }
+                            $tagsRaw = if ($cached.TagsRaw) { $cached.TagsRaw } else { "" }
+                        }
+                    }
+                } elseif ($null -ne $cached) {
+                    # Non-script file — use cached metadata if available
+                    $comment  = if ($cached.Comment) { $cached.Comment } else { "" }
+                    $tags     = if ($cached.Tags)    { @($cached.Tags) } else { @() }
+                    $tagsRaw  = if ($cached.TagsRaw) { $cached.TagsRaw } else { "" }
+                }
+
                 $allFiles.Add([PSCustomObject]@{
                     Name           = $f.Name
                     FileRef        = $f.FullName
@@ -2544,34 +2706,17 @@ Target : $($result.TargetPath)
                     Author         = ""
                     LastModifiedBy = ""
                     SizeBytes      = $f.Length
-                    Extension      = $f.Extension.ToLower()
-                    Comment        = ""
-                    Tags           = @()
-                    TagsRaw        = ""
+                    Extension      = $ext
+                    Comment        = $comment
+                    Tags           = $tags
+                    TagsRaw        = $tagsRaw
                     ContentLoaded  = $false
                 })
             }
 
-            Write-AppLog "Repo scan complete: $($allFiles.Count) script files found"
+            Write-AppLog "Repo scan complete: $($allFiles.Count) files. Read=$readCount Cache=$cacheCount"
 
             $script:AllFiles = $allFiles
-
-            # Merge existing cache (preserves comments/tags between scans)
-            $cache = Load-GitCache
-            if ($null -ne $cache) {
-                $cacheMap = @{}
-                foreach ($cf in $cache.Files) {
-                    if (-not [string]::IsNullOrEmpty($cf.FileRef)) { $cacheMap[$cf.FileRef] = $cf }
-                }
-                foreach ($f in $script:AllFiles) {
-                    if ($cacheMap.ContainsKey($f.FileRef)) {
-                        $cached    = $cacheMap[$f.FileRef]
-                        $f.Comment = if ($cached.Comment) { $cached.Comment } else { "" }
-                        $f.Tags    = if ($cached.Tags)    { @($cached.Tags) } else { @() }
-                        $f.TagsRaw = if ($cached.TagsRaw) { $cached.TagsRaw } else { "" }
-                    }
-                }
-            }
 
             Save-GitCache $script:AllFiles
 
@@ -2691,6 +2836,10 @@ Target : $($result.TargetPath)
     $BtnRename.Add_Click({ Invoke-RenameFile })
     $BtnSaveMetadata.Add_Click({ Save-FileMetadata })
 
+    $BtnTagIsApp.Add_Click({       Add-QuickTag "isApp"       })
+    $BtnTagIsFunction.Add_Click({  Add-QuickTag "isFunction"  })
+    $BtnTagIsMigrated.Add_Click({  Add-QuickTag "isMigrated"  })
+    $BtnTagPS7.Add_Click({         Add-QuickTag "PowerShell 7" })
     $BtnTagAutomation.Add_Click({  Add-QuickTag "automation"  })
     $BtnTagMaintenance.Add_Click({ Add-QuickTag "maintenance" })
     $BtnTagDeploy.Add_Click({      Add-QuickTag "deployment"  })
