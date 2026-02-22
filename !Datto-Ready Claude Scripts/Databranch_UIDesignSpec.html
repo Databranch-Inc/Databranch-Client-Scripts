@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Databranch UI Design System — Design Specification</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+  :root {
+    /* ================================================================
+       DATABRANCH DESIGN SYSTEM — MASTER TOKEN REFERENCE
+       All colors referenced throughout this document use these tokens.
+    ================================================================ */
+
+    /* --- Core Brand (from logo + website analysis) --- */
+    --brand-red-vivid:    #C8102E;   /* Logo/website primary red — use sparingly */
+    --brand-red:          #B01020;   /* Slightly deepened for dark UI legibility */
+    --brand-red-muted:    #8B2030;   /* Desaturated red — preferred UI accent     */
+    --brand-red-soft:     #C0404A;   /* Soft red for highlights, hover states     */
+    --brand-red-pale:     #D07080;   /* Very soft red — secondary accents, tags   */
+    --brand-red-glow:     rgba(176,16,32,0.18); /* Red glow for halos/shadows    */
+
+    --brand-blue-electric: #1E90FF;  /* Electric blue from circuit board imagery  */
+    --brand-blue-bright:   #2E8BFF;  /* Primary UI interactive blue               */
+    --brand-blue-mid:      #1A6FD4;  /* Deepened blue for pressed states          */
+    --brand-blue-muted:    #2A5FA8;  /* Muted blue for secondary elements         */
+    --brand-blue-pale:     #4A8FD4;  /* Pale blue for tags, badges                */
+    --brand-blue-dim:      #1A3A6A;  /* Deep blue for panel backgrounds           */
+    --brand-blue-glow:     rgba(30,144,255,0.15); /* Blue glow for halos/shadows */
+
+    /* --- Dark Mode Surface Layers (depth stack) --- */
+    --surface-void:       #080C14;   /* Deepest — used behind everything          */
+    --surface-base:       #0D1520;   /* App/window background                     */
+    --surface-raised:     #111C2E;   /* Panels, sidebars                          */
+    --surface-card:       #162238;   /* Cards, containers                         */
+    --surface-elevated:   #1D2E48;   /* Hover backgrounds, active panels          */
+    --surface-overlay:    #243558;   /* Dialog overlays, selected states          */
+    --surface-high:       #2C3F68;   /* Highest raised — badges, chips            */
+
+    /* --- Text --- */
+    --text-primary:       #F0F4FF;   /* Primary text — near-white with blue tint  */
+    --text-secondary:     #A8BDD8;   /* Secondary text — muted blue-white         */
+    --text-muted:         #607090;   /* Tertiary, labels, metadata                */
+    --text-dim:           #3A5070;   /* Placeholder, disabled, ghost              */
+    --text-inverse:       #080C14;   /* Text on bright accent buttons             */
+
+    /* --- Borders --- */
+    --border-subtle:      #1A2D48;   /* Hairline borders, dividers                */
+    --border-default:     #213A58;   /* Standard panel/card borders               */
+    --border-mid:         #2A4A70;   /* Emphasized borders                        */
+    --border-accent-blue: #1E6ABF;   /* Blue focus/active border                  */
+    --border-accent-red:  #8B2030;   /* Red emphasis border                       */
+
+    /* --- Semantic / Status Colors --- */
+    --status-success:     #22C55E;   /* Green — success, online, confirmed        */
+    --status-success-bg:  #0A2818;
+    --status-success-bd:  #1A5030;
+    --status-warn:        #E8A020;   /* Amber — warning, partial, caution         */
+    --status-warn-bg:     #1E1800;
+    --status-warn-bd:     #6A4800;
+    --status-error:       #C84040;   /* Red — error, failure (matches brand red)  */
+    --status-error-bg:    #200A0A;
+    --status-error-bd:    #6A1818;
+    --status-info:        #2E8BFF;   /* Blue — info (matches brand blue)          */
+    --status-info-bg:     #091828;
+    --status-info-bd:     #1A3A6A;
+
+    /* --- Console/Log Severity Colors (terminal output) --- */
+    --log-info:           #4AB4FF;   /* INFO — brighter blue for dark terminal    */
+    --log-success:        #22C55E;   /* SUCCESS — green                           */
+    --log-warn:           #E8A020;   /* WARN — amber                              */
+    --log-error:          #FF4444;   /* ERROR — bright red                        */
+    --log-debug:          #C084FC;   /* DEBUG — purple/magenta                    */
+
+    /* --- Code Blocks --- */
+    --code-bg:            #060E1A;   /* Code block background                     */
+    --code-text:          #7DD3FC;   /* Code text (light blue)                    */
+    --code-comment:       #3A6A50;   /* Comments (muted green)                    */
+    --code-keyword:       #C084FC;   /* Keywords (purple)                         */
+    --code-string:        #86EFAC;   /* Strings (light green)                     */
+    --code-variable:      #FDE68A;   /* Variables (light yellow)                  */
+
+    /* --- WPF/Windows-specific Color Notes --- */
+    /* These colors must be expressed as hex strings in XAML/code-behind.       */
+    /* See Section 4 for WPF-specific values and SolidColorBrush equivalents.   */
+
+    /* ================================================================
+       PAGE CHROME — this document's own rendering                      
+    ================================================================ */
+    --navy:        #0D1520;
+    --navy-mid:    #162238;
+    --navy-light:  #1D2E48;
+    --accent:      #2E8BFF;
+    --teal:        #00C9B1;
+    --red:         #C0404A;
+    --white:       #F0F4FF;
+    --text:        #A8BDD8;
+    --text-muted:  #607090;
+    --text-dim:    #3A5070;
+    --border:      #213A58;
+    --border-mid:  #2A4A70;
+    --code-bg-doc: #060E1A;
+    --row-alt:     #111C2E;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--navy); color: var(--text); font-size: 15px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+  @media print {
+    body { background: #fff; color: #111; font-size: 12px; }
+    .cover { background: #0d1520 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar { width: 280px; min-width: 280px; background: #080C14; border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100; padding: 0 0 40px; }
+  .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .sidebar-logo .company { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; color: var(--red); text-transform: uppercase; margin-bottom: 4px; }
+  .sidebar-logo .doc-title { font-size: 13px; font-weight: 600; color: var(--white); line-height: 1.4; }
+  .sidebar-logo .doc-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .sidebar nav { padding: 0 8px; }
+  .nav-section { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 12px 12px 4px; }
+  .nav-link { display: block; padding: 6px 12px; border-radius: 5px; font-size: 12.5px; color: var(--text-muted); text-decoration: none; transition: all 0.15s; line-height: 1.4; }
+  .nav-link:hover { background: var(--navy-mid); color: var(--white); }
+  .nav-link.active { background: var(--navy-light); color: var(--white); border-left: 2px solid var(--red); padding-left: 10px; }
+  .nav-link.sub { padding-left: 24px; font-size: 11.5px; }
+
+  .main { margin-left: 280px; flex: 1; min-width: 0; }
+
+  /* ── Cover ── */
+  .cover { background: linear-gradient(145deg, #060E1A 0%, #0D1F3A 40%, #0A1828 100%); padding: 80px 80px 60px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+  .cover::before { content: ''; position: absolute; top: -60px; right: -60px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(30,144,255,0.07) 0%, transparent 65%); border-radius: 50%; }
+  .cover::after  { content: ''; position: absolute; bottom: -40px; left: 80px; width: 350px; height: 350px; background: radial-gradient(circle, rgba(176,16,32,0.06) 0%, transparent 65%); border-radius: 50%; }
+  .cover-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-bottom: 16px; }
+  .cover-title { font-size: 40px; font-weight: 700; color: var(--white); line-height: 1.1; margin-bottom: 10px; letter-spacing: -0.02em; }
+  .cover-title span { color: var(--accent); }
+  .cover-sub { font-size: 15px; color: var(--text-muted); font-style: italic; margin-bottom: 40px; }
+  .cover-meta { display: flex; gap: 40px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .cover-meta-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3px; }
+  .cover-meta-value { font-size: 14px; color: var(--text); font-weight: 500; }
+  .cover-meta-value.mono { font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+  .cover-meta-value.red  { color: var(--red); }
+
+  /* ── Content ── */
+  .content { max-width: 920px; padding: 56px 80px 80px; }
+  .section { margin-bottom: 64px; }
+
+  h1 { font-size: 26px; font-weight: 700; color: var(--white); padding-bottom: 10px; border-bottom: 2px solid var(--navy-light); margin-bottom: 20px; letter-spacing: -0.01em; }
+  h1::before { content: '//  '; color: var(--red); font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 400; }
+  h2 { font-size: 18px; font-weight: 600; color: var(--accent); margin: 32px 0 12px; letter-spacing: -0.01em; }
+  h3 { font-size: 12px; font-weight: 700; color: #C0404A; margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin-bottom: 14px; color: var(--text); }
+  strong { color: var(--white); font-weight: 600; }
+  em { color: var(--text-muted); font-style: italic; }
+
+  /* ── Code ── */
+  .code-block { background: var(--code-bg-doc); border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: 6px; padding: 14px 18px; margin: 12px 0 20px; overflow-x: auto; }
+  .code-block code { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #7DD3FC; white-space: pre; line-height: 1.7; }
+  code.inline { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--code-bg-doc); color: #7DD3FC; padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border); }
+  .c  { color: #3A6A50; } /* comment */
+  .kw { color: #C084FC; } /* keyword */
+  .st { color: #86EFAC; } /* string  */
+  .vr { color: #FDE68A; } /* variable */
+  .nm { color: #4AB4FF; } /* name/value */
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin: 16px 0 24px; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: var(--navy-mid); }
+  thead th { padding: 10px 16px; text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-mid); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: var(--navy-mid); }
+  td { padding: 10px 16px; color: var(--text); vertical-align: top; line-height: 1.5; }
+  td.mono { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #7DD3FC; white-space: nowrap; }
+  td.hex  { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--text); }
+
+  /* ── Callouts ── */
+  .callout { border-radius: 6px; padding: 14px 18px; margin: 16px 0; display: flex; gap: 12px; align-items: flex-start; }
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .callout-body { flex: 1; }
+  .callout-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .callout-text { font-size: 13.5px; line-height: 1.6; }
+  .callout.note { background: var(--status-info-bg); border: 1px solid var(--status-info-bd); border-left: 3px solid var(--accent); }
+  .callout.note .callout-label { color: var(--accent); }
+  .callout.warn { background: var(--status-warn-bg); border: 1px solid var(--status-warn-bd); border-left: 3px solid var(--status-warn); }
+  .callout.warn .callout-label { color: var(--status-warn); }
+  .callout.tip  { background: var(--status-success-bg); border: 1px solid var(--status-success-bd); border-left: 3px solid var(--status-success); }
+  .callout.tip  .callout-label { color: var(--status-success); }
+  .callout.brand { background: #1A0810; border: 1px solid #5A1020; border-left: 3px solid var(--red); }
+  .callout.brand .callout-label { color: var(--red); }
+
+  ul.styled { list-style: none; padding: 0; margin: 8px 0 16px; }
+  ul.styled li { padding: 5px 0 5px 22px; position: relative; color: var(--text); font-size: 14px; line-height: 1.6; }
+  ul.styled li::before { content: '▸'; position: absolute; left: 0; color: var(--red); font-size: 11px; top: 7px; }
+
+  /* ── Color Swatches ── */
+  .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin: 16px 0 24px; }
+  .swatch { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .swatch-color { height: 60px; }
+  .swatch-info { padding: 8px 10px; background: var(--navy-mid); }
+  .swatch-name { font-size: 11px; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+  .swatch-hex  { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--text-muted); }
+  .swatch-use  { font-size: 10px; color: var(--text-dim); margin-top: 2px; line-height: 1.3; }
+
+  /* ── UI Element Demos ── */
+  .demo-strip { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin: 16px 0 24px; }
+  .demo-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .demo-row:last-child { margin-bottom: 0; }
+
+  .db-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; border-radius: 5px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; text-decoration: none; }
+  .db-btn-primary { background: var(--red); color: #F0F4FF; border-color: var(--red); }
+  .db-btn-primary:hover { background: var(--brand-red-soft); border-color: var(--brand-red-soft); }
+  .db-btn-secondary { background: #1D2E48; color: #A8BDD8; border-color: #213A58; }
+  .db-btn-secondary:hover { background: #243558; border-color: #2E8BFF; color: #F0F4FF; }
+  .db-btn-accent { background: var(--accent); color: #080C14; border-color: var(--accent); font-weight: 600; }
+  .db-btn-accent:hover { background: #4A9FFF; border-color: #4A9FFF; }
+  .db-btn-ghost { background: transparent; color: #A8BDD8; border-color: #213A58; }
+  .db-btn-ghost:hover { background: #1D2E48; color: #F0F4FF; border-color: #2E8BFF; }
+  .db-btn-danger { background: #200A0A; color: #FF4444; border-color: #6A1818; }
+  .db-btn-danger:hover { background: #2A1010; border-color: #C84040; }
+  .db-btn:disabled, .db-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+  .db-badge { display: inline-block; padding: 2px 9px; border-radius: 4px; font-size: 10.5px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.05em; }
+  .db-badge-blue  { background: rgba(46,139,255,0.15); color: #4AB4FF; border: 1px solid rgba(46,139,255,0.3); }
+  .db-badge-red   { background: rgba(176,16,32,0.15);  color: #D07080; border: 1px solid rgba(176,16,32,0.3); }
+  .db-badge-green { background: rgba(34,197,94,0.12);  color: #22C55E; border: 1px solid rgba(34,197,94,0.25); }
+  .db-badge-amber { background: rgba(232,160,32,0.12); color: #E8A020; border: 1px solid rgba(232,160,32,0.25); }
+  .db-badge-purple{ background: rgba(192,132,252,0.12);color: #C084FC; border: 1px solid rgba(192,132,252,0.25); }
+  .db-badge-muted { background: rgba(96,112,144,0.15); color: #607090; border: 1px solid rgba(96,112,144,0.25); }
+
+  .db-input { background: #111C2E; color: #F0F4FF; border: 1px solid #213A58; border-radius: 5px; padding: 8px 12px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif; outline: none; width: 220px; caret-color: #2E8BFF; transition: border-color 0.15s; }
+  .db-input:focus { border-color: #2E8BFF; }
+  .db-input::placeholder { color: #3A5070; }
+
+  .db-card { background: #162238; border: 1px solid #213A58; border-radius: 8px; padding: 16px 20px; }
+  .db-card-accent-red  { border-left: 3px solid var(--red); }
+  .db-card-accent-blue { border-left: 3px solid var(--accent); }
+
+  /* ── Severity Display ── */
+  .sev-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 16px 0; }
+  .sev-cell { background: var(--code-bg-doc); border: 1px solid var(--border); border-radius: 6px; padding: 12px 10px; text-align: center; }
+  .sev-level { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; margin-bottom: 5px; }
+  .sev-stream { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+  .sev-color { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); }
+
+  /* ── Typography specimen ── */
+  .type-specimen { margin: 12px 0 20px; }
+  .type-row { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 24px; }
+  .type-row:last-child { border-bottom: none; }
+  .type-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); min-width: 120px; flex-shrink: 0; }
+  .type-meta  { font-size: 10px; color: var(--text-dim); min-width: 160px; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── Layer Stack ── */
+  .layer-stack { display: flex; gap: 0; margin: 16px 0 24px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .layer-cell { flex: 1; padding: 16px 12px; text-align: center; }
+  .layer-name { font-size: 11px; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+  .layer-hex  { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+  .layer-use  { font-size: 10px; color: var(--text-dim); line-height: 1.3; }
+
+  /* ── Footer ── */
+  .doc-footer { border-top: 1px solid var(--border); padding: 24px 80px; display: flex; justify-content: space-between; align-items: center; color: var(--text-dim); font-size: 12px; max-width: 920px; }
+  .doc-footer .version { font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="company">Databranch</div>
+    <div class="doc-title">UI Design System</div>
+    <div class="doc-sub">Design Specification v1.0</div>
+  </div>
+  <nav>
+    <div class="nav-section">Foundation</div>
+    <a class="nav-link" href="#origin">1. Brand Origin & Philosophy</a>
+    <a class="nav-link" href="#palette">2. Color Palette</a>
+    <a class="nav-link sub" href="#brand-colors">Brand Colors</a>
+    <a class="nav-link sub" href="#surfaces">Surface Layers</a>
+    <a class="nav-link sub" href="#text-colors">Text Colors</a>
+    <a class="nav-link sub" href="#semantic">Semantic Colors</a>
+    <a class="nav-link" href="#typography">3. Typography</a>
+    <a class="nav-link" href="#spacing">4. Spacing & Radius</a>
+
+    <div class="nav-section">Components</div>
+    <a class="nav-link" href="#buttons">5. Buttons</a>
+    <a class="nav-link" href="#inputs">6. Inputs & Forms</a>
+    <a class="nav-link" href="#cards">7. Cards & Panels</a>
+    <a class="nav-link" href="#badges">8. Badges & Tags</a>
+    <a class="nav-link" href="#callouts">9. Callout Boxes</a>
+    <a class="nav-link" href="#tables">10. Tables</a>
+    <a class="nav-link" href="#code">11. Code Blocks</a>
+    <a class="nav-link" href="#severity">12. Severity / Status</a>
+    <a class="nav-link" href="#nav-sidebar">13. Navigation & Sidebars</a>
+    <a class="nav-link" href="#dialogs">14. Dialogs & Overlays</a>
+    <a class="nav-link" href="#statusbar">15. Status Bars & Banners</a>
+
+    <div class="nav-section">Platform Tokens</div>
+    <a class="nav-link" href="#html-css">16. HTML / CSS Tokens</a>
+    <a class="nav-link" href="#wpf">17. WPF / XAML Tokens</a>
+    <a class="nav-link" href="#winforms">18. WinForms Tokens</a>
+    <a class="nav-link" href="#console">19. Console Output</a>
+
+    <div class="nav-section">Usage Rules</div>
+    <a class="nav-link" href="#do-dont">20. Do & Don't</a>
+    <a class="nav-link" href="#application">21. Applying the Spec</a>
+  </nav>
+</aside>
+
+<!-- ── Main ── -->
+<div class="main">
+
+<!-- Cover -->
+<div class="cover">
+  <div class="cover-eyebrow">Databranch Internal Design System</div>
+  <div class="cover-title">UI Design <span>Specification</span></div>
+  <div class="cover-sub">Dark Mode · Brand-Unified · Cross-Platform</div>
+  <div class="cover-meta">
+    <div><div class="cover-meta-label">Version</div><div class="cover-meta-value mono">v1.0.0</div></div>
+    <div><div class="cover-meta-label">Date</div><div class="cover-meta-value">February 2026</div></div>
+    <div><div class="cover-meta-label">Author</div><div class="cover-meta-value">Sam Kirsch</div></div>
+    <div><div class="cover-meta-label">Scope</div><div class="cover-meta-value">HTML/CSS · WPF · WinForms · Console</div></div>
+    <div><div class="cover-meta-label">Mode</div><div class="cover-meta-value red">Dark Only</div></div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ================================================================ -->
+<div class="section" id="origin">
+  <h1>1. Brand Origin &amp; Design Philosophy</h1>
+
+  <h2>Source Material</h2>
+  <p>This design system derives from three authoritative brand sources: the Databranch logo, the Databranch website at <code class="inline">databranch.com</code>, and the existing internal tooling palette established in <code class="inline">Start-ScriptManagementBrowser.ps1</code> and the <code class="inline">Start-EventLogCollection</code> documentation.</p>
+
+  <p>The logo establishes the two core brand colors: a bold <strong>crimson red</strong> used for the wordmark and accent spheres, set against a <strong>deep circuit-board blue</strong> rendered as glowing electric-blue traces. Black is used as the deepest background. The overall character is technical, high-contrast, and dark-themed — the design system extends these qualities directly into application and documentation UI.</p>
+
+  <h2>Philosophy: The Circuit Board Principle</h2>
+  <p>Databranch's visual identity evokes circuit board imagery — deep dark backgrounds, precise glowing traces of blue light, and vivid focal points of red. The UI design system translates this directly:</p>
+  <ul class="styled">
+    <li><strong>Dark backgrounds first.</strong> All surfaces are deep navy-black. There is no light mode variant. The depth stack creates a sense of layered physical structure, like looking at hardware under illumination.</li>
+    <li><strong>Blue as the primary interactive signal.</strong> Electric blue is the color of active elements, links, focus rings, and interactive affordances — exactly as it is in the logo's circuit traces.</li>
+    <li><strong>Red as a power accent, used precisely.</strong> The brand red never competes for attention — it marks the most important single element in a given context: the primary action, the brand identity label, the critical alert. It is not a general-purpose highlight color.</li>
+    <li><strong>Desaturated red for comfort.</strong> The logo's vivid <code class="inline">#C8102E</code> red is aggressive at small sizes on dark backgrounds. The design system shifts to <code class="inline">#C0404A</code> (soft red) and <code class="inline">#D07080</code> (pale red) for most UI applications, reserving the vivid red only for brand-identity contexts.</li>
+    <li><strong>White text with a blue undertone.</strong> Pure white (<code class="inline">#FFFFFF</code>) reads as harsh and disconnected from the blue-dark palette. All text whites use <code class="inline">#F0F4FF</code> — a near-white with a subtle blue cast that integrates naturally with the surface palette.</li>
+  </ul>
+
+  <div class="callout brand">
+    <div class="callout-icon">🎨</div>
+    <div class="callout-body">
+      <div class="callout-label">Design Decision Record</div>
+      <div class="callout-text">When re-applying this spec to any document or application, the central question to ask first is: <strong>what is the primary interactive signal on this surface?</strong> That element gets accent blue. What is the single most important brand or identity marker? That gets red. Everything else is layered in the neutral blue-dark surface stack. Do not distribute red broadly — one red element per visual zone is the rule.</div>
+    </div>
+  </div>
+
+  <h2>Existing Palette Analysis</h2>
+  <p>The prior WPF application used a Dracula-inspired purple-dark palette (<code class="inline">#1E1E2E</code>, <code class="inline">#252537</code>, <code class="inline">#7B9CFF</code>). The existing HTML documentation used a navy-blue palette that was already closer to the brand. This design system <strong>converges both</strong> onto a unified navy-to-void depth stack with brand red and electric blue accents, retiring the purple undertones in favor of pure blue-dark tones.</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="palette">
+  <h1>2. Color Palette</h1>
+
+  <div id="brand-colors">
+  <h2>2.1 Brand Colors</h2>
+  <p>The brand palette defines the red and blue accent families. Each family has five tiers ranging from vivid to pale, allowing appropriate usage across different surface depths and element sizes.</p>
+
+  <div class="swatch-grid">
+    <div class="swatch"><div class="swatch-color" style="background:#C8102E;"></div><div class="swatch-info"><div class="swatch-name">Brand Red Vivid</div><div class="swatch-hex">#C8102E</div><div class="swatch-use">Logo, wordmark, brand identity only</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#B01020;"></div><div class="swatch-info"><div class="swatch-name">Brand Red</div><div class="swatch-hex">#B01020</div><div class="swatch-use">Critical alerts, destructive actions</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#8B2030;"></div><div class="swatch-info"><div class="swatch-name">Brand Red Muted</div><div class="swatch-hex">#8B2030</div><div class="swatch-use">Borders, accents on dark cards</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#C0404A;"></div><div class="swatch-info"><div class="swatch-name">Brand Red Soft</div><div class="swatch-hex">#C0404A</div><div class="swatch-use">Primary action buttons, key UI accents</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#D07080;"></div><div class="swatch-info"><div class="swatch-name">Brand Red Pale</div><div class="swatch-hex">#D07080</div><div class="swatch-use">Tags, secondary accents, h3 headings</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#1E90FF;"></div><div class="swatch-info"><div class="swatch-name">Electric Blue</div><div class="swatch-hex">#1E90FF</div><div class="swatch-use">Logo circuit traces, electric highlights</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#2E8BFF;"></div><div class="swatch-info"><div class="swatch-name">Brand Blue Bright</div><div class="swatch-hex">#2E8BFF</div><div class="swatch-use">Primary interactive: links, focus, h2</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#1A6FD4;"></div><div class="swatch-info"><div class="swatch-name">Brand Blue Mid</div><div class="swatch-hex">#1A6FD4</div><div class="swatch-use">Pressed/active states of blue elements</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#2A5FA8;"></div><div class="swatch-info"><div class="swatch-name">Brand Blue Muted</div><div class="swatch-hex">#2A5FA8</div><div class="swatch-use">Secondary interactive elements</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#4A8FD4;"></div><div class="swatch-info"><div class="swatch-name">Brand Blue Pale</div><div class="swatch-hex">#4A8FD4</div><div class="swatch-use">Tags, info badges, subtle accents</div></div></div>
+  </div>
+  </div>
+
+  <div id="surfaces">
+  <h2>2.2 Surface Layer Stack</h2>
+  <p>Surfaces are layered from deepest to highest to create perceived depth. Each step should only be used one level away from its neighbors — do not skip layers. Elements appear to "float" by stepping up one surface level from their parent container.</p>
+
+  <div class="layer-stack">
+    <div class="layer-cell" style="background:#080C14;"><div class="layer-name">Void</div><div class="layer-hex">#080C14</div><div class="layer-use">Behind everything, window chrome</div></div>
+    <div class="layer-cell" style="background:#0D1520;"><div class="layer-name">Base</div><div class="layer-hex">#0D1520</div><div class="layer-use">App/window background</div></div>
+    <div class="layer-cell" style="background:#111C2E;"><div class="layer-name">Raised</div><div class="layer-hex">#111C2E</div><div class="layer-use">Panels, sidebars</div></div>
+    <div class="layer-cell" style="background:#162238;"><div class="layer-name">Card</div><div class="layer-hex">#162238</div><div class="layer-use">Cards, containers</div></div>
+    <div class="layer-cell" style="background:#1D2E48;"><div class="layer-name">Elevated</div><div class="layer-hex">#1D2E48</div><div class="layer-use">Hover, active panels</div></div>
+    <div class="layer-cell" style="background:#243558;"><div class="layer-name">Overlay</div><div class="layer-hex">#243558</div><div class="layer-use">Selected, dialogs</div></div>
+    <div class="layer-cell" style="background:#2C3F68;"><div class="layer-name">High</div><div class="layer-hex">#2C3F68</div><div class="layer-use">Badges, chips, tooltips</div></div>
+  </div>
+  </div>
+
+  <div id="text-colors">
+  <h2>2.3 Text Colors</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Token</th><th>Hex</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td>Text Primary</td><td class="hex">#F0F4FF</td><td>Headings, labels, primary body text. Blue-white cast integrates with dark surfaces.</td></tr>
+      <tr><td>Text Secondary</td><td class="hex">#A8BDD8</td><td>Body copy, descriptions, general prose.</td></tr>
+      <tr><td>Text Muted</td><td class="hex">#607090</td><td>Metadata, captions, field labels (uppercase), secondary information.</td></tr>
+      <tr><td>Text Dim</td><td class="hex">#3A5070</td><td>Placeholders, disabled controls, ghost text, decorative nav section labels.</td></tr>
+      <tr><td>Text Inverse</td><td class="hex">#080C14</td><td>Text on bright accent buttons (red primary, blue accent). Near-black for contrast.</td></tr>
+    </tbody>
+  </table></div>
+  </div>
+
+  <div id="semantic">
+  <h2>2.4 Semantic / Status Colors</h2>
+  <p>Semantic colors are used exclusively for state communication — never for decoration. Each has a vivid foreground, a dark background, and a border for callout box usage.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>State</th><th>Foreground</th><th>Background</th><th>Border</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:#22C55E;">Success</strong></td><td class="hex">#22C55E</td><td class="hex">#0A2818</td><td class="hex">#1A5030</td><td>Completed operations, online status, confirmed actions.</td></tr>
+      <tr><td><strong style="color:#E8A020;">Warning</strong></td><td class="hex">#E8A020</td><td class="hex">#1E1800</td><td class="hex">#6A4800</td><td>Partial success, caution states, recoverable issues.</td></tr>
+      <tr><td><strong style="color:#C84040;">Error</strong></td><td class="hex">#C84040</td><td class="hex">#200A0A</td><td class="hex">#6A1818</td><td>Failures, destructive operations, critical alerts.</td></tr>
+      <tr><td><strong style="color:#2E8BFF;">Info</strong></td><td class="hex">#2E8BFF</td><td class="hex">#091828</td><td class="hex">#1A3A6A</td><td>Neutral information, notes, general status messages.</td></tr>
+    </tbody>
+  </table></div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="typography">
+  <h1>3. Typography</h1>
+
+  <h2>Font Families</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Family</th><th>Source</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><strong>IBM Plex Sans</strong></td><td>Google Fonts</td><td>All body text, UI labels, prose, buttons, form elements. Weights: 300, 400, 500, 600, 700.</td></tr>
+      <tr><td><strong>IBM Plex Mono</strong></td><td>Google Fonts</td><td>All code, script names, hex values, version numbers, file paths, terminal output, monospace UI. Weights: 400, 500, 600.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout note">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-body">
+      <div class="callout-label">WPF / WinForms Font Fallback</div>
+      <div class="callout-text">IBM Plex Sans and IBM Plex Mono are not system fonts. In WPF/WinForms applications, either bundle the fonts as application resources, or use <strong>Segoe UI</strong> (sans-serif) and <strong>Consolas</strong> (monospace) as system-available fallbacks. Consolas is preferred over Courier New — it is designed for screen readability at small sizes.</div>
+    </div>
+  </div>
+
+  <h2>Type Scale (HTML/CSS)</h2>
+  <div class="type-specimen">
+    <div class="type-row">
+      <div class="type-label">Cover Title</div>
+      <div class="type-meta">40px / 700 / -0.02em</div>
+      <div style="font-size:32px;font-weight:700;color:#F0F4FF;letter-spacing:-0.02em;">Databranch</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">H1 Section</div>
+      <div class="type-meta">26px / 700 / -0.01em</div>
+      <div style="font-size:22px;font-weight:700;color:#F0F4FF;letter-spacing:-0.01em;">Section Heading</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">H2 Subsection</div>
+      <div class="type-meta">18px / 600 / -0.01em</div>
+      <div style="font-size:18px;font-weight:600;color:#2E8BFF;letter-spacing:-0.01em;">Subsection Heading</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">H3 Label</div>
+      <div class="type-meta">12px / 700 / 0.08em / uppercase</div>
+      <div style="font-size:12px;font-weight:700;color:#D07080;text-transform:uppercase;letter-spacing:0.08em;">CATEGORY LABEL</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">Body</div>
+      <div class="type-meta">15px / 400 / lh 1.7</div>
+      <div style="font-size:15px;color:#A8BDD8;line-height:1.7;">Standard body text for prose and descriptions.</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">Small / Caption</div>
+      <div class="type-meta">11–12px / 400 / lh 1.5</div>
+      <div style="font-size:11px;color:#607090;">Metadata, captions, field helper text</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">Code / Mono</div>
+      <div class="type-meta">IBM Plex Mono / 12–13px</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#7DD3FC;">Get-ADComputer -Filter *</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">Nav Section Label</div>
+      <div class="type-meta">10px / 700 / 0.12em / uppercase</div>
+      <div style="font-size:10px;font-weight:700;color:#3A5070;text-transform:uppercase;letter-spacing:0.12em;">NAVIGATION</div>
+    </div>
+  </div>
+
+  <h2>WPF / WinForms Type Scale</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Role</th><th>FontSize</th><th>FontWeight</th><th>Color Token</th></tr></thead>
+    <tbody>
+      <tr><td>Window Title</td><td class="mono">16–18px</td><td class="mono">Bold</td><td>Text Primary (#F0F4FF)</td></tr>
+      <tr><td>Section Header</td><td class="mono">13–14px</td><td class="mono">SemiBold</td><td>Blue Bright (#2E8BFF)</td></tr>
+      <tr><td>Field Label (uppercase)</td><td class="mono">10px</td><td class="mono">SemiBold</td><td>Text Muted (#607090)</td></tr>
+      <tr><td>Body / Control Text</td><td class="mono">12px</td><td class="mono">Normal</td><td>Text Primary (#F0F4FF)</td></tr>
+      <tr><td>Secondary / Sub Info</td><td class="mono">11px</td><td class="mono">Normal</td><td>Text Muted (#607090)</td></tr>
+      <tr><td>Metadata / Footer</td><td class="mono">11px</td><td class="mono">Normal</td><td>Text Dim (#3A5070)</td></tr>
+      <tr><td>Code / Mono Input</td><td class="mono">12px / Consolas</td><td class="mono">Normal</td><td>Code Text (#7DD3FC)</td></tr>
+      <tr><td>Status Bar</td><td class="mono">11px</td><td class="mono">Normal</td><td>Varies by severity</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="spacing">
+  <h1>4. Spacing, Radius &amp; Elevation</h1>
+
+  <h2>Spacing Scale</h2>
+  <p>All spacing values use a base-4 scale. These apply uniformly across HTML/CSS, WPF Margin/Padding, and WinForms Padding.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td>xs</td><td class="mono">4px / 2pt</td><td>Tight inline gaps, icon-to-text spacing</td></tr>
+      <tr><td>sm</td><td class="mono">8px / 4pt</td><td>Between related elements, inner cell padding</td></tr>
+      <tr><td>md</td><td class="mono">12–16px / 6–8pt</td><td>Card padding, button padding, form field gaps</td></tr>
+      <tr><td>lg</td><td class="mono">20–24px / 10–12pt</td><td>Section spacing within panels, dialog padding</td></tr>
+      <tr><td>xl</td><td class="mono">32–40px / 16–20pt</td><td>Between major layout sections</td></tr>
+      <tr><td>2xl</td><td class="mono">56–80px</td><td>Cover block padding, content area horizontal padding</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Border Radius</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td>Tight</td><td class="mono">3–4px</td><td>Badges, inline chips, small input borders</td></tr>
+      <tr><td>Standard</td><td class="mono">5–6px</td><td>Buttons, text inputs, nav links, small cards</td></tr>
+      <tr><td>Card</td><td class="mono">8px</td><td>Main cards, panels, file header blocks</td></tr>
+      <tr><td>Large</td><td class="mono">10–12px</td><td>Modal dialogs, large overlay panels</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Border Widths</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Context</th><th>Thickness</th><th>Color</th></tr></thead>
+    <tbody>
+      <tr><td>Default element border</td><td class="mono">1px</td><td>Border Default (#213A58)</td></tr>
+      <tr><td>Focus ring (inputs)</td><td class="mono">1px → 1px (color change)</td><td>Border Accent Blue (#1E6ABF)</td></tr>
+      <tr><td>Active nav / callout left edge</td><td class="mono">2–3px left only</td><td>Brand Red Soft or Blue Bright</td></tr>
+      <tr><td>H1 underline rule</td><td class="mono">2px bottom</td><td>Surface Elevated (#1D2E48)</td></tr>
+      <tr><td>Panel divider</td><td class="mono">1px</td><td>Border Subtle (#1A2D48)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Elevation (Shadows)</h2>
+  <p>Shadows on dark backgrounds should use colored umbra, not grey. This keeps the aesthetic cohesive rather than introducing foreign grey tones.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Level</th><th>CSS box-shadow</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td>Low</td><td class="mono">0 2px 8px rgba(8,12,20,0.6)</td><td>Cards, list items</td></tr>
+      <tr><td>Medium</td><td class="mono">0 4px 20px rgba(8,12,20,0.8)</td><td>Dialogs, floating panels</td></tr>
+      <tr><td>High</td><td class="mono">0 8px 40px rgba(8,12,20,0.9)</td><td>Modals, popups</td></tr>
+      <tr><td>Blue glow</td><td class="mono">0 0 16px rgba(30,144,255,0.15)</td><td>Focused inputs, active elements</td></tr>
+      <tr><td>Red glow</td><td class="mono">0 0 16px rgba(176,16,32,0.18)</td><td>Error states, brand-identity covers</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="buttons">
+  <h1>5. Buttons</h1>
+
+  <h2>Button Variants</h2>
+  <div class="demo-strip">
+    <div class="demo-row">
+      <button class="db-btn db-btn-primary">Primary Action</button>
+      <button class="db-btn db-btn-accent">Accent / CTA</button>
+      <button class="db-btn db-btn-secondary">Secondary</button>
+      <button class="db-btn db-btn-ghost">Ghost</button>
+      <button class="db-btn db-btn-danger">Destructive</button>
+      <button class="db-btn db-btn-secondary" disabled>Disabled</button>
+    </div>
+  </div>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Variant</th><th>Background</th><th>Foreground</th><th>Border</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Primary</strong></td><td class="hex">#C0404A</td><td class="hex">#F0F4FF</td><td class="hex">#C0404A</td><td>The single most important action per screen/dialog. Use once per context. Examples: Save, Submit, Delete (with danger styling).</td></tr>
+      <tr><td><strong>Accent</strong></td><td class="hex">#2E8BFF</td><td class="hex">#080C14</td><td class="hex">#2E8BFF</td><td>Key interactive CTA that is not destructive. Sync, Launch, Connect. Inverse (dark) text on bright blue background.</td></tr>
+      <tr><td><strong>Secondary</strong></td><td class="hex">#1D2E48</td><td class="hex">#A8BDD8</td><td class="hex">#213A58</td><td>Supporting actions alongside a primary. Cancel, Refresh, Settings.</td></tr>
+      <tr><td><strong>Ghost</strong></td><td>Transparent</td><td class="hex">#A8BDD8</td><td class="hex">#213A58</td><td>Low-emphasis actions in toolbars, list rows. Hover reveals subtle fill.</td></tr>
+      <tr><td><strong>Destructive</strong></td><td class="hex">#200A0A</td><td class="hex">#FF4444</td><td class="hex">#6A1818</td><td>Dangerous irreversible actions: delete files, wipe data. Dark red background, bright red text. Requires explicit user intent.</td></tr>
+      <tr><td><strong>Disabled</strong></td><td>Same variant</td><td>Same</td><td>Same</td><td>Opacity: 0.4. Do not change color — reduce opacity only.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Button States</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>State</th><th>Background Change</th><th>Border Change</th></tr></thead>
+    <tbody>
+      <tr><td>Default</td><td>As specified above</td><td>As specified above</td></tr>
+      <tr><td>Hover</td><td>Lighten by 1 surface step, or shift hue slightly brighter</td><td>Shift to brighter/more saturated version of accent color</td></tr>
+      <tr><td>Pressed / Active</td><td>Darken by 1 surface step</td><td>Same as hover or slightly muted</td></tr>
+      <tr><td>Focused</td><td>Same as hover</td><td>Blue Bright (#2E8BFF) outline, 2px offset</td></tr>
+      <tr><td>Disabled</td><td>Same as default</td><td>Same as default</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Button Sizing</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Size</th><th>Height</th><th>Padding</th><th>Font Size</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td>Small</td><td class="mono">26–28px</td><td class="mono">4px 10px</td><td class="mono">11px</td><td>Inline list row actions, toolbar micro-buttons</td></tr>
+      <tr><td>Default</td><td class="mono">32–34px</td><td class="mono">6px 14px</td><td class="mono">12–13px</td><td>Standard dialogs, panels, form buttons</td></tr>
+      <tr><td>Large</td><td class="mono">40–44px</td><td class="mono">10px 20px</td><td class="mono">14px</td><td>Primary CTA in large views, welcome screens</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="inputs">
+  <h1>6. Inputs &amp; Form Elements</h1>
+
+  <div class="demo-strip">
+    <div class="demo-row">
+      <input class="db-input" placeholder="Search files, tags, comments..." />
+      <input class="db-input" value="C:\Databranch\Scripts" style="font-family:'IBM Plex Mono',monospace;font-size:12px;" />
+    </div>
+  </div>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Property</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Background</td><td class="hex">#111C2E (Surface Raised) — one step below the panel it lives in</td></tr>
+      <tr><td>Text / Foreground</td><td class="hex">#F0F4FF (Text Primary)</td></tr>
+      <tr><td>Placeholder</td><td class="hex">#3A5070 (Text Dim)</td></tr>
+      <tr><td>Border (default)</td><td class="hex">1px #213A58 (Border Default)</td></tr>
+      <tr><td>Border (focused)</td><td class="hex">1px #2E8BFF (Blue Bright) + optional blue glow</td></tr>
+      <tr><td>Border (error)</td><td class="hex">1px #C84040 (Status Error)</td></tr>
+      <tr><td>Caret</td><td class="hex">#2E8BFF (Blue Bright)</td></tr>
+      <tr><td>Selection highlight</td><td class="hex">#1D2E48 (Surface Elevated) / rgba(46,139,255,0.25)</td></tr>
+      <tr><td>Radius</td><td>5px standard, 6px for search bar</td></tr>
+      <tr><td>Padding</td><td>8px 12px standard, 10px 12px for larger inputs</td></tr>
+      <tr><td>Font (standard fields)</td><td>IBM Plex Sans / Segoe UI, 12–13px</td></tr>
+      <tr><td>Font (path / code fields)</td><td>IBM Plex Mono / Consolas, 12px</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Field Labels</h2>
+  <p>Field labels sit above the input. They use uppercase, 10px, <code class="inline">font-weight: 600</code>, Text Muted color (<code class="inline">#607090</code>), with 4px of margin below. This uppercase small-caps treatment creates visual hierarchy without competing with the input content.</p>
+
+  <h2>Helper / Hint Text</h2>
+  <p>Helper text below an input uses Text Dim (<code class="inline">#3A5070</code>), 10–11px, with 4px margin above the input. For path examples and technical hints, use IBM Plex Mono / Consolas.</p>
+
+  <h2>Checkboxes &amp; Toggle Controls</h2>
+  <ul class="styled">
+    <li>Checkbox border: <code class="inline">#213A58</code>. Checked fill: <code class="inline">#2E8BFF</code> (accent blue). Checkmark: <code class="inline">#F0F4FF</code>.</li>
+    <li>Label text: Text Secondary (<code class="inline">#A8BDD8</code>), 11–12px.</li>
+    <li>Disabled: opacity 0.4.</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="cards">
+  <h1>7. Cards &amp; Panels</h1>
+
+  <div class="demo-strip">
+    <div class="demo-row" style="gap:16px;align-items:stretch;">
+      <div class="db-card db-card-accent-red" style="flex:1;min-width:200px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#607090;margin-bottom:4px;">FILE TYPE</div>
+        <div style="font-size:14px;color:#F0F4FF;">PowerShell Script</div>
+      </div>
+      <div class="db-card db-card-accent-blue" style="flex:1;min-width:200px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#607090;margin-bottom:4px;">LAST MODIFIED</div>
+        <div style="font-size:14px;color:#F0F4FF;">Feb 21, 2026</div>
+      </div>
+      <div class="db-card" style="flex:1;min-width:200px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#607090;margin-bottom:4px;">SIZE</div>
+        <div style="font-size:14px;color:#F0F4FF;">148 KB</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Card Anatomy</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Property</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Background</td><td class="hex">#162238 (Surface Card)</td></tr>
+      <tr><td>Border</td><td class="hex">1px #213A58 (Border Default)</td></tr>
+      <tr><td>Border Radius</td><td>8px standard, 6px for compact cards</td></tr>
+      <tr><td>Padding</td><td>14–20px all sides</td></tr>
+      <tr><td>Left accent (optional)</td><td>3px left border — Red Soft for brand emphasis, Blue Bright for info/interactive</td></tr>
+      <tr><td>Hover state</td><td>Border transitions to #2A4A70 (Border Mid) or accent color. Background: #1D2E48</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Panel vs Card Distinction</h2>
+  <ul class="styled">
+    <li><strong>Panels</strong> are full-height structural zones (sidebar, main content area, title bar). Background: Surface Raised (<code class="inline">#111C2E</code>). Divided by 1px borders.</li>
+    <li><strong>Cards</strong> are floating containers within a panel. Background: Surface Card (<code class="inline">#162238</code>). Have border radius and optional shadow.</li>
+    <li><strong>Sections within cards</strong> step up to Surface Elevated (<code class="inline">#1D2E48</code>) for hover or selected states.</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="badges">
+  <h1>8. Badges &amp; Tags</h1>
+
+  <div class="demo-strip">
+    <div class="demo-row">
+      <span class="db-badge db-badge-blue">automation</span>
+      <span class="db-badge db-badge-red">critical</span>
+      <span class="db-badge db-badge-green">success</span>
+      <span class="db-badge db-badge-amber">warning</span>
+      <span class="db-badge db-badge-purple">DEBUG</span>
+      <span class="db-badge db-badge-muted">utility</span>
+    </div>
+  </div>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Variant</th><th>Text Color</th><th>Background</th><th>Border</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td>Blue</td><td class="hex">#4AB4FF</td><td>rgba(46,139,255,0.15)</td><td>rgba(46,139,255,0.3)</td><td>Script type labels, info tags, feature badges</td></tr>
+      <tr><td>Red</td><td class="hex">#D07080</td><td>rgba(176,16,32,0.15)</td><td>rgba(176,16,32,0.3)</td><td>Priority flags, brand-category labels</td></tr>
+      <tr><td>Green</td><td class="hex">#22C55E</td><td>rgba(34,197,94,0.12)</td><td>rgba(34,197,94,0.25)</td><td>Success state, online/active indicators</td></tr>
+      <tr><td>Amber</td><td class="hex">#E8A020</td><td>rgba(232,160,32,0.12)</td><td>rgba(232,160,32,0.25)</td><td>Warnings, partial states, caution tags</td></tr>
+      <tr><td>Purple</td><td class="hex">#C084FC</td><td>rgba(192,132,252,0.12)</td><td>rgba(192,132,252,0.25)</td><td>DEBUG level, technical/internal markers</td></tr>
+      <tr><td>Muted</td><td class="hex">#607090</td><td>rgba(96,112,144,0.15)</td><td>rgba(96,112,144,0.25)</td><td>Neutral tags, secondary categories</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>All badges use IBM Plex Mono / Consolas, 10.5–11px, font-weight 600, letter-spacing 0.05em, border-radius 4px, padding 2px 9px.</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="callouts">
+  <h1>9. Callout Boxes</h1>
+
+  <div class="callout note"><div class="callout-icon">ℹ️</div><div class="callout-body"><div class="callout-label">Note</div><div class="callout-text">This is a general informational note. Used for context, tips, or supplementary information that doesn't require user action.</div></div></div>
+  <div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><div class="callout-label">Tip</div><div class="callout-text">This is a helpful tip or best practice that makes the operator's life easier.</div></div></div>
+  <div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><div class="callout-label">Warning</div><div class="callout-text">This condition requires attention. Something unexpected may happen if this is ignored.</div></div></div>
+  <div class="callout brand"><div class="callout-icon">🔴</div><div class="callout-body"><div class="callout-label">Design Decision Record</div><div class="callout-text">This is a Databranch brand-specific callout. Used in design specs and documentation to record intentional design decisions that future authors must respect.</div></div></div>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Variant</th><th>Left Border</th><th>Label Color</th><th>Background</th><th>Border</th><th>Icon</th></tr></thead>
+    <tbody>
+      <tr><td>Note</td><td class="hex">#2E8BFF</td><td class="hex">#2E8BFF</td><td class="hex">#091828</td><td class="hex">#1A3A6A</td><td>ℹ️ / 🔧</td></tr>
+      <tr><td>Tip</td><td class="hex">#22C55E</td><td class="hex">#22C55E</td><td class="hex">#0A2818</td><td class="hex">#1A5030</td><td>💡</td></tr>
+      <tr><td>Warning</td><td class="hex">#E8A020</td><td class="hex">#E8A020</td><td class="hex">#1E1800</td><td class="hex">#6A4800</td><td>⚠️</td></tr>
+      <tr><td>Brand/Decision</td><td class="hex">#C0404A</td><td class="hex">#C0404A</td><td>#1A0810</td><td>#5A1020</td><td>🔴 / 🎨</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>All callouts: flex row layout with emoji icon (flex-shrink: 0) and body column. Label: 11px, 700 weight, letter-spaced, uppercase. Body text: 13.5px, lh 1.6. Border radius: 6px. Padding: 14px 18px. Left border: 3px solid accent. All other borders: 1px.</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="tables">
+  <h1>10. Tables</h1>
+  <p>All tables are wrapped in <code class="inline">.table-wrap</code> for horizontal overflow on small screens. Tables have no standalone borders — the wrap provides the outer border and radius.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Property</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Header background</td><td class="hex">#162238 (Surface Card / Navy Mid)</td></tr>
+      <tr><td>Header text</td><td>10.5–11px, 700 weight, uppercase, letter-spaced, Text Muted (#607090)</td></tr>
+      <tr><td>Header bottom border</td><td class="hex">1px #2A4A70 (Border Mid)</td></tr>
+      <tr><td>Row background (odd)</td><td>Transparent / inherits from surface</td></tr>
+      <tr><td>Row background (even)</td><td class="hex">#111C2E (Surface Raised)</td></tr>
+      <tr><td>Row hover</td><td class="hex">#162238 (Surface Card)</td></tr>
+      <tr><td>Row border (bottom)</td><td class="hex">1px #213A58 (Border Default)</td></tr>
+      <tr><td>Cell padding</td><td>10px 16px</td></tr>
+      <tr><td>Cell text</td><td>13–13.5px, Text Secondary (#A8BDD8)</td></tr>
+      <tr><td>Monospace cells (.mono)</td><td>IBM Plex Mono 11.5–12px, Code Text (#7DD3FC), white-space: nowrap</td></tr>
+      <tr><td>Outer wrap border</td><td class="hex">1px #213A58, border-radius 8px</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="code">
+  <h1>11. Code Blocks</h1>
+
+  <div class="code-block"><code><span class="c"># DattoRMM env var takes precedence; falls back to parameter default</span>
+<span class="vr">$SiteName</span> = $(if (<span class="vr">$env:CS_PROFILE_NAME</span>) { <span class="vr">$env:CS_PROFILE_NAME</span> } else { <span class="st">"UnknownSite"</span> })
+
+<span class="kw">function</span> <span class="nm">Write-Log</span> {
+    <span class="kw">param</span>([<span class="nm">string</span>]<span class="vr">$Message</span>, [<span class="nm">string</span>]<span class="vr">$Severity</span> = <span class="st">"INFO"</span>)
+    <span class="vr">$Timestamp</span> = <span class="nm">Get-Date</span> -Format <span class="st">"yyyy-MM-dd HH:mm:ss"</span>
+    <span class="nm">Add-Content</span> -Path <span class="vr">$LogFile</span> -Value <span class="st">"[$Timestamp] [$Severity] $Message"</span>
+}</code></div>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Property</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Background</td><td class="hex">#060E1A (Code BG — deepest surface)</td></tr>
+      <tr><td>Border</td><td class="hex">1px #213A58, left edge: 3px #C0404A (Brand Red Soft)</td></tr>
+      <tr><td>Border radius</td><td>6px</td></tr>
+      <tr><td>Padding</td><td>14px 18px</td></tr>
+      <tr><td>Font</td><td>IBM Plex Mono / Consolas, 12.5–13px, lh 1.7</td></tr>
+      <tr><td>Default code text</td><td class="hex">#7DD3FC (light blue)</td></tr>
+      <tr><td>Comments</td><td class="hex">#3A6A50 (muted green)</td></tr>
+      <tr><td>Keywords</td><td class="hex">#C084FC (purple)</td></tr>
+      <tr><td>Strings</td><td class="hex">#86EFAC (light green)</td></tr>
+      <tr><td>Variables</td><td class="hex">#FDE68A (light yellow)</td></tr>
+      <tr><td>Function names / types</td><td class="hex">#4AB4FF (bright blue)</td></tr>
+      <tr><td>Inline code</td><td>Same background + border, 2px 7px padding, border-radius 4px, no left accent</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout brand">
+    <div class="callout-icon">🔴</div>
+    <div class="callout-body">
+      <div class="callout-label">Design Decision Record</div>
+      <div class="callout-text">The code block left-border accent is <strong>red</strong> in the Databranch design system. This differs from the prior HTML documentation which used blue. The red left edge visually ties code blocks to the brand identity and distinguishes them from callout boxes (which use colored left edges for semantic meaning). This is an intentional choice — do not revert to blue for code block left edges.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="severity">
+  <h1>12. Severity &amp; Status Display</h1>
+
+  <h2>Log Severity Color System</h2>
+  <p>Used in log output, console display, badge labels, and status indicators. Colors must remain consistent across all output contexts (HTML docs, WPF status bars, console terminal).</p>
+
+  <div class="sev-grid">
+    <div class="sev-cell"><div class="sev-level" style="color:#4AB4FF;">INFO</div><div class="sev-stream">Write-Output</div><div class="sev-color">#4AB4FF</div></div>
+    <div class="sev-cell"><div class="sev-level" style="color:#22C55E;">SUCCESS</div><div class="sev-stream">Write-Output</div><div class="sev-color">#22C55E</div></div>
+    <div class="sev-cell"><div class="sev-level" style="color:#C084FC;">DEBUG</div><div class="sev-stream">Write-Output</div><div class="sev-color">#C084FC</div></div>
+    <div class="sev-cell"><div class="sev-level" style="color:#E8A020;">WARN</div><div class="sev-stream">Write-Warning</div><div class="sev-color">#E8A020</div></div>
+    <div class="sev-cell"><div class="sev-level" style="color:#FF4444;">ERROR</div><div class="sev-stream">Write-Error</div><div class="sev-color">#FF4444</div></div>
+  </div>
+
+  <h2>Console Write-Host Color Mapping</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Severity</th><th>HTML Hex</th><th>WPF Brush / Hex</th><th>PowerShell Write-Host ForegroundColor</th></tr></thead>
+    <tbody>
+      <tr><td style="color:#4AB4FF;font-weight:600;">INFO</td><td class="hex">#4AB4FF</td><td class="hex">#4AB4FF</td><td><code class="inline">Cyan</code></td></tr>
+      <tr><td style="color:#22C55E;font-weight:600;">SUCCESS</td><td class="hex">#22C55E</td><td class="hex">#22C55E</td><td><code class="inline">Green</code></td></tr>
+      <tr><td style="color:#E8A020;font-weight:600;">WARN</td><td class="hex">#E8A020</td><td class="hex">#E8A020</td><td><code class="inline">Yellow</code></td></tr>
+      <tr><td style="color:#FF4444;font-weight:600;">ERROR</td><td class="hex">#FF4444</td><td class="hex">#FF4444</td><td><code class="inline">Red</code></td></tr>
+      <tr><td style="color:#C084FC;font-weight:600;">DEBUG</td><td class="hex">#C084FC</td><td class="hex">#C084FC</td><td><code class="inline">Magenta</code></td></tr>
+      <tr><td style="color:#A8BDD8;font-weight:600;">PLAIN</td><td class="hex">#A8BDD8</td><td class="hex">#A8BDD8</td><td><code class="inline">Gray</code></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="nav-sidebar">
+  <h1>13. Navigation &amp; Sidebars</h1>
+
+  <h2>Sidebar Structure</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Element</th><th>Style</th></tr></thead>
+    <tbody>
+      <tr><td>Sidebar background</td><td class="hex">#080C14 (Surface Void) — deepest level, creates depth contrast with content</td></tr>
+      <tr><td>Right border</td><td class="hex">1px #213A58 (Border Default)</td></tr>
+      <tr><td>Width</td><td>260–280px fixed</td></tr>
+      <tr><td>Logo block (top)</td><td>24px padding. Company name: Red Pale / Brand Red, 11px, uppercase, letter-spaced. Script/App name: Text Primary, 13px, semibold.</td></tr>
+      <tr><td>Nav section label</td><td>10px, 700 weight, uppercase, 0.12em letter-spacing, Text Dim (#3A5070). Padding: 12px 12px 4px.</td></tr>
+      <tr><td>Nav link (default)</td><td>12.5px, Text Muted (#607090). Padding: 6px 12px. Hover: bg #162238, color #F0F4FF.</td></tr>
+      <tr><td>Nav link (active)</td><td>bg #1D2E48, color #F0F4FF, <strong>2px left border in Brand Red Soft (#C0404A)</strong>, padding-left: 10px.</td></tr>
+      <tr><td>Nav sub-link</td><td>Same as nav link but padding-left: 24px, font-size: 11.5px.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout brand">
+    <div class="callout-icon">🔴</div>
+    <div class="callout-body">
+      <div class="callout-label">Design Decision Record</div>
+      <div class="callout-text">The active nav link indicator is <strong>red</strong> in the Databranch design system, not blue. The prior HTML documentation used a blue active indicator. This was changed to use Brand Red Soft as the active sidebar accent — it anchors the sidebar to brand identity and clearly differentiates "where you are" from "what you can click" (interactive blue). The left border active indicator is always red.</div>
+    </div>
+  </div>
+
+  <h2>Scroll-Spy Navigation (HTML)</h2>
+  <p>Navigation links highlight automatically as the user scrolls using IntersectionObserver with <code class="inline">rootMargin: '-20% 0px -70% 0px'</code>. Active class is applied to the nearest matching <code class="inline">href="#id"</code> link. This rootMargin targets the upper third of the viewport, ensuring the active link reflects what the reader is currently engaging with.</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="dialogs">
+  <h1>14. Dialogs &amp; Overlays</h1>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Property</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Dialog background</td><td class="hex">#0D1520 (Surface Base) — same as app window background</td></tr>
+      <tr><td>Dialog border</td><td class="hex">1px #213A58 — dialogs float, so they need a border to define their edge</td></tr>
+      <tr><td>Dialog shadow</td><td><code class="inline">0 8px 40px rgba(8,12,20,0.9)</code></td></tr>
+      <tr><td>Dialog border radius</td><td>10–12px</td></tr>
+      <tr><td>Overlay/scrim</td><td><code class="inline">rgba(5,8,14,0.75)</code> behind modal dialogs</td></tr>
+      <tr><td>Inner sections</td><td>Background #111C2E (Surface Raised) — step up from dialog base to show content structure</td></tr>
+      <tr><td>Section headers in dialogs</td><td>Blue Bright (#2E8BFF), 11px, semibold, with em-dash prefix: <code class="inline">— SECTION NAME</code></td></tr>
+      <tr><td>Scrollable lists</td><td>Background #162238 (Surface Card), 1px border, rounded</td></tr>
+      <tr><td>Button alignment</td><td>Right-aligned in all dialog footers. Primary/destructive action rightmost.</td></tr>
+      <tr><td>Min/Max size</td><td>Define MinWidth and MinHeight on all resizable dialogs. Default: 480×320px min.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Warning / Confirmation Dialogs</h2>
+  <ul class="styled">
+    <li>Header text in destructive dialogs: Status Warning color (<code class="inline">#E8A020</code>) for the description, never neutral gray.</li>
+    <li>File paths or item names in confirmation lists: use Destructive/Error color (<code class="inline">#FF4444</code>) in Consolas/Mono font.</li>
+    <li>Confirm button: Destructive variant (dark red background, bright red text). Cancel/Skip: Secondary variant.</li>
+  </ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="statusbar">
+  <h1>15. Status Bars &amp; Banners</h1>
+
+  <h2>Application Status Bar (WPF bottom bar)</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Property</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Background</td><td class="hex">#080C14 (Surface Void) or #111C2E (Surface Raised)</td></tr>
+      <tr><td>Height</td><td>26–30px</td></tr>
+      <tr><td>Top border</td><td class="hex">1px #213A58</td></tr>
+      <tr><td>Text size</td><td>11px</td></tr>
+      <tr><td>Default text color</td><td class="hex">#607090 (Text Muted)</td></tr>
+      <tr><td>Status text color</td><td>Dynamic — matches severity color of last operation</td></tr>
+      <tr><td>Padding</td><td>0 16px</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Console Script Banners (Write-Banner)</h2>
+  <div class="code-block"><code><span class="c">============================================================</span>
+  INVOKE-SCRIPTNAME v1.0.0.0
+<span class="c">============================================================</span>
+
+<span class="c">---- Section Name ------------------------------------------</span>
+<span class="nm">[INFO]</span>    Normal progress message
+<span class="st">[SUCCESS]</span> Operation completed
+<span class="vr">[WARN]</span>    Something unexpected but recoverable
+<span class="kw">[ERROR]</span>   A task failed
+<span class="c">[DEBUG]</span>   Internal diagnostic detail
+
+<span class="st">============================================================</span>
+  COMPLETED SUCCESSFULLY
+<span class="st">============================================================</span></code></div>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Element</th><th>PowerShell Color</th><th>Character</th><th>Width</th></tr></thead>
+    <tbody>
+      <tr><td>Write-Banner border</td><td>Cyan (default) / Green (success) / Red (failure)</td><td><code class="inline">=</code></td><td>60 chars</td></tr>
+      <tr><td>Banner title text</td><td>White</td><td>2-space indent</td><td>—</td></tr>
+      <tr><td>Write-Section header</td><td>Cyan (default)</td><td><code class="inline">---- Title ---…</code></td><td>60 chars auto-padded</td></tr>
+      <tr><td>Write-Separator</td><td>DarkGray</td><td><code class="inline">-</code></td><td>60 chars</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Cover Block (HTML Documentation)</h2>
+  <p>The document cover uses a linear gradient from Surface Void through a deep blue-navy, with two decorative radial glows (blue at top-right, red at bottom-left) using pseudo-elements. The gradient is <code class="inline">linear-gradient(145deg, #060E1A 0%, #0D1F3A 40%, #0A1828 100%)</code>. Cover eyebrow text uses Brand Red Soft. Cover title uses Text Primary with a Blue Bright accent on a key word. Document type subtitle is italic, Text Muted.</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="html-css">
+  <h1>16. HTML / CSS Token Reference</h1>
+
+  <div class="code-block"><code><span class="kw">:root</span> {
+  <span class="c">/* Brand Colors */</span>
+  <span class="nm">--brand-red-vivid</span>:    <span class="st">#C8102E</span>;  <span class="c">/* Logo/wordmark — brand identity only */</span>
+  <span class="nm">--brand-red</span>:          <span class="st">#B01020</span>;  <span class="c">/* Critical alerts, destructive */</span>
+  <span class="nm">--brand-red-muted</span>:    <span class="st">#8B2030</span>;  <span class="c">/* Borders, dark-surface accents */</span>
+  <span class="nm">--brand-red-soft</span>:     <span class="st">#C0404A</span>;  <span class="c">/* Primary buttons, active nav — PREFERRED RED */</span>
+  <span class="nm">--brand-red-pale</span>:     <span class="st">#D07080</span>;  <span class="c">/* H3 headings, secondary accents */</span>
+  <span class="nm">--brand-blue-bright</span>:  <span class="st">#2E8BFF</span>;  <span class="c">/* H2, links, focus rings — PRIMARY BLUE */</span>
+  <span class="nm">--brand-blue-mid</span>:     <span class="st">#1A6FD4</span>;  <span class="c">/* Pressed/active blue states */</span>
+  <span class="nm">--brand-blue-pale</span>:    <span class="st">#4A8FD4</span>;  <span class="c">/* Info badges, subtle blue accents */</span>
+
+  <span class="c">/* Surface Layers (depth stack, void to high) */</span>
+  <span class="nm">--surface-void</span>:       <span class="st">#080C14</span>;
+  <span class="nm">--surface-base</span>:       <span class="st">#0D1520</span>;
+  <span class="nm">--surface-raised</span>:     <span class="st">#111C2E</span>;
+  <span class="nm">--surface-card</span>:       <span class="st">#162238</span>;
+  <span class="nm">--surface-elevated</span>:   <span class="st">#1D2E48</span>;
+  <span class="nm">--surface-overlay</span>:    <span class="st">#243558</span>;
+  <span class="nm">--surface-high</span>:       <span class="st">#2C3F68</span>;
+
+  <span class="c">/* Text */</span>
+  <span class="nm">--text-primary</span>:       <span class="st">#F0F4FF</span>;
+  <span class="nm">--text-secondary</span>:     <span class="st">#A8BDD8</span>;
+  <span class="nm">--text-muted</span>:         <span class="st">#607090</span>;
+  <span class="nm">--text-dim</span>:           <span class="st">#3A5070</span>;
+  <span class="nm">--text-inverse</span>:       <span class="st">#080C14</span>;
+
+  <span class="c">/* Borders */</span>
+  <span class="nm">--border-subtle</span>:      <span class="st">#1A2D48</span>;
+  <span class="nm">--border-default</span>:     <span class="st">#213A58</span>;
+  <span class="nm">--border-mid</span>:         <span class="st">#2A4A70</span>;
+  <span class="nm">--border-accent-blue</span>: <span class="st">#1E6ABF</span>;
+  <span class="nm">--border-accent-red</span>:  <span class="st">#8B2030</span>;
+
+  <span class="c">/* Status / Semantic */</span>
+  <span class="nm">--status-success</span>:     <span class="st">#22C55E</span>;
+  <span class="nm">--status-warn</span>:        <span class="st">#E8A020</span>;
+  <span class="nm">--status-error</span>:       <span class="st">#C84040</span>;
+  <span class="nm">--status-info</span>:        <span class="st">#2E8BFF</span>;
+
+  <span class="c">/* Code */</span>
+  <span class="nm">--code-bg</span>:            <span class="st">#060E1A</span>;
+  <span class="nm">--code-text</span>:          <span class="st">#7DD3FC</span>;
+}</code></div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="wpf">
+  <h1>17. WPF / XAML Token Reference</h1>
+
+  <p>WPF resources are defined as <code class="inline">SolidColorBrush</code> entries in <code class="inline">Window.Resources</code> or <code class="inline">Application.Resources</code> and referenced as <code class="inline">{StaticResource TokenName}</code>.</p>
+
+  <div class="code-block"><code><span class="c">&lt;!-- Databranch WPF Resource Dictionary --&gt;</span>
+<span class="kw">&lt;Window.Resources&gt;</span>
+
+  <span class="c">&lt;!-- Surface Layers --&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"SurfaceVoid"</span>     <span class="vr">Color</span>=<span class="st">"#080C14"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"SurfaceBase"</span>     <span class="vr">Color</span>=<span class="st">"#0D1520"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"SurfaceRaised"</span>   <span class="vr">Color</span>=<span class="st">"#111C2E"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"SurfaceCard"</span>     <span class="vr">Color</span>=<span class="st">"#162238"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"SurfaceElevated"</span> <span class="vr">Color</span>=<span class="st">"#1D2E48"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"SurfaceOverlay"</span>  <span class="vr">Color</span>=<span class="st">"#243558"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"SurfaceHigh"</span>     <span class="vr">Color</span>=<span class="st">"#2C3F68"</span>/<span class="nm">&gt;</span>
+
+  <span class="c">&lt;!-- Brand Accent --&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"AccentRed"</span>        <span class="vr">Color</span>=<span class="st">"#C0404A"</span>/<span class="nm">&gt;</span>  <span class="c">&lt;!-- Primary red —</span> preferred --&gt;
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"AccentRedVivid"</span>   <span class="vr">Color</span>=<span class="st">"#C8102E"</span>/<span class="nm">&gt;</span>  <span class="c">&lt;!-- Brand only --&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"AccentRedDark"</span>    <span class="vr">Color</span>=<span class="st">"#8B2030"</span>/<span class="nm">&gt;</span>  <span class="c">&lt;!-- Borders/muted --&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"AccentRedPale"</span>    <span class="vr">Color</span>=<span class="st">"#D07080"</span>/<span class="nm">&gt;</span>  <span class="c">&lt;!-- Labels/secondary --&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"AccentBlue"</span>       <span class="vr">Color</span>=<span class="st">"#2E8BFF"</span>/<span class="nm">&gt;</span>  <span class="c">&lt;!-- Primary interactive blue --&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"AccentBlueMid"</span>    <span class="vr">Color</span>=<span class="st">"#1A6FD4"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"AccentBluePale"</span>   <span class="vr">Color</span>=<span class="st">"#4A8FD4"</span>/<span class="nm">&gt;</span>
+
+  <span class="c">&lt;!-- Text --&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"TextPrimary"</span>      <span class="vr">Color</span>=<span class="st">"#F0F4FF"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"TextSecondary"</span>    <span class="vr">Color</span>=<span class="st">"#A8BDD8"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"TextMuted"</span>        <span class="vr">Color</span>=<span class="st">"#607090"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"TextDim"</span>          <span class="vr">Color</span>=<span class="st">"#3A5070"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"TextInverse"</span>      <span class="vr">Color</span>=<span class="st">"#080C14"</span>/<span class="nm">&gt;</span>
+
+  <span class="c">&lt;!-- Borders --&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"BorderSubtle"</span>     <span class="vr">Color</span>=<span class="st">"#1A2D48"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"BorderDefault"</span>    <span class="vr">Color</span>=<span class="st">"#213A58"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"BorderMid"</span>        <span class="vr">Color</span>=<span class="st">"#2A4A70"</span>/<span class="nm">&gt;</span>
+
+  <span class="c">&lt;!-- Status / Semantic --&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"StatusSuccess"</span>    <span class="vr">Color</span>=<span class="st">"#22C55E"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"StatusWarn"</span>       <span class="vr">Color</span>=<span class="st">"#E8A020"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"StatusError"</span>      <span class="vr">Color</span>=<span class="st">"#C84040"</span>/<span class="nm">&gt;</span>
+  <span class="nm">&lt;SolidColorBrush</span> <span class="vr">x:Key</span>=<span class="st">"StatusInfo"</span>       <span class="vr">Color</span>=<span class="st">"#2E8BFF"</span>/<span class="nm">&gt;</span>
+
+<span class="kw">&lt;/Window.Resources&gt;</span></code></div>
+
+  <h2>WPF Style Patterns</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Style Key</th><th>TargetType</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code class="inline">AppButton</code></td><td>Button</td><td>Standard secondary button. SurfaceElevated bg, BorderDefault border, radius 4–5px. Hover: SurfaceOverlay bg, AccentBlue border.</td></tr>
+      <tr><td><code class="inline">PrimaryButton</code></td><td>Button</td><td>BasedOn AppButton. AccentRed bg, TextPrimary fg, AccentRed border. Hover: AccentRedSoft slightly lighter.</td></tr>
+      <tr><td><code class="inline">AccentButton</code></td><td>Button</td><td>BasedOn AppButton. AccentBlue bg, TextInverse fg, SemiBold. Hover: lighter blue.</td></tr>
+      <tr><td><code class="inline">DangerButton</code></td><td>Button</td><td>StatusError bg (dark), StatusError bright fg, StatusError border.</td></tr>
+      <tr><td><code class="inline">AppTextBox</code></td><td>TextBox</td><td>SurfaceRaised bg, TextPrimary fg, BorderDefault. Focus: AccentBlue border. CornerRadius 4. CaretBrush AccentBlue.</td></tr>
+      <tr><td><code class="inline">FileListItem</code></td><td>ListBoxItem</td><td>Transparent default. IsMouseOver: SurfaceElevated. IsSelected: SurfaceOverlay. CornerRadius 4, padding 10,7.</td></tr>
+      <tr><td><code class="inline">MetaLabel</code></td><td>TextBlock</td><td>TextMuted, 10px, SemiBold, uppercase via text transform.</td></tr>
+      <tr><td><code class="inline">MetaValue</code></td><td>TextBlock</td><td>TextSecondary, 12px, TextWrapping Wrap.</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="winforms">
+  <h1>18. WinForms Token Reference</h1>
+
+  <p>WinForms uses <code class="inline">System.Drawing.Color</code> values. The pattern is to define a static color palette class and reference it throughout the application.</p>
+
+  <div class="code-block"><code><span class="c">// Databranch WinForms Color Palette — C#</span>
+<span class="kw">public static class</span> <span class="nm">DatabrnachColors</span>
+{
+    <span class="c">// Surface Layers</span>
+    <span class="kw">public static readonly</span> Color SurfaceVoid     = ColorTranslator.FromHtml(<span class="st">"#080C14"</span>);
+    <span class="kw">public static readonly</span> Color SurfaceBase     = ColorTranslator.FromHtml(<span class="st">"#0D1520"</span>);
+    <span class="kw">public static readonly</span> Color SurfaceRaised   = ColorTranslator.FromHtml(<span class="st">"#111C2E"</span>);
+    <span class="kw">public static readonly</span> Color SurfaceCard     = ColorTranslator.FromHtml(<span class="st">"#162238"</span>);
+    <span class="kw">public static readonly</span> Color SurfaceElevated = ColorTranslator.FromHtml(<span class="st">"#1D2E48"</span>);
+
+    <span class="c">// Brand Accents</span>
+    <span class="kw">public static readonly</span> Color AccentRed       = ColorTranslator.FromHtml(<span class="st">"#C0404A"</span>);
+    <span class="kw">public static readonly</span> Color AccentRedVivid  = ColorTranslator.FromHtml(<span class="st">"#C8102E"</span>);
+    <span class="kw">public static readonly</span> Color AccentRedPale   = ColorTranslator.FromHtml(<span class="st">"#D07080"</span>);
+    <span class="kw">public static readonly</span> Color AccentBlue      = ColorTranslator.FromHtml(<span class="st">"#2E8BFF"</span>);
+    <span class="kw">public static readonly</span> Color AccentBluePale  = ColorTranslator.FromHtml(<span class="st">"#4A8FD4"</span>);
+
+    <span class="c">// Text</span>
+    <span class="kw">public static readonly</span> Color TextPrimary     = ColorTranslator.FromHtml(<span class="st">"#F0F4FF"</span>);
+    <span class="kw">public static readonly</span> Color TextSecondary   = ColorTranslator.FromHtml(<span class="st">"#A8BDD8"</span>);
+    <span class="kw">public static readonly</span> Color TextMuted       = ColorTranslator.FromHtml(<span class="st">"#607090"</span>);
+    <span class="kw">public static readonly</span> Color TextDim         = ColorTranslator.FromHtml(<span class="st">"#3A5070"</span>);
+
+    <span class="c">// Borders</span>
+    <span class="kw">public static readonly</span> Color BorderDefault   = ColorTranslator.FromHtml(<span class="st">"#213A58"</span>);
+    <span class="kw">public static readonly</span> Color BorderMid       = ColorTranslator.FromHtml(<span class="st">"#2A4A70"</span>);
+
+    <span class="c">// Status</span>
+    <span class="kw">public static readonly</span> Color StatusSuccess   = ColorTranslator.FromHtml(<span class="st">"#22C55E"</span>);
+    <span class="kw">public static readonly</span> Color StatusWarn      = ColorTranslator.FromHtml(<span class="st">"#E8A020"</span>);
+    <span class="kw">public static readonly</span> Color StatusError     = ColorTranslator.FromHtml(<span class="st">"#C84040"</span>);
+    <span class="kw">public static readonly</span> Color StatusInfo      = ColorTranslator.FromHtml(<span class="st">"#2E8BFF"</span>);
+}</code></div>
+
+  <h2>WinForms Control Mapping</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Control</th><th>BackColor</th><th>ForeColor</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Form</td><td>SurfaceBase</td><td>TextPrimary</td><td>Set via constructor or Designer properties.</td></tr>
+      <tr><td>Panel / GroupBox</td><td>SurfaceRaised</td><td>TextSecondary</td><td>GroupBox border: manually drawn or use flat style.</td></tr>
+      <tr><td>Label (standard)</td><td>Transparent</td><td>TextSecondary</td><td></td></tr>
+      <tr><td>Label (field label)</td><td>Transparent</td><td>TextMuted</td><td>Use uppercase text in code.</td></tr>
+      <tr><td>TextBox</td><td>SurfaceRaised</td><td>TextPrimary</td><td>BorderStyle.FixedSingle. Focus border requires owner-draw or custom paint.</td></tr>
+      <tr><td>Button (primary)</td><td>AccentRed</td><td>TextPrimary</td><td>FlatStyle.Flat, FlatAppearance.BorderSize=0</td></tr>
+      <tr><td>Button (secondary)</td><td>SurfaceElevated</td><td>TextSecondary</td><td>FlatStyle.Flat, border AccentBlue on focus.</td></tr>
+      <tr><td>ListBox / ListView</td><td>SurfaceRaised</td><td>TextPrimary</td><td>Selected: SurfaceOverlay bg. OwnerDraw for full control.</td></tr>
+      <tr><td>StatusStrip</td><td>SurfaceVoid</td><td>TextMuted</td><td>Rendered text color changes with severity on status update.</td></tr>
+      <tr><td>ToolStrip / MenuStrip</td><td>SurfaceRaised</td><td>TextSecondary</td><td>Use custom ToolStripRenderer for full dark theming.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-label">WinForms Dark Mode Limitation</div>
+      <div class="callout-text">WinForms controls do not natively support dark mode on Windows. Many controls (ComboBox, ScrollBar, CheckBox, MenuStrip) require custom owner-draw implementations or third-party dark-mode libraries (e.g. <strong>DarkUI</strong>, <strong>MaterialSkin</strong>) to achieve consistent dark theming. Plan for additional implementation effort when using WinForms for complex UIs. <strong>WPF is strongly preferred</strong> for new Databranch desktop applications due to its full styling support.</td>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="console">
+  <h1>19. Console / Terminal Output</h1>
+
+  <p>PowerShell console output uses <code class="inline">Write-Host</code> for the display stream (presentation layer) and <code class="inline">Write-Output</code> / <code class="inline">Write-Warning</code> / <code class="inline">Write-Error</code> for the log/DattoRMM layer. The two streams are independent.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Element</th><th>ForegroundColor</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>[INFO] prefix</td><td><code class="inline">Cyan</code></td><td>Normal progress. Most common severity.</td></tr>
+      <tr><td>[SUCCESS] prefix</td><td><code class="inline">Green</code></td><td>Key operations confirmed complete.</td></tr>
+      <tr><td>[WARN] prefix</td><td><code class="inline">Yellow</code></td><td>Unexpected but recoverable. Script continues.</td></tr>
+      <tr><td>[ERROR] prefix</td><td><code class="inline">Red</code></td><td>Task-level failures. Script may continue.</td></tr>
+      <tr><td>[DEBUG] prefix</td><td><code class="inline">Magenta</code></td><td>Internal detail. Safe to ignore in normal operation.</td></tr>
+      <tr><td>Message text (after prefix)</td><td><code class="inline">White</code></td><td>Always white for maximum readability after colored prefix.</td></tr>
+      <tr><td>PLAIN / metadata lines</td><td><code class="inline">Gray</code></td><td>Site, Hostname, Run As, Log File. No prefix.</td></tr>
+      <tr><td>Banner (=== lines)</td><td><code class="inline">Cyan</code> / <code class="inline">Green</code> / <code class="inline">Red</code></td><td>Color varies by outcome: Cyan=neutral, Green=success, Red=failure.</td></tr>
+      <tr><td>Section (---- lines)</td><td><code class="inline">Cyan</code></td><td>60-char auto-padded separator. Default Cyan.</td></tr>
+      <tr><td>Separator (--- lines)</td><td><code class="inline">DarkGray</code></td><td>Thin divider within sections.</td></tr>
+      <tr><td>Indented sub-items</td><td>Same as parent severity</td><td>2 spaces per indent level (-Indent parameter on Write-Console).</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Avoiding Pipeline Pollution</h2>
+  <p>Functions that both write log messages and return values must route <code class="inline">Write-Log</code> calls to <code class="inline">| Out-Null</code> and use unary comma operator (<code class="inline">return ,$list</code>) to prevent log strings from being captured as return values. This is a critical PS 5.1 gotcha — see script comments for the full pattern.</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="do-dont">
+  <h1>20. Do &amp; Don't</h1>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>✅ DO</th><th>❌ DON'T</th></tr></thead>
+    <tbody>
+      <tr><td>Use Brand Red Soft (#C0404A) for primary buttons and active nav accents</td><td>Use vivid logo red (#C8102E) in UI controls — it is too aggressive on dark backgrounds at small sizes</td></tr>
+      <tr><td>Use Brand Blue Bright (#2E8BFF) for all interactive affordances: links, focus rings, H2 headings, accent buttons</td><td>Mix blue and red as equal-prominence accents on the same surface — one must be primary, the other secondary</td></tr>
+      <tr><td>Use Text Primary (#F0F4FF, blue-white) for headings and key labels</td><td>Use pure white (#FFFFFF) — it reads as harsh and disconnects from the dark blue palette</td></tr>
+      <tr><td>Step surfaces only one layer at a time (e.g. Card on top of Raised)</td><td>Skip layers (e.g. High surface directly on Void) — it breaks the sense of physical depth</td></tr>
+      <tr><td>Use red as the active/selected nav sidebar indicator (left border)</td><td>Use blue for the active nav indicator — blue is reserved for interactive affordances, red is the identity anchor</td></tr>
+      <tr><td>Use Code BG (#060E1A) for code blocks — the deepest surface creates maximum contrast for code text</td><td>Use a mid-surface color for code block backgrounds — the code becomes harder to read</td></tr>
+      <tr><td>Keep red accents sparse — one per visual context at most</td><td>Apply red to multiple elements within the same card or section</td></tr>
+      <tr><td>Use IBM Plex Mono / Consolas for all file paths, hex values, version numbers, code snippets</td><td>Display technical values in a proportional font — they become harder to scan</td></tr>
+      <tr><td>Use semantic status colors (green/amber/red) only to communicate state</td><td>Use status colors for decoration or general categorization</td></tr>
+      <tr><td>Define all colors as tokens (CSS variables, WPF resources, C# constants)</td><td>Hardcode hex values directly in component styles — changes become impossible to coordinate</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ================================================================ -->
+<div class="section" id="application">
+  <h1>21. Applying This Spec to Existing Work</h1>
+
+  <h2>When Redesigning the WPF App (Start-ScriptManagementBrowser)</h2>
+  <ul class="styled">
+    <li>Replace the current purple-dark surface stack (<code class="inline">#1E1E2E</code>, <code class="inline">#252537</code>, <code class="inline">#2E2E45</code>, <code class="inline">#3A3A55</code>) with the new navy-dark surface stack (Void → Base → Raised → Card → Elevated).</li>
+    <li>Replace the current accent blue (<code class="inline">#7B9CFF</code> — a periwinkle/lavender blue) with Brand Blue Bright (<code class="inline">#2E8BFF</code>) and update the AccentButton to use AccentRed (#C0404A) as the primary action button.</li>
+    <li>The existing <code class="inline">AccentGreen</code> (<code class="inline">#50FA7B</code>) SyncButton was a good UX choice for the Sync action — retain green for that specific status-success affordance but shift to <code class="inline">#22C55E</code> to match the unified semantic system.</li>
+    <li>Replace <code class="inline">TextMuted</code> (<code class="inline">#6272A4</code> — bluish-purple) with the new <code class="inline">#607090</code> (clean blue-gray muted).</li>
+    <li>Replace <code class="inline">BorderColor</code> (<code class="inline">#44446A</code> — purple-tinted) with BorderDefault (<code class="inline">#213A58</code>).</li>
+    <li>Replace <code class="inline">PS1Color</code> (<code class="inline">#BD93F9</code> — purple) file type badge with AccentBluePale (<code class="inline">#4A8FD4</code>) — purple is now reserved for DEBUG only.</li>
+  </ul>
+
+  <h2>When Redesigning HTML Documentation</h2>
+  <ul class="styled">
+    <li>The existing HTML documentation navy palette is already very close. Primary changes: shift sidebar active indicator from blue to Brand Red Soft. Shift H3 from teal to Brand Red Pale. Shift code block left-border from blue to red. Update <code class="inline">--navy</code>, <code class="inline">--navy-mid</code>, <code class="inline">--navy-light</code> to the new surface token values.</li>
+    <li>The existing teal (<code class="inline">#00C9B1</code>) used for company labels, H3, and arch tags should be retired. The design system does not include teal — it is not a Databranch brand color. Replace with Brand Red Pale for labels and Brand Blue Pale for tags.</li>
+    <li>Cover eyebrow changes from teal to Brand Red Soft. Cover gradient deepens slightly toward void-black.</li>
+    <li>All other component shapes, spacing, and structure remain identical.</li>
+  </ul>
+
+  <h2>Priority Order for Applying Changes</h2>
+  <p>When updating existing documents or applications, apply changes in this order to minimize visual disruption and ensure correctness at each step:</p>
+  <ul class="styled">
+    <li><strong>1. Surfaces first.</strong> Update all background colors to the new surface stack. This creates the correct depth foundation everything else sits on.</li>
+    <li><strong>2. Text colors.</strong> Update all text to the new text token hierarchy. This restores readability immediately.</li>
+    <li><strong>3. Borders.</strong> Update borders to the new border tokens. This cleans up the structural definition of panels and cards.</li>
+    <li><strong>4. Accent colors.</strong> Apply Brand Red Soft to primary actions and active indicators. Apply Brand Blue Bright to interactive and H2 elements.</li>
+    <li><strong>5. Status/semantic colors.</strong> Update severity indicators, callouts, and status messages to the unified semantic palette.</li>
+    <li><strong>6. Code blocks.</strong> Update code block backgrounds, syntax highlight colors, and left-border accent to red.</li>
+  </ul>
+
+  <div class="callout brand">
+    <div class="callout-icon">🔴</div>
+    <div class="callout-body">
+      <div class="callout-label">For the AI Applying This Spec</div>
+      <div class="callout-text">When you are given an existing document or application to redesign using this spec, begin by identifying: (1) what is the primary interactive element → it gets blue, (2) what is the brand identity anchor → it gets red, (3) what are the surface layers present → map them to the depth stack. Then apply the token changes in the priority order above. Do not introduce teal, purple (except for DEBUG), or orange as decorative colors. The palette is deliberate and constrained. Every color has a specific job.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="doc-footer">
+  <div>Databranch &mdash; Internal Design System &mdash; Confidential</div>
+  <div class="version">Databranch_UIDesignSpec.html &nbsp;|&nbsp; v1.0.0 &nbsp;|&nbsp; Feb 2026</div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
