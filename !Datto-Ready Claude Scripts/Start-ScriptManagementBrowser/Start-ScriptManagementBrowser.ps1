@@ -32,7 +32,7 @@
 
 .NOTES
     File Name      : Start-ScriptManagementBrowser.ps1
-    Version        : 1.0.7.0
+    Version        : 1.0.8.0
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -61,6 +61,28 @@
         Full path : /sites/YourSite/IT Scripts/Published/Scripts
 
 .CHANGELOG
+    v1.0.8.0 - 2026-02-22 - Sam Kirsch
+        - Changed: SharePoint sync now performs a TRUE full-repo scan using
+          Get-ChildItem with no file type filter. All files synced regardless
+          of extension (.md, .html, .docx, .pdf, etc.) — not just .ps1/.bat.
+        - Redesigned: Full UI color redesign applying the Databranch Design System
+          (Databranch_UIDesignSpec.html v1.0.0). Changes applied in spec priority
+          order — surfaces, text, borders, accents, semantic colors:
+          * Surface stack: purple-dark (#1E1E2E/#252537/#2E2E45/#3A3A55/#4B4B70)
+            replaced with navy-dark (Base/Raised/Card/Elevated/Overlay).
+          * Primary actions (AccentButton): #7B9CFF → Brand Red Soft (#C0404A).
+          * Sync button: green (#50FA7B) → Brand Blue Bright (#2E8BFF) per user choice.
+          * Interactive/focus blue: #7B9CFF (periwinkle) → #2E8BFF (Brand Blue Bright).
+          * Active view toggle: uses Brand Red Soft as nav identity anchor.
+          * Selected file: uses blue (#162238 + #2E8BFF border) for file selection.
+          * Text: #F8F8F2→#F0F4FF primary, #A0A0C0→#A8BDD8 secondary, #6272A4→#607090 muted.
+          * Borders: #44446A→#213A58 default, #3A3A55→#1A2D48 subtle.
+          * PS1 badge: #BD93F9 (purple) → #4A8FD4 (blue-pale). Purple retired.
+          * Tag chips aligned to semantic system: blue/green/amber/neutral/red/blue.
+          * File preview code background: #1E1E2E → #060E1A (deepest Code BG).
+          * Settings dialog: all surfaces, borders, text updated to match.
+          * Delete confirmation dialog: all code-behind colors updated to match.
+
     v1.0.7.0 - 2026-02-21 - Sam Kirsch
         - Added: Ancestor path diagnostic in folder pre-creation pass. Walks each
           segment of the root target path (e.g. Documents, Engineering Procedures,
@@ -170,7 +192,7 @@ function Start-ScriptManagementBrowser {
     # APP CONSTANTS
     # ==========================================================================
     $script:AppName       = "ScriptManagementBrowser"
-    $script:AppVersion    = "1.0.7.0"
+    $script:AppVersion    = "1.0.8.0"
     $script:AppDataDir    = "$env:APPDATA\ScriptManagementBrowser"
     $script:ConfigFile    = "$script:AppDataDir\config.json"
     $script:LogFile       = "$script:AppDataDir\app.log"
@@ -515,7 +537,6 @@ function Start-ScriptManagementBrowser {
             SharePointSiteUrl    = $script:Config.SharePointSiteUrl
             SharePointFolderPath = $script:Config.SharePointFolderPath
             EntraClientId        = $script:Config.EntraClientId
-            FileTypes            = $script:FileTypes
         }
 
         $ps.AddScript({
@@ -585,9 +606,10 @@ function Start-ScriptManagementBrowser {
                 # ------------------------------------------------------------------
                 # Enumerate local Git repo files
                 # ------------------------------------------------------------------
+                # True sync: scan ALL files in the repo, no extension filter.
+                # File type filtering only applies to the browser UI display.
                 $localFiles = Get-ChildItem -Path $rsConfig.GitRepoPath `
                                             -Recurse -File `
-                                            -Include $rsConfig.FileTypes `
                                             -ErrorAction Stop
 
                 RS-Log "Local files found: $($localFiles.Count)"
@@ -887,7 +909,7 @@ Target : $($result.TargetPath)
                     [System.Windows.MessageBoxImage]::Information
                 )
 
-                Set-Status "Sync complete — Uploaded: $($result.Uploaded)  Deleted: $deletedCount  Errors: $($result.Errors)" "#50FA7B"
+                Set-Status "Sync complete — Uploaded: $($result.Uploaded)  Deleted: $deletedCount  Errors: $($result.Errors)" "#22C55E"
                 $TxtCacheInfo.Text = "Last sync: $(Get-Date -Format 'h:mmtt')"
 
             } catch {
@@ -918,7 +940,7 @@ Target : $($result.TargetPath)
         $dlg.MinHeight             = 320
         $dlg.WindowStartupLocation = "CenterOwner"
         $dlg.Owner                 = $Window
-        $dlg.Background            = "#1E1E2E"
+        $dlg.Background            = "#0D1520"
         $dlg.ResizeMode            = "CanResize"
 
         # Root layout
@@ -937,7 +959,7 @@ Target : $($result.TargetPath)
         # Header
         $header            = [System.Windows.Controls.TextBlock]::new()
         $header.Text       = "The following $($FilePaths.Count) file(s) exist in SharePoint but were NOT found in the local Git repository.`nThey will be permanently deleted from SharePoint if you proceed."
-        $header.Foreground = "#FFB86C"
+        $header.Foreground = "#E8A020"
         $header.FontSize   = 12
         $header.TextWrapping = "Wrap"
         $header.Margin     = [System.Windows.Thickness]::new(0,0,0,12)
@@ -947,7 +969,7 @@ Target : $($result.TargetPath)
         # Scrollable file list
         $scroll                             = [System.Windows.Controls.ScrollViewer]::new()
         $scroll.VerticalScrollBarVisibility = "Auto"
-        $scroll.Background                  = "#252537"
+        $scroll.Background                  = "#111C2E"
         $scroll.Margin                      = [System.Windows.Thickness]::new(0,0,0,12)
         [System.Windows.Controls.Grid]::SetRow($scroll, 1)
         $root.Children.Add($scroll)
@@ -959,7 +981,7 @@ Target : $($result.TargetPath)
         foreach ($path in ($FilePaths | Sort-Object)) {
             $tb              = [System.Windows.Controls.TextBlock]::new()
             $tb.Text         = $path
-            $tb.Foreground   = "#FF5555"
+            $tb.Foreground   = "#C84040"
             $tb.FontFamily   = [System.Windows.Media.FontFamily]::new("Consolas")
             $tb.FontSize     = 11
             $tb.Margin       = [System.Windows.Thickness]::new(0,2,0,2)
@@ -977,11 +999,11 @@ Target : $($result.TargetPath)
         $chkSkip              = [System.Windows.Controls.CheckBox]::new()
         $chkSkip.IsChecked    = $false
         $chkSkip.VerticalAlignment = "Center"
-        $chkSkip.Foreground   = "#A0A0C0"
+        $chkSkip.Foreground   = "#A8BDD8"
 
         $chkLabel             = [System.Windows.Controls.TextBlock]::new()
         $chkLabel.Text        = "Skip this confirmation in future syncs (can be reset in Settings)"
-        $chkLabel.Foreground  = "#A0A0C0"
+        $chkLabel.Foreground  = "#A8BDD8"
         $chkLabel.FontSize    = 11
         $chkLabel.Margin      = [System.Windows.Thickness]::new(8,0,0,0)
         $chkLabel.VerticalAlignment = "Center"
@@ -1000,8 +1022,8 @@ Target : $($result.TargetPath)
         $btnDelete.Content      = "Delete from SharePoint"
         $btnDelete.Width        = 180
         $btnDelete.Height       = 34
-        $btnDelete.Background   = "#FF5555"
-        $btnDelete.Foreground   = "#F8F8F2"
+        $btnDelete.Background   = "#C84040"
+        $btnDelete.Foreground   = "#F0F4FF"
         $btnDelete.FontWeight   = "SemiBold"
         $btnDelete.Margin       = [System.Windows.Thickness]::new(0,0,8,0)
 
@@ -1009,8 +1031,8 @@ Target : $($result.TargetPath)
         $btnSkip.Content        = "Skip Deletions"
         $btnSkip.Width          = 120
         $btnSkip.Height         = 34
-        $btnSkip.Background     = "#3A3A55"
-        $btnSkip.Foreground     = "#F8F8F2"
+        $btnSkip.Background     = "#1D2E48"
+        $btnSkip.Foreground     = "#F0F4FF"
 
         $btnPanel.Children.Add($btnDelete)
         $btnPanel.Children.Add($btnSkip)
@@ -1074,51 +1096,51 @@ Target : $($result.TargetPath)
     Title="Settings"
     Height="$winHeight" Width="600" MinWidth="480"
     WindowStartupLocation="CenterScreen"
-    Background="#1E1E2E"
+    Background="#0D1520"
     ResizeMode="NoResize">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="24,20,24,20">
 
             <TextBlock x:Name="TxtSettingsTitle"
-                       Foreground="#F8F8F2" FontSize="18" FontWeight="Bold" Margin="0,0,0,4"/>
+                       Foreground="#F0F4FF" FontSize="18" FontWeight="Bold" Margin="0,0,0,4"/>
             <TextBlock x:Name="TxtSettingsSubtitle"
-                       Foreground="#6272A4" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,24"/>
+                       Foreground="#607090" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,24"/>
 
             <!-- GIT SECTION -->
             <TextBlock Text="&#x2014; GIT REPOSITORY"
-                       Foreground="#7B9CFF" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                       Foreground="#2E8BFF" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,12"/>
 
             <StackPanel Margin="0,0,0,14">
-                <TextBlock Text="GIT REPO PATH" Foreground="#6272A4" FontSize="10"
+                <TextBlock Text="GIT REPO PATH" Foreground="#607090" FontSize="10"
                            FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <TextBox x:Name="TxtGitPath" Background="#2E2E45" Foreground="#F8F8F2"
-                         BorderBrush="#44446A" BorderThickness="1" Padding="10,7"
+                <TextBox x:Name="TxtGitPath" Background="#162238" Foreground="#F0F4FF"
+                         BorderBrush="#213A58" BorderThickness="1" Padding="10,7"
                          FontSize="12" FontFamily="Consolas"/>
                 <TextBlock Text="Full path to your local repository root.  e.g.  C:\GitHubRepos\Databranch-Client-Scripts"
-                           Foreground="#44446A" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap"/>
+                           Foreground="#607090" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap"/>
             </StackPanel>
 
             <!-- SHAREPOINT SECTION -->
             <TextBlock Text="&#x2014; SHAREPOINT SYNC  (optional)"
-                       Foreground="#7B9CFF" FontSize="11" FontWeight="SemiBold" Margin="0,8,0,12"/>
+                       Foreground="#2E8BFF" FontSize="11" FontWeight="SemiBold" Margin="0,8,0,12"/>
 
             <StackPanel Margin="0,0,0,14">
-                <TextBlock Text="SHAREPOINT SITE URL  (optional)" Foreground="#6272A4"
+                <TextBlock Text="SHAREPOINT SITE URL  (optional)" Foreground="#607090"
                            FontSize="10" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <TextBox x:Name="TxtSpSiteUrl" Background="#2E2E45" Foreground="#F8F8F2"
-                         BorderBrush="#44446A" BorderThickness="1" Padding="10,7"
+                <TextBox x:Name="TxtSpSiteUrl" Background="#162238" Foreground="#F0F4FF"
+                         BorderBrush="#213A58" BorderThickness="1" Padding="10,7"
                          FontSize="12" FontFamily="Consolas"/>
                 <TextBlock Text="Root URL of your SharePoint site.  e.g.  https://databranch.sharepoint.com  or  https://databranch.sharepoint.com/sites/IT"
-                           Foreground="#44446A" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap"/>
+                           Foreground="#607090" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap"/>
             </StackPanel>
 
             <StackPanel Margin="0,0,0,14">
-                <TextBlock Text="SHAREPOINT FOLDER PATH  (optional)" Foreground="#6272A4"
+                <TextBlock Text="SHAREPOINT FOLDER PATH  (optional)" Foreground="#607090"
                            FontSize="10" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <TextBox x:Name="TxtSpFolderPath" Background="#2E2E45" Foreground="#F8F8F2"
-                         BorderBrush="#44446A" BorderThickness="1" Padding="10,7"
+                <TextBox x:Name="TxtSpFolderPath" Background="#162238" Foreground="#F0F4FF"
+                         BorderBrush="#213A58" BorderThickness="1" Padding="10,7"
                          FontSize="12" FontFamily="Consolas"/>
-                <TextBlock Foreground="#44446A" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap">
+                <TextBlock Foreground="#607090" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap">
                     <Run Text="Full folder path within your site. No leading slash. Library name is the first segment."/>
                     <LineBreak/>
                     <Run Text="Find it: navigate to the folder in SharePoint, copy the URL, decode the id= parameter value, drop the leading slash."/>
@@ -1128,12 +1150,12 @@ Target : $($result.TargetPath)
             </StackPanel>
 
             <StackPanel Margin="0,0,0,14">
-                <TextBlock Text="ENTRA APP CLIENT ID  (optional)" Foreground="#6272A4"
+                <TextBlock Text="ENTRA APP CLIENT ID  (optional)" Foreground="#607090"
                            FontSize="10" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <TextBox x:Name="TxtClientId" Background="#2E2E45" Foreground="#F8F8F2"
-                         BorderBrush="#44446A" BorderThickness="1" Padding="10,7"
+                <TextBox x:Name="TxtClientId" Background="#162238" Foreground="#F0F4FF"
+                         BorderBrush="#213A58" BorderThickness="1" Padding="10,7"
                          FontSize="12" FontFamily="Consolas"/>
-                <TextBlock Foreground="#44446A" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap">
+                <TextBlock Foreground="#607090" FontSize="10" Margin="2,4,0,0" TextWrapping="Wrap">
                     <Run Text="Client ID from your PnP Entra app registration. To create:"/>
                     <LineBreak/>
                     <Run Text="Register-PnPEntraIDAppForInteractiveLogin -ApplicationName 'PnP.PowerShell' -Tenant 'databranch.onmicrosoft.com' -Interactive"
@@ -1144,15 +1166,15 @@ Target : $($result.TargetPath)
             <!-- Delete confirmation reset banner (only shown when SkipDeleteConfirm = true) -->
             <Border x:Name="PanelResetDeleteConfirm"
                     Visibility="$showReset"
-                    Background="#252537" BorderBrush="#FF5555" BorderThickness="1"
+                    Background="#111C2E" BorderBrush="#C84040" BorderThickness="1"
                     CornerRadius="6" Padding="14,10" Margin="0,8,0,14">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Delete confirmation is currently disabled.  "
-                               Foreground="#FFB86C" FontSize="11" VerticalAlignment="Center"/>
+                               Foreground="#E8A020" FontSize="11" VerticalAlignment="Center"/>
                     <Button x:Name="BtnResetDeleteConfirm" Content="Re-enable"
-                            Background="#3A3A55" Foreground="#F8F8F2"
+                            Background="#1D2E48" Foreground="#F0F4FF"
                             Padding="10,4" FontSize="11" Cursor="Hand"
-                            BorderThickness="1" BorderBrush="#44446A"/>
+                            BorderThickness="1" BorderBrush="#213A58"/>
                 </StackPanel>
             </Border>
 
@@ -1160,12 +1182,12 @@ Target : $($result.TargetPath)
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
                 <Button x:Name="BtnSettingsCancel" Content="Cancel"
                         Width="80" Height="34" Margin="0,0,8,0"
-                        Background="#3A3A55" Foreground="#F8F8F2"
-                        BorderThickness="1" BorderBrush="#44446A"
+                        Background="#1D2E48" Foreground="#F0F4FF"
+                        BorderThickness="1" BorderBrush="#213A58"
                         Cursor="Hand" Visibility="$showCancel"/>
                 <Button x:Name="BtnSettingsSave" Content="$saveLabel"
                         Width="130" Height="34"
-                        Background="#7B9CFF" Foreground="#1E1E2E"
+                        Background="#C0404A" Foreground="#F0F4FF"
                         FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
             </StackPanel>
 
@@ -1239,30 +1261,30 @@ Target : $($result.TargetPath)
     Title="Script Management Browser"
     Height="800" Width="1280" MinHeight="600" MinWidth="900"
     WindowStartupLocation="CenterScreen"
-    Background="#1E1E2E">
+    Background="#0D1520">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="BgDeep"       Color="#1E1E2E"/>
-        <SolidColorBrush x:Key="BgPanel"      Color="#252537"/>
-        <SolidColorBrush x:Key="BgCard"       Color="#2E2E45"/>
-        <SolidColorBrush x:Key="BgHover"      Color="#3A3A55"/>
-        <SolidColorBrush x:Key="BgSelected"   Color="#4B4B70"/>
-        <SolidColorBrush x:Key="AccentBlue"   Color="#7B9CFF"/>
-        <SolidColorBrush x:Key="AccentGreen"  Color="#50FA7B"/>
-        <SolidColorBrush x:Key="AccentOrange" Color="#FFB86C"/>
-        <SolidColorBrush x:Key="AccentRed"    Color="#FF5555"/>
-        <SolidColorBrush x:Key="TextPrimary"  Color="#F8F8F2"/>
-        <SolidColorBrush x:Key="TextSecond"   Color="#A0A0C0"/>
-        <SolidColorBrush x:Key="TextMuted"    Color="#6272A4"/>
-        <SolidColorBrush x:Key="BorderColor"  Color="#44446A"/>
-        <SolidColorBrush x:Key="PS1Color"     Color="#BD93F9"/>
-        <SolidColorBrush x:Key="BatColor"     Color="#FFB86C"/>
+        <SolidColorBrush x:Key="BgDeep"       Color="#0D1520"/>
+        <SolidColorBrush x:Key="BgPanel"      Color="#111C2E"/>
+        <SolidColorBrush x:Key="BgCard"       Color="#162238"/>
+        <SolidColorBrush x:Key="BgHover"      Color="#1D2E48"/>
+        <SolidColorBrush x:Key="BgSelected"   Color="#243558"/>
+        <SolidColorBrush x:Key="AccentBlue"   Color="#2E8BFF"/>
+        <SolidColorBrush x:Key="AccentGreen"  Color="#22C55E"/>
+        <SolidColorBrush x:Key="AccentOrange" Color="#E8A020"/>
+        <SolidColorBrush x:Key="AccentRed"    Color="#C84040"/>
+        <SolidColorBrush x:Key="TextPrimary"  Color="#F0F4FF"/>
+        <SolidColorBrush x:Key="TextSecond"   Color="#A8BDD8"/>
+        <SolidColorBrush x:Key="TextMuted"    Color="#607090"/>
+        <SolidColorBrush x:Key="BorderColor"  Color="#213A58"/>
+        <SolidColorBrush x:Key="PS1Color"     Color="#4A8FD4"/>
+        <SolidColorBrush x:Key="BatColor"     Color="#E8A020"/>
 
         <Style x:Key="AppButton" TargetType="Button">
-            <Setter Property="Background"       Value="#3A3A55"/>
-            <Setter Property="Foreground"       Value="#F8F8F2"/>
+            <Setter Property="Background"       Value="#1D2E48"/>
+            <Setter Property="Foreground"       Value="#F0F4FF"/>
             <Setter Property="BorderThickness"  Value="1"/>
-            <Setter Property="BorderBrush"      Value="#44446A"/>
+            <Setter Property="BorderBrush"      Value="#213A58"/>
             <Setter Property="Padding"          Value="12,6"/>
             <Setter Property="FontSize"         Value="12"/>
             <Setter Property="Cursor"           Value="Hand"/>
@@ -1277,11 +1299,11 @@ Target : $($result.TargetPath)
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#4B4B70"/>
-                                <Setter Property="BorderBrush" Value="#7B9CFF"/>
+                                <Setter Property="Background" Value="#243558"/>
+                                <Setter Property="BorderBrush" Value="#2E8BFF"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#5C5C88"/>
+                                <Setter Property="Background" Value="#2C3F68"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.4"/>
@@ -1293,38 +1315,44 @@ Target : $($result.TargetPath)
         </Style>
 
         <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource AppButton}">
-            <Setter Property="Background"  Value="#7B9CFF"/>
-            <Setter Property="Foreground"  Value="#1E1E2E"/>
+            <Setter Property="Background"  Value="#C0404A"/>
+            <Setter Property="Foreground"  Value="#F0F4FF"/>
             <Setter Property="FontWeight"  Value="SemiBold"/>
-            <Setter Property="BorderBrush" Value="#7B9CFF"/>
+            <Setter Property="BorderBrush" Value="#8B2030"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#9BB4FF"/>
+                    <Setter Property="Background" Value="#B01020"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#8B2030"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="SyncButton" TargetType="Button" BasedOn="{StaticResource AppButton}">
-            <Setter Property="Background"  Value="#44663A"/>
-            <Setter Property="Foreground"  Value="#50FA7B"/>
-            <Setter Property="BorderBrush" Value="#50FA7B"/>
+            <Setter Property="Background"  Value="#1A3A6A"/>
+            <Setter Property="Foreground"  Value="#2E8BFF"/>
+            <Setter Property="BorderBrush" Value="#2E8BFF"/>
             <Setter Property="FontWeight"  Value="SemiBold"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#557A49"/>
+                    <Setter Property="Background" Value="#1E4A8A"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#1A3A6A"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="AppTextBox" TargetType="TextBox">
-            <Setter Property="Background"        Value="#1E1E2E"/>
-            <Setter Property="Foreground"        Value="#F8F8F2"/>
-            <Setter Property="BorderBrush"       Value="#44446A"/>
+            <Setter Property="Background"        Value="#0D1520"/>
+            <Setter Property="Foreground"        Value="#F0F4FF"/>
+            <Setter Property="BorderBrush"       Value="#213A58"/>
             <Setter Property="BorderThickness"   Value="1"/>
             <Setter Property="Padding"           Value="8,6"/>
             <Setter Property="FontSize"          Value="12"/>
-            <Setter Property="CaretBrush"        Value="#7B9CFF"/>
-            <Setter Property="SelectionBrush"    Value="#4B4B70"/>
+            <Setter Property="CaretBrush"        Value="#2E8BFF"/>
+            <Setter Property="SelectionBrush"    Value="#243558"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
@@ -1336,7 +1364,7 @@ Target : $($result.TargetPath)
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter Property="BorderBrush" Value="#7B9CFF"/>
+                                <Setter Property="BorderBrush" Value="#2E8BFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -1346,7 +1374,7 @@ Target : $($result.TargetPath)
 
         <Style x:Key="FileListItem" TargetType="ListBoxItem">
             <Setter Property="Background"  Value="Transparent"/>
-            <Setter Property="Foreground"  Value="#F8F8F2"/>
+            <Setter Property="Foreground"  Value="#F0F4FF"/>
             <Setter Property="Padding"     Value="10,7"/>
             <Setter Property="Margin"      Value="2,1"/>
             <Setter Property="Template">
@@ -1358,10 +1386,11 @@ Target : $($result.TargetPath)
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#3A3A55"/>
+                                <Setter Property="Background" Value="#1D2E48"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#4B4B70"/>
+                                <Setter Property="Background" Value="#162238"/>
+                                <Setter Property="BorderBrush" Value="#2E8BFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -1375,14 +1404,14 @@ Target : $($result.TargetPath)
         </Style>
 
         <Style x:Key="MetaLabel" TargetType="TextBlock">
-            <Setter Property="Foreground"  Value="#6272A4"/>
+            <Setter Property="Foreground"  Value="#607090"/>
             <Setter Property="FontSize"    Value="10"/>
             <Setter Property="FontWeight"  Value="SemiBold"/>
             <Setter Property="Margin"      Value="0,0,0,2"/>
         </Style>
 
         <Style x:Key="MetaValue" TargetType="TextBlock">
-            <Setter Property="Foreground"    Value="#A0A0C0"/>
+            <Setter Property="Foreground"    Value="#A8BDD8"/>
             <Setter Property="FontSize"      Value="12"/>
             <Setter Property="Margin"        Value="0,0,0,10"/>
             <Setter Property="TextWrapping"  Value="Wrap"/>
@@ -1397,7 +1426,7 @@ Target : $($result.TargetPath)
         </Grid.RowDefinitions>
 
         <!-- TITLE BAR -->
-        <Border Grid.Row="0" Background="#252537" BorderBrush="#44446A" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="#111C2E" BorderBrush="#213A58" BorderThickness="0,0,0,1">
             <Grid Margin="16,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -1406,11 +1435,11 @@ Target : $($result.TargetPath)
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="[*]" FontSize="20" Foreground="#7B9CFF" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="[*]" FontSize="20" Foreground="#2E8BFF" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <TextBlock Text="Script Management Browser" FontSize="16" FontWeight="Bold"
-                               Foreground="#F8F8F2" VerticalAlignment="Center"/>
+                               Foreground="#F0F4FF" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TxtVersionBadge" Text=" v1.0.0.0"
-                               FontSize="11" Foreground="#44446A" VerticalAlignment="Center"/>
+                               FontSize="11" Foreground="#1A2D48" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -1423,9 +1452,9 @@ Target : $($result.TargetPath)
                     <Button x:Name="BtnSettings" Style="{StaticResource AppButton}"
                             Content="[=] Settings"
                             ToolTip="Configure repository path and SharePoint settings" Margin="0,0,8,0"/>
-                    <Border Width="1" Background="#44446A" Margin="4,8"/>
+                    <Border Width="1" Background="#213A58" Margin="4,8"/>
                     <TextBlock x:Name="TxtConnectionStatus" Text="[G] Git Repo"
-                               Foreground="#6272A4" VerticalAlignment="Center" FontSize="11" Margin="8,0,0,0"/>
+                               Foreground="#607090" VerticalAlignment="Center" FontSize="11" Margin="8,0,0,0"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -1439,7 +1468,7 @@ Target : $($result.TargetPath)
             </Grid.ColumnDefinitions>
 
             <!-- LEFT PANEL -->
-            <Border Grid.Column="0" Background="#252537" BorderBrush="#44446A" BorderThickness="0,0,1,0">
+            <Border Grid.Column="0" Background="#111C2E" BorderBrush="#213A58" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -1449,17 +1478,17 @@ Target : $($result.TargetPath)
                     </Grid.RowDefinitions>
 
                     <!-- Search -->
-                    <Border Grid.Row="0" Margin="10,10,10,6" Background="#1E1E2E"
-                            BorderBrush="#44446A" BorderThickness="1" CornerRadius="6">
+                    <Border Grid.Row="0" Margin="10,10,10,6" Background="#0D1520"
+                            BorderBrush="#213A58" BorderThickness="1" CornerRadius="6">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox x:Name="TxtSearch" Grid.Column="0"
-                                     Background="Transparent" Foreground="#F8F8F2"
+                                     Background="Transparent" Foreground="#F0F4FF"
                                      BorderThickness="0" Padding="10,8"
-                                     FontSize="13" CaretBrush="#7B9CFF"
+                                     FontSize="13" CaretBrush="#2E8BFF"
                                      VerticalAlignment="Center">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -1470,7 +1499,7 @@ Target : $($result.TargetPath)
                                                         <VisualBrush Stretch="None" AlignmentX="Left">
                                                             <VisualBrush.Visual>
                                                                 <TextBlock Text="Search files, tags, comments..."
-                                                                           Foreground="#6272A4" FontSize="13" Padding="10,8"/>
+                                                                           Foreground="#607090" FontSize="13" Padding="10,8"/>
                                                             </VisualBrush.Visual>
                                                         </VisualBrush>
                                                     </Setter.Value>
@@ -1482,14 +1511,14 @@ Target : $($result.TargetPath)
                             </TextBox>
                             <Button x:Name="BtnClearSearch" Grid.Column="1" Content="X"
                                     Background="Transparent" BorderThickness="0"
-                                    Foreground="#6272A4" Padding="8,0" Cursor="Hand"
+                                    Foreground="#607090" Padding="8,0" Cursor="Hand"
                                     VerticalAlignment="Center" FontSize="12"/>
                         </Grid>
                     </Border>
 
                     <!-- View mode toggle -->
-                    <Border Grid.Row="1" Margin="10,0,10,8" Background="#1E1E2E"
-                            BorderBrush="#44446A" BorderThickness="1" CornerRadius="6">
+                    <Border Grid.Row="1" Margin="10,0,10,8" Background="#0D1520"
+                            BorderBrush="#213A58" BorderThickness="1" CornerRadius="6">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -1497,7 +1526,7 @@ Target : $($result.TargetPath)
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Button x:Name="BtnViewAlpha" Grid.Column="0" Content="A-Z"
-                                    Background="#4B4B70" Foreground="#F8F8F2"
+                                    Background="#C0404A" Foreground="#F0F4FF"
                                     BorderThickness="0" Padding="0,6"
                                     FontSize="11" Cursor="Hand" FontWeight="SemiBold">
                                 <Button.Template>
@@ -1510,7 +1539,7 @@ Target : $($result.TargetPath)
                                 </Button.Template>
                             </Button>
                             <Button x:Name="BtnViewFolder" Grid.Column="1" Content="[/] Folder"
-                                    Background="Transparent" Foreground="#A0A0C0"
+                                    Background="Transparent" Foreground="#A8BDD8"
                                     BorderThickness="0" Padding="0,6"
                                     FontSize="11" Cursor="Hand">
                                 <Button.Template>
@@ -1521,14 +1550,14 @@ Target : $($result.TargetPath)
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#3A3A55"/>
+                                                <Setter Property="Background" Value="#1D2E48"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Button.Template>
                             </Button>
                             <Button x:Name="BtnViewTag" Grid.Column="2" Content="[#] Tags"
-                                    Background="Transparent" Foreground="#A0A0C0"
+                                    Background="Transparent" Foreground="#A8BDD8"
                                     BorderThickness="0" Padding="0,6"
                                     FontSize="11" Cursor="Hand">
                                 <Button.Template>
@@ -1539,7 +1568,7 @@ Target : $($result.TargetPath)
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#3A3A55"/>
+                                                <Setter Property="Background" Value="#1D2E48"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -1571,9 +1600,9 @@ Target : $($result.TargetPath)
                                                        VerticalAlignment="Center"/>
                                             <StackPanel Grid.Column="1">
                                                 <TextBlock Text="{Binding Name}" FontSize="12"
-                                                           Foreground="#F8F8F2" TextTrimming="CharacterEllipsis"/>
+                                                           Foreground="#F0F4FF" TextTrimming="CharacterEllipsis"/>
                                                 <TextBlock Text="{Binding SubInfo}" FontSize="10"
-                                                           Foreground="#6272A4" TextTrimming="CharacterEllipsis"/>
+                                                           Foreground="#607090" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                         </Grid>
                                     </DataTemplate>
@@ -1586,7 +1615,7 @@ Target : $($result.TargetPath)
                                 <TreeView.Resources>
                                     <Style TargetType="TreeViewItem">
                                         <Setter Property="Background"  Value="Transparent"/>
-                                        <Setter Property="Foreground"  Value="#F8F8F2"/>
+                                        <Setter Property="Foreground"  Value="#F0F4FF"/>
                                         <Setter Property="IsExpanded"  Value="True"/>
                                     </Style>
                                 </TreeView.Resources>
@@ -1595,30 +1624,30 @@ Target : $($result.TargetPath)
                     </ScrollViewer>
 
                     <!-- File count footer -->
-                    <Border Grid.Row="3" Background="#1E1E2E" BorderBrush="#44446A"
+                    <Border Grid.Row="3" Background="#0D1520" BorderBrush="#213A58"
                             BorderThickness="0,1,0,0" Padding="10,6">
                         <TextBlock x:Name="TxtFileCount" Text="No files loaded"
-                                   Foreground="#6272A4" FontSize="11"/>
+                                   Foreground="#607090" FontSize="11"/>
                     </Border>
                 </Grid>
             </Border>
 
             <!-- Grid Splitter -->
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"
-                          Background="#2E2E45" Cursor="SizeWE"/>
+                          Background="#162238" Cursor="SizeWE"/>
 
             <!-- RIGHT PANEL -->
-            <Grid Grid.Column="2" Background="#1E1E2E">
+            <Grid Grid.Column="2" Background="#0D1520">
 
                 <!-- Empty state -->
                 <StackPanel x:Name="PanelEmpty" VerticalAlignment="Center" HorizontalAlignment="Center">
                     <TextBlock Text="[*]" FontSize="64" HorizontalAlignment="Center"
-                               Foreground="#3A3A55"/>
+                               Foreground="#162238"/>
                     <TextBlock Text="Select a script to view details" FontSize="16"
-                               Foreground="#44446A" HorizontalAlignment="Center" Margin="0,16,0,8"/>
+                               Foreground="#213A58" HorizontalAlignment="Center" Margin="0,16,0,8"/>
                     <TextBlock x:Name="TxtEmptyHint"
                                Text="Open your Git repository to get started"
-                               FontSize="12" Foreground="#3A3A55" HorizontalAlignment="Center"/>
+                               FontSize="12" Foreground="#1A2D48" HorizontalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Detail panel -->
@@ -1636,9 +1665,9 @@ Target : $($result.TargetPath)
                         </Grid.RowDefinitions>
 
                         <!-- File Header -->
-                        <Border Grid.Row="0" Background="#252537" CornerRadius="8"
+                        <Border Grid.Row="0" Background="#111C2E" CornerRadius="8"
                                 Padding="20,16" Margin="0,0,0,16"
-                                BorderBrush="#44446A" BorderThickness="1">
+                                BorderBrush="#213A58" BorderThickness="1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -1646,17 +1675,17 @@ Target : $($result.TargetPath)
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <Border Grid.Column="0" Width="50" Height="50"
-                                        Background="#2E2E45" CornerRadius="8" Margin="0,0,16,0">
+                                        Background="#162238" CornerRadius="8" Margin="0,0,16,0">
                                     <TextBlock x:Name="TxtFileIcon" Text="PS1" FontSize="14"
                                                FontWeight="Bold" HorizontalAlignment="Center"
-                                               VerticalAlignment="Center" Foreground="#BD93F9"/>
+                                               VerticalAlignment="Center" Foreground="#4A8FD4"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock x:Name="TxtDetailName" Text="filename.ps1"
-                                               FontSize="18" FontWeight="Bold" Foreground="#F8F8F2"
+                                               FontSize="18" FontWeight="Bold" Foreground="#F0F4FF"
                                                TextTrimming="CharacterEllipsis"/>
                                     <TextBlock x:Name="TxtDetailPath" Text="/path/to/file.ps1"
-                                               FontSize="11" Foreground="#6272A4" Margin="0,4,0,0"
+                                               FontSize="11" Foreground="#607090" Margin="0,4,0,0"
                                                TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                                 <Button x:Name="BtnRename" Grid.Column="2"
@@ -1677,8 +1706,8 @@ Target : $($result.TargetPath)
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <Border Grid.Column="0" Background="#252537" CornerRadius="6"
-                                    Padding="14,12" BorderBrush="#44446A" BorderThickness="1">
+                            <Border Grid.Column="0" Background="#111C2E" CornerRadius="6"
+                                    Padding="14,12" BorderBrush="#213A58" BorderThickness="1">
                                 <StackPanel>
                                     <TextBlock Text="CREATED"      Style="{StaticResource MetaLabel}"/>
                                     <TextBlock x:Name="TxtMetaCreated" Text="-" Style="{StaticResource MetaValue}"/>
@@ -1687,8 +1716,8 @@ Target : $($result.TargetPath)
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="2" Background="#252537" CornerRadius="6"
-                                    Padding="14,12" BorderBrush="#44446A" BorderThickness="1">
+                            <Border Grid.Column="2" Background="#111C2E" CornerRadius="6"
+                                    Padding="14,12" BorderBrush="#213A58" BorderThickness="1">
                                 <StackPanel>
                                     <TextBlock Text="TYPE"         Style="{StaticResource MetaLabel}"/>
                                     <TextBlock x:Name="TxtMetaType" Text="-" Style="{StaticResource MetaValue}"/>
@@ -1697,8 +1726,8 @@ Target : $($result.TargetPath)
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="4" Background="#252537" CornerRadius="6"
-                                    Padding="14,12" BorderBrush="#44446A" BorderThickness="1">
+                            <Border Grid.Column="4" Background="#111C2E" CornerRadius="6"
+                                    Padding="14,12" BorderBrush="#213A58" BorderThickness="1">
                                 <StackPanel>
                                     <TextBlock Text="FOLDER"       Style="{StaticResource MetaLabel}"/>
                                     <TextBlock x:Name="TxtMetaFolder" Text="-" Style="{StaticResource MetaValue}"
@@ -1708,8 +1737,8 @@ Target : $($result.TargetPath)
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="6" Background="#252537" CornerRadius="6"
-                                    Padding="14,12" BorderBrush="#44446A" BorderThickness="1">
+                            <Border Grid.Column="6" Background="#111C2E" CornerRadius="6"
+                                    Padding="14,12" BorderBrush="#213A58" BorderThickness="1">
                                 <StackPanel>
                                     <TextBlock Text="SHAREPOINT URL" Style="{StaticResource MetaLabel}"/>
                                     <TextBlock x:Name="TxtMetaSpUrl" Text="-"
@@ -1721,9 +1750,9 @@ Target : $($result.TargetPath)
                         </Grid>
 
                         <!-- Action Buttons -->
-                        <Border Grid.Row="2" Background="#252537" CornerRadius="8"
+                        <Border Grid.Row="2" Background="#111C2E" CornerRadius="8"
                                 Padding="16,12" Margin="0,0,0,16"
-                                BorderBrush="#44446A" BorderThickness="1">
+                                BorderBrush="#213A58" BorderThickness="1">
                             <StackPanel Orientation="Horizontal">
                                 <Button x:Name="BtnOpenVSCode"  Style="{StaticResource AccentButton}"
                                         Content="[VS] Open in VSCode" Margin="0,0,8,0"
@@ -1731,7 +1760,7 @@ Target : $($result.TargetPath)
                                 <Button x:Name="BtnLoadContent" Style="{StaticResource AppButton}"
                                         Content="[L] Load Content" Margin="0,0,8,0"
                                         ToolTip="Load file content for preview and metadata editing"/>
-                                <Border Width="1" Background="#44446A" Margin="4,4"/>
+                                <Border Width="1" Background="#213A58" Margin="4,4"/>
                                 <Button x:Name="BtnCopyPath"    Style="{StaticResource AppButton}"
                                         Content="Copy Local Path" Margin="8,0,8,0"
                                         ToolTip="Copy full local filesystem path to clipboard"/>
@@ -1742,16 +1771,16 @@ Target : $($result.TargetPath)
                         </Border>
 
                         <!-- Comment Section -->
-                        <Border Grid.Row="3" Background="#252537" CornerRadius="8"
+                        <Border Grid.Row="3" Background="#111C2E" CornerRadius="8"
                                 Padding="16,14" Margin="0,0,0,12"
-                                BorderBrush="#44446A" BorderThickness="1">
+                                BorderBrush="#213A58" BorderThickness="1">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <TextBlock Text="[C]" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="COMMENT" FontSize="11" FontWeight="SemiBold"
-                                               Foreground="#6272A4" VerticalAlignment="Center"/>
+                                               Foreground="#607090" VerticalAlignment="Center"/>
                                     <TextBlock Text=" — stored as  ##SCRIPTMGMT#COMMENT#  in file"
-                                               FontSize="10" Foreground="#44446A" VerticalAlignment="Center"/>
+                                               FontSize="10" Foreground="#213A58" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBox x:Name="TxtComment" Style="{StaticResource AppTextBox}"
                                          Height="80" TextWrapping="Wrap" AcceptsReturn="True"
@@ -1759,68 +1788,68 @@ Target : $($result.TargetPath)
                                          VerticalContentAlignment="Top"
                                          Text="" FontFamily="Consolas" FontSize="12"/>
                                 <TextBlock Text="Multi-line supported. Load file content first to see existing comments."
-                                           FontSize="10" Foreground="#44446A" Margin="0,6,0,0"/>
+                                           FontSize="10" Foreground="#607090" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Tags Section -->
-                        <Border Grid.Row="4" Background="#252537" CornerRadius="8"
+                        <Border Grid.Row="4" Background="#111C2E" CornerRadius="8"
                                 Padding="16,14" Margin="0,0,0,12"
-                                BorderBrush="#44446A" BorderThickness="1">
+                                BorderBrush="#213A58" BorderThickness="1">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <TextBlock Text="[#]" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="TAGS" FontSize="11" FontWeight="SemiBold"
-                                               Foreground="#6272A4" VerticalAlignment="Center"/>
+                                               Foreground="#607090" VerticalAlignment="Center"/>
                                     <TextBlock Text=" — stored as  ##SCRIPTMGMT#TAGS#  in file"
-                                               FontSize="10" Foreground="#44446A" VerticalAlignment="Center"/>
+                                               FontSize="10" Foreground="#213A58" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBox x:Name="TxtTags" Style="{StaticResource AppTextBox}"
                                          Height="36" VerticalContentAlignment="Center"
                                          Text="" FontFamily="Consolas" FontSize="12"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                    <TextBlock Text="Quick add:" FontSize="10" Foreground="#6272A4"
+                                    <TextBlock Text="Quick add:" FontSize="10" Foreground="#607090"
                                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                                     <Button x:Name="BtnTagAutomation"  Content="automation"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
-                                            Foreground="#BD93F9" BorderBrush="#BD93F9" Margin="0,0,6,0"/>
+                                            Foreground="#4A8FD4" BorderBrush="#4A8FD4" Margin="0,0,6,0"/>
                                     <Button x:Name="BtnTagMaintenance" Content="maintenance"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
-                                            Foreground="#50FA7B" BorderBrush="#50FA7B" Margin="0,0,6,0"/>
+                                            Foreground="#22C55E" BorderBrush="#22C55E" Margin="0,0,6,0"/>
                                     <Button x:Name="BtnTagDeploy"      Content="deployment"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
-                                            Foreground="#FFB86C" BorderBrush="#FFB86C" Margin="0,0,6,0"/>
+                                            Foreground="#E8A020" BorderBrush="#E8A020" Margin="0,0,6,0"/>
                                     <Button x:Name="BtnTagMonitor"     Content="monitoring"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
-                                            Foreground="#FF79C6" BorderBrush="#FF79C6" Margin="0,0,6,0"/>
+                                            Foreground="#A8BDD8" BorderBrush="#A8BDD8" Margin="0,0,6,0"/>
                                     <Button x:Name="BtnTagSecurity"    Content="security"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
-                                            Foreground="#FF5555" BorderBrush="#FF5555" Margin="0,0,6,0"/>
+                                            Foreground="#C84040" BorderBrush="#C84040" Margin="0,0,6,0"/>
                                     <Button x:Name="BtnTagUtil"        Content="utility"
                                             Style="{StaticResource AppButton}" Padding="8,3" FontSize="10"
-                                            Foreground="#8BE9FD" BorderBrush="#8BE9FD"/>
+                                            Foreground="#2E8BFF" BorderBrush="#2E8BFF"/>
                                 </StackPanel>
                                 <TextBlock Text="Comma-separated. Load file content first to see existing tags."
-                                           FontSize="10" Foreground="#44446A" Margin="0,6,0,0"/>
+                                           FontSize="10" Foreground="#607090" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Border>
 
                         <!-- File Content Preview -->
-                        <Border Grid.Row="5" Background="#252537" CornerRadius="8"
+                        <Border Grid.Row="5" Background="#111C2E" CornerRadius="8"
                                 Padding="16,14" Margin="0,0,0,12"
-                                BorderBrush="#44446A" BorderThickness="1">
+                                BorderBrush="#213A58" BorderThickness="1">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <TextBlock Text="[F]" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="FILE PREVIEW" FontSize="11" FontWeight="SemiBold"
-                                               Foreground="#6272A4" VerticalAlignment="Center"/>
+                                               Foreground="#607090" VerticalAlignment="Center"/>
                                     <TextBlock x:Name="TxtPreviewNote"
                                                Text=" — click 'Load Content' above"
-                                               FontSize="10" Foreground="#44446A" VerticalAlignment="Center"/>
+                                               FontSize="10" Foreground="#607090" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBox x:Name="TxtFileContent"
-                                         Background="#1E1E2E" Foreground="#F8F8F2"
-                                         BorderBrush="#44446A" BorderThickness="1"
+                                         Background="#060E1A" Foreground="#F0F4FF"
+                                         BorderBrush="#213A58" BorderThickness="1"
                                          Padding="12,10" FontFamily="Consolas" FontSize="11"
                                          Height="250" TextWrapping="NoWrap" AcceptsReturn="True"
                                          IsReadOnly="True" VerticalScrollBarVisibility="Auto"
@@ -1837,7 +1866,7 @@ Target : $($result.TargetPath)
                                         Content="[Save] Save Comment &amp; Tags to File"
                                         Padding="16,10" FontSize="13" Margin="0,0,10,0"/>
                                 <TextBlock x:Name="TxtSaveStatus" VerticalAlignment="Center"
-                                           Foreground="#50FA7B" FontSize="12" Text=""/>
+                                           Foreground="#22C55E" FontSize="12" Text=""/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -1846,7 +1875,7 @@ Target : $($result.TargetPath)
         </Grid>
 
         <!-- STATUS BAR -->
-        <Border Grid.Row="2" Background="#252537" BorderBrush="#44446A" BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Background="#111C2E" BorderBrush="#213A58" BorderThickness="0,1,0,0">
             <Grid Margin="16,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -1854,23 +1883,23 @@ Target : $($result.TargetPath)
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="TxtStatus"    Grid.Column="0"
                            Text="Ready. Configure settings and open your Git repository."
-                           Foreground="#6272A4" VerticalAlignment="Center" FontSize="11"/>
+                           Foreground="#607090" VerticalAlignment="Center" FontSize="11"/>
                 <TextBlock x:Name="TxtCacheInfo" Grid.Column="1"
-                           Foreground="#44446A" VerticalAlignment="Center" FontSize="11"/>
+                           Foreground="#607090" VerticalAlignment="Center" FontSize="11"/>
             </Grid>
         </Border>
 
         <!-- Loading Overlay -->
         <Border x:Name="LoadingOverlay" Grid.RowSpan="3"
-                Background="#CC1E1E2E" Visibility="Collapsed">
+                Background="#CC0D1520" Visibility="Collapsed">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock x:Name="TxtLoadingMsg" Text="Working..."
-                           FontSize="18" Foreground="#F8F8F2" HorizontalAlignment="Center"/>
+                           FontSize="18" Foreground="#F0F4FF" HorizontalAlignment="Center"/>
                 <TextBlock x:Name="TxtLoadingSubMsg" Text=""
-                           FontSize="12" Foreground="#A0A0C0" HorizontalAlignment="Center"
+                           FontSize="12" Foreground="#A8BDD8" HorizontalAlignment="Center"
                            Margin="0,8,0,0" TextWrapping="Wrap" MaxWidth="400" TextAlignment="Center"/>
-                <Border Width="200" Height="4" Background="#3A3A55" CornerRadius="2" Margin="0,20,0,0">
-                    <Border x:Name="ProgressBar" Width="0" Height="4" Background="#7B9CFF"
+                <Border Width="200" Height="4" Background="#1D2E48" CornerRadius="2" Margin="0,20,0,0">
+                    <Border x:Name="ProgressBar" Width="0" Height="4" Background="#2E8BFF"
                             CornerRadius="2" HorizontalAlignment="Left">
                         <Border.Triggers>
                             <EventTrigger RoutedEvent="Border.Loaded">
@@ -1962,7 +1991,7 @@ Target : $($result.TargetPath)
     # UI HELPERS
     # ==========================================================================
     function Set-Status {
-        param([string]$Message, [string]$Color = "#6272A4")
+        param([string]$Message, [string]$Color = "#607090")
         $TxtStatus.Dispatcher.Invoke({
             $TxtStatus.Text       = $Message
             $TxtStatus.Foreground = $Color
@@ -2012,11 +2041,11 @@ Target : $($result.TargetPath)
         foreach ($key in $map.Keys) {
             $btn = $map[$key]
             if ($key -eq $Active) {
-                $btn.Background = "#4B4B70"
-                $btn.Foreground = "#F8F8F2"
+                $btn.Background = "#C0404A"
+                $btn.Foreground = "#F0F4FF"
             } else {
                 $btn.Background = "Transparent"
-                $btn.Foreground = "#A0A0C0"
+                $btn.Foreground = "#A8BDD8"
             }
         }
     }
@@ -2201,10 +2230,10 @@ Target : $($result.TargetPath)
         $ext = $File.Extension.ToLower()
         if ($ext -eq ".ps1") {
             $TxtFileIcon.Text       = "PS1"
-            $TxtFileIcon.Foreground = "#BD93F9"
+            $TxtFileIcon.Foreground = "#4A8FD4"
         } else {
             $TxtFileIcon.Text       = "BAT"
-            $TxtFileIcon.Foreground = "#FFB86C"
+            $TxtFileIcon.Foreground = "#E8A020"
         }
 
         $TxtDetailName.Text  = $File.Name
@@ -2297,7 +2326,7 @@ Target : $($result.TargetPath)
             $script:SelectedFile.TagsRaw     = ($tags -join ",")
             $TxtFileContent.Text             = $newContent
             $TxtSaveStatus.Text              = "[OK] Saved $(Get-Date -Format 'h:mmtt')"
-            $TxtSaveStatus.Foreground        = "#50FA7B"
+            $TxtSaveStatus.Foreground        = "#22C55E"
             Set-Status "Saved metadata to: $($script:SelectedFile.Name)" "#50FA7B"
             Write-AppLog "Metadata saved: $($script:SelectedFile.FileRef)"
             Save-GitCache $script:AllFiles
@@ -2321,7 +2350,7 @@ Target : $($result.TargetPath)
         $dlg.Height                = 175
         $dlg.WindowStartupLocation = "CenterOwner"
         $dlg.Owner                 = $Window
-        $dlg.Background            = "#252537"
+        $dlg.Background            = "#111C2E"
         $dlg.ResizeMode            = "NoResize"
 
         $sp         = [System.Windows.Controls.StackPanel]::new()
@@ -2330,18 +2359,18 @@ Target : $($result.TargetPath)
 
         $lbl            = [System.Windows.Controls.TextBlock]::new()
         $lbl.Text       = "Enter new filename (include extension):"
-        $lbl.Foreground = "#A0A0C0"
+        $lbl.Foreground = "#A8BDD8"
         $lbl.FontSize   = 12
         $lbl.Margin     = [System.Windows.Thickness]::new(0,0,0,8)
         $sp.Children.Add($lbl)
 
         $tb             = [System.Windows.Controls.TextBox]::new()
         $tb.Text        = $script:SelectedFile.Name
-        $tb.Background  = "#1E1E2E"
-        $tb.Foreground  = "#F8F8F2"
+        $tb.Background  = "#0D1520"
+        $tb.Foreground  = "#F0F4FF"
         $tb.FontSize    = 13
         $tb.Padding     = [System.Windows.Thickness]::new(8,6,8,6)
-        $tb.BorderBrush = "#7B9CFF"
+        $tb.BorderBrush = "#2E8BFF"
         $tb.Margin      = [System.Windows.Thickness]::new(0,0,0,16)
         $sp.Children.Add($tb)
         $tb.SelectAll()
@@ -2356,16 +2385,16 @@ Target : $($result.TargetPath)
         $btnOk.Width      = 80
         $btnOk.Height     = 32
         $btnOk.Margin     = [System.Windows.Thickness]::new(0,0,8,0)
-        $btnOk.Background = "#7B9CFF"
-        $btnOk.Foreground = "#1E1E2E"
+        $btnOk.Background = "#C0404A"
+        $btnOk.Foreground = "#F0F4FF"
         $btnOk.FontWeight = "SemiBold"
 
         $btnCancel            = [System.Windows.Controls.Button]::new()
         $btnCancel.Content    = "Cancel"
         $btnCancel.Width      = 80
         $btnCancel.Height     = 32
-        $btnCancel.Background = "#3A3A55"
-        $btnCancel.Foreground = "#F8F8F2"
+        $btnCancel.Background = "#1D2E48"
+        $btnCancel.Foreground = "#F0F4FF"
 
         $btnRow.Children.Add($btnOk)
         $btnRow.Children.Add($btnCancel)
@@ -2547,7 +2576,7 @@ Target : $($result.TargetPath)
             Save-GitCache $script:AllFiles
 
             $TxtConnectionStatus.Text       = "[G] Git Repo"
-            $TxtConnectionStatus.Foreground = "#50FA7B"
+            $TxtConnectionStatus.Foreground = "#22C55E"
             $BtnRefresh.IsEnabled           = $true
             $TxtCacheInfo.Text              = "Last scan: $(Get-Date -Format 'h:mmtt')"
 
@@ -2571,7 +2600,7 @@ Target : $($result.TargetPath)
             $script:AllFiles = $cache.Files
 
             $TxtConnectionStatus.Text       = "[G] Git Repo (cached)"
-            $TxtConnectionStatus.Foreground = "#FFB86C"
+            $TxtConnectionStatus.Foreground = "#E8A020"
             $BtnRefresh.IsEnabled           = $true
 
             $age    = [datetime]::Now - $cache.Timestamp
