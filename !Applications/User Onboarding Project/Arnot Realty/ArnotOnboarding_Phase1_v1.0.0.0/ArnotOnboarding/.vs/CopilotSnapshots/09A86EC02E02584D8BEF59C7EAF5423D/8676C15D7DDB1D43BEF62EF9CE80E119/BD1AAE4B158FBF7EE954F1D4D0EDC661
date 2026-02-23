@@ -1,4 +1,4 @@
-// =============================================================
+﻿// =============================================================
 // ArnotOnboarding — WizardView.Designer.cs  v1.0.0.0
 // =============================================================
 namespace ArnotOnboarding.Views
@@ -16,8 +16,11 @@ namespace ArnotOnboarding.Views
         private System.Windows.Forms.Button _btnSaveClose;
         private System.Windows.Forms.Label  _lblSaved;
 
-        // Designer Dispose moved to the main partial class so custom cleanup
-        // (in WizardView.cs) can run alongside disposing generated components.
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && components != null) components.Dispose();
+            base.Dispose(disposing);
+        }
 
         private void InitializeComponent()
         {

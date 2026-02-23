@@ -1,4 +1,4 @@
-// =============================================================
+﻿// =============================================================
 // ArnotOnboarding — WizardPageBase.cs
 // Version    : 1.0.0.0
 // Author     : Sam Kirsch
@@ -25,7 +25,7 @@ namespace ArnotOnboarding.Views.WizardPages
         public abstract string PageTitle { get; }
         public abstract void   LoadData(OnboardingRecord record);
         public abstract OnboardingRecord SaveData(OnboardingRecord record);
-        public new virtual string Validate() { return null; } // Most pages have no required fields
+        public virtual  string Validate() { return null; } // Most pages have no required fields
 
         public event EventHandler DataChanged;
 

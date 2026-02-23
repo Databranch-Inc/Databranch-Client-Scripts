@@ -1,4 +1,4 @@
-// =============================================================
+﻿// =============================================================
 // ArnotOnboarding — WizardView.cs
 // Version    : 1.0.0.0
 // Author     : Sam Kirsch
@@ -345,7 +345,6 @@ namespace ArnotOnboarding.Views
             {
                 _autoSave?.FlushNow(); // Save anything pending before destroying
                 _autoSave?.Dispose();
-                if (components != null) components.Dispose();
             }
             base.Dispose(disposing);
         }

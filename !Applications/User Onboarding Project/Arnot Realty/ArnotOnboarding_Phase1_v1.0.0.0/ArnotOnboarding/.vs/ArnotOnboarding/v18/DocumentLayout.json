@@ -1,7 +1,20 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\GitHubRepos\\Databranch-Client-Scripts\\!Applications\\User Onboarding Project\\Arnot Realty\\ArnotOnboarding_Phase1_v1.0.0.0\\ArnotOnboarding\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|ArnotOnboarding\\ArnotOnboarding.csproj|c:\\githubrepos\\databranch-client-scripts\\!applications\\user onboarding project\\arnot realty\\arnotonboarding_phase1_v1.0.0.0\\arnotonboarding\\arnotonboarding\\views\\wizardpages\\wizardpagebase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|ArnotOnboarding\\ArnotOnboarding.csproj|solutionrelative:arnotonboarding\\views\\wizardpages\\wizardpagebase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|ArnotOnboarding\\ArnotOnboarding.csproj|C:\\GitHubRepos\\Databranch-Client-Scripts\\!Applications\\User Onboarding Project\\Arnot Realty\\ArnotOnboarding_Phase1_v1.0.0.0\\ArnotOnboarding\\arnotonboarding\\views\\wizardview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|ArnotOnboarding\\ArnotOnboarding.csproj|solutionrelative:arnotonboarding\\views\\wizardview.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|ArnotOnboarding\\ArnotOnboarding.csproj|C:\\GitHubRepos\\Databranch-Client-Scripts\\!Applications\\User Onboarding Project\\Arnot Realty\\ArnotOnboarding_Phase1_v1.0.0.0\\ArnotOnboarding\\arnotonboarding\\views\\wizardview.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|ArnotOnboarding\\ArnotOnboarding.csproj|solutionrelative:arnotonboarding\\views\\wizardview.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -9,11 +22,48 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 0,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "WizardPageBase.cs",
+              "DocumentMoniker": "C:\\GitHubRepos\\Databranch-Client-Scripts\\!Applications\\User Onboarding Project\\Arnot Realty\\ArnotOnboarding_Phase1_v1.0.0.0\\ArnotOnboarding\\ArnotOnboarding\\Views\\WizardPages\\WizardPageBase.cs",
+              "RelativeDocumentMoniker": "ArnotOnboarding\\Views\\WizardPages\\WizardPageBase.cs",
+              "ToolTip": "C:\\GitHubRepos\\Databranch-Client-Scripts\\!Applications\\User Onboarding Project\\Arnot Realty\\ArnotOnboarding_Phase1_v1.0.0.0\\ArnotOnboarding\\ArnotOnboarding\\Views\\WizardPages\\WizardPageBase.cs",
+              "RelativeToolTip": "ArnotOnboarding\\Views\\WizardPages\\WizardPageBase.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAUwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-23T06:27:26.586Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "WizardView.cs",
+              "DocumentMoniker": "C:\\GitHubRepos\\Databranch-Client-Scripts\\!Applications\\User Onboarding Project\\Arnot Realty\\ArnotOnboarding_Phase1_v1.0.0.0\\ArnotOnboarding\\ArnotOnboarding\\Views\\WizardView.cs",
+              "RelativeDocumentMoniker": "ArnotOnboarding\\Views\\WizardView.cs",
+              "ToolTip": "C:\\GitHubRepos\\Databranch-Client-Scripts\\!Applications\\User Onboarding Project\\Arnot Realty\\ArnotOnboarding_Phase1_v1.0.0.0\\ArnotOnboarding\\ArnotOnboarding\\Views\\WizardView.cs",
+              "RelativeToolTip": "ArnotOnboarding\\Views\\WizardView.cs",
+              "ViewState": "AgIAAEYBAAAAAAAAAAApwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-23T06:26:57.345Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "WizardView.Designer.cs",
+              "DocumentMoniker": "C:\\GitHubRepos\\Databranch-Client-Scripts\\!Applications\\User Onboarding Project\\Arnot Realty\\ArnotOnboarding_Phase1_v1.0.0.0\\ArnotOnboarding\\ArnotOnboarding\\Views\\WizardView.Designer.cs",
+              "RelativeDocumentMoniker": "ArnotOnboarding\\Views\\WizardView.Designer.cs",
+              "ToolTip": "C:\\GitHubRepos\\Databranch-Client-Scripts\\!Applications\\User Onboarding Project\\Arnot Realty\\ArnotOnboarding_Phase1_v1.0.0.0\\ArnotOnboarding\\ArnotOnboarding\\Views\\WizardView.Designer.cs",
+              "RelativeToolTip": "ArnotOnboarding\\Views\\WizardView.Designer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAhwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-23T06:26:50.545Z"
             }
           ]
         }

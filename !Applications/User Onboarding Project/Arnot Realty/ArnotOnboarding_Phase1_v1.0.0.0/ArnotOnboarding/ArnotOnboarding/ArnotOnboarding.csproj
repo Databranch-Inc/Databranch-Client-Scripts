@@ -34,11 +34,27 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MigraDoc.DocumentObjectModel-gdi, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp-MigraDoc-gdi.1.50.5147\lib\net20\MigraDoc.DocumentObjectModel-gdi.dll</HintPath>
+    </Reference>
+    <Reference Include="MigraDoc.Rendering-gdi, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp-MigraDoc-gdi.1.50.5147\lib\net20\MigraDoc.Rendering-gdi.dll</HintPath>
+    </Reference>
+    <Reference Include="MigraDoc.RtfRendering-gdi, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp-MigraDoc-gdi.1.50.5147\lib\net20\MigraDoc.RtfRendering-gdi.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp-gdi, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp-MigraDoc-gdi.1.50.5147\lib\net20\PdfSharp-gdi.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp.Charting-gdi, Version=1.50.5147.0, Culture=neutral, PublicKeyToken=f94615aa0424f9eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\PDFsharp-MigraDoc-gdi.1.50.5147\lib\net20\PdfSharp.Charting-gdi.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Newtonsoft.Json">
@@ -113,20 +129,48 @@
     </Compile>
     <!-- Wizard Pages -->
     <Compile Include="Views\WizardPages\IWizardPage.cs" />
-    <Compile Include="Views\WizardPages\WizardPageBase.cs" />
-    <Compile Include="Views\WizardPages\Page01_EmployeeName.cs" />
-    <Compile Include="Views\WizardPages\Page02_Scheduling.cs" />
-    <Compile Include="Views\WizardPages\Page03_UserInformation.cs" />
-    <Compile Include="Views\WizardPages\Page04_RequestorInfo.cs" />
-    <Compile Include="Views\WizardPages\Page05_AccountSetup.cs" />
-    <Compile Include="Views\WizardPages\Page06_EmailSetup.cs" />
-    <Compile Include="Views\WizardPages\Page07_Applications.cs" />
-    <Compile Include="Views\WizardPages\Page08_ComputerSetup.cs" />
-    <Compile Include="Views\WizardPages\Page09_RemoteAccess.cs" />
-    <Compile Include="Views\WizardPages\Page10_SoftwareAccess.cs" />
-    <Compile Include="Views\WizardPages\Page11_AdditionalAccess.cs" />
-    <Compile Include="Views\WizardPages\Page12_PhoneMobile.cs" />
-    <Compile Include="Views\WizardPages\Page13_MiscNotes.cs" />
+    <Compile Include="Views\WizardPages\WizardPageBase.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page01_EmployeeName.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page02_Scheduling.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page03_UserInformation.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page04_RequestorInfo.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page05_AccountSetup.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page06_EmailSetup.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page07_Applications.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page08_ComputerSetup.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page09_RemoteAccess.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page10_SoftwareAccess.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page11_AdditionalAccess.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page12_PhoneMobile.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardPages\Page13_MiscNotes.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <!-- Utilities -->
     <Compile Include="Utilities\PathHelper.cs" />
     <Compile Include="Utilities\AutoSaveTimer.cs" />
