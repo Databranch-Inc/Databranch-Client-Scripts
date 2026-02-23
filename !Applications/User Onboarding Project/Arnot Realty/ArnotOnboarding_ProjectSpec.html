@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arnot Onboarding App — Project Specification</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+  :root {
+    --brand-red:          #B01020;
+    --brand-red-muted:    #8B2030;
+    --brand-red-soft:     #C0404A;
+    --brand-red-pale:     #D07080;
+    --brand-blue-bright:  #2E8BFF;
+    --brand-blue-muted:   #2A5FA8;
+    --brand-blue-pale:    #4A8FD4;
+    --brand-blue-dim:     #1A3A6A;
+
+    --surface-void:       #080C14;
+    --surface-base:       #0D1520;
+    --surface-raised:     #111C2E;
+    --surface-card:       #162238;
+    --surface-elevated:   #1D2E48;
+    --surface-overlay:    #243558;
+    --surface-high:       #2C3F68;
+
+    --text-primary:       #F0F4FF;
+    --text-secondary:     #A8BDD8;
+    --text-muted:         #607090;
+    --text-dim:           #3A5070;
+    --text-inverse:       #080C14;
+
+    --border-subtle:      #1A2D48;
+    --border-default:     #213A58;
+    --border-mid:         #2A4A70;
+    --border-accent-blue: #1E6ABF;
+    --border-accent-red:  #8B2030;
+
+    --status-success:     #22C55E;
+    --status-success-bg:  #0A2818;
+    --status-success-bd:  #1A5030;
+    --status-warn:        #E8A020;
+    --status-warn-bg:     #1E1800;
+    --status-warn-bd:     #6A4800;
+    --status-error:       #C84040;
+    --status-info:        #2E8BFF;
+    --status-info-bg:     #091828;
+    --status-info-bd:     #1A3A6A;
+
+    --code-bg:            #060E1A;
+    --code-text:          #7DD3FC;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--surface-base);
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--surface-raised);
+    border-right: 1px solid var(--border-default);
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .sidebar-logo .company {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand-red-soft);
+    margin-bottom: 4px;
+  }
+
+  .sidebar-logo .doc-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  .sidebar-logo .doc-ver {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 20px 24px 6px;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 7px 24px 7px 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all 0.15s ease;
+    line-height: 1.4;
+  }
+
+  .nav-link:hover {
+    color: var(--text-secondary);
+    background: var(--surface-elevated);
+    border-left-color: var(--border-mid);
+  }
+
+  .nav-link.active {
+    color: var(--text-primary);
+    background: var(--surface-card);
+    border-left-color: var(--brand-red-soft);
+    font-weight: 500;
+  }
+
+  .nav-link.sub {
+    padding-left: 36px;
+    font-size: 12px;
+  }
+
+  .main {
+    margin-left: 260px;
+    flex: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content {
+    max-width: 920px;
+    padding: 48px 56px;
+    flex: 1;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    background: linear-gradient(135deg, var(--surface-void) 0%, var(--surface-base) 40%, #0E1E38 100%);
+    border-bottom: 1px solid var(--border-default);
+    padding: 56px 56px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(176,16,32,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: 200px;
+    width: 400px; height: 200px;
+    background: radial-gradient(ellipse, rgba(46,139,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cover-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--brand-red-soft);
+    margin-bottom: 14px;
+  }
+
+  .cover h1 {
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .cover-subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+  }
+
+  .cover-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    overflow: hidden;
+    max-width: 720px;
+  }
+
+  .cover-meta-item {
+    padding: 12px 18px;
+    border-right: 1px solid var(--border-default);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .cover-meta-item:last-child { border-right: none; }
+
+  .cover-meta-item .label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 3px;
+  }
+
+  .cover-meta-item .value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── Sections ── */
+  .section {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .section:last-child { border-bottom: none; }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h1::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border-mid), transparent);
+  }
+
+  h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand-blue-bright);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 28px 0 10px;
+  }
+
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand-red-pale);
+    margin: 20px 0 8px;
+  }
+
+  p {
+    margin-bottom: 14px;
+    color: var(--text-secondary);
+  }
+
+  p:last-child { margin-bottom: 0; }
+
+  a { color: var(--brand-blue-bright); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Tables ── */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    border-radius: 6px;
+    border: 1px solid var(--border-default);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead tr {
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--border-mid);
+  }
+
+  thead th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--surface-raised); }
+  tbody tr:hover { background: var(--surface-elevated); }
+
+  tbody td {
+    padding: 10px 16px;
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  tbody td:first-child {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  code.inline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  /* ── Milestone Cards ── */
+  .milestone-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .milestone-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-left: 4px solid var(--border-accent-blue);
+    border-radius: 6px;
+    padding: 20px 24px;
+  }
+
+  .milestone-card.phase-1 { border-left-color: var(--brand-red-soft); }
+  .milestone-card.phase-2 { border-left-color: var(--brand-blue-bright); }
+  .milestone-card.phase-3 { border-left-color: var(--status-warn); }
+  .milestone-card.phase-4 { border-left-color: var(--status-success); }
+  .milestone-card.phase-5 { border-left-color: var(--brand-red-pale); }
+  .milestone-card.phase-6 { border-left-color: var(--brand-blue-pale); }
+
+  .milestone-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .milestone-phase {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .milestone-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .milestone-badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-todo { background: var(--surface-elevated); color: var(--text-muted); border: 1px solid var(--border-mid); }
+  .badge-inprogress { background: var(--status-info-bg); color: var(--status-info); border: 1px solid var(--status-info-bd); }
+  .badge-done { background: var(--status-success-bg); color: var(--status-success); border: 1px solid var(--status-success-bd); }
+
+  .task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .task-list li {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+
+  .task-list li::before {
+    content: '○';
+    color: var(--text-dim);
+    font-size: 11px;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+
+  .task-list li.done::before {
+    content: '●';
+    color: var(--status-success);
+  }
+
+  .task-list li strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* ── Callouts ── */
+  .callout {
+    display: flex;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 6px;
+    border: 1px solid;
+    margin: 20px 0;
+  }
+
+  .callout.info {
+    background: var(--status-info-bg);
+    border-color: var(--status-info-bd);
+  }
+
+  .callout.warn {
+    background: var(--status-warn-bg);
+    border-color: var(--status-warn-bd);
+  }
+
+  .callout.success {
+    background: var(--status-success-bg);
+    border-color: var(--status-success-bd);
+  }
+
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  .callout-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .callout.info .callout-label { color: var(--status-info); }
+  .callout.warn .callout-label { color: var(--status-warn); }
+  .callout.success .callout-label { color: var(--status-success); }
+
+  .callout-text {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ── Wizard page list ── */
+  .wizard-page {
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .wizard-page-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .page-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--brand-blue-dim);
+    border: 1px solid var(--brand-blue-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--brand-blue-bright);
+    flex-shrink: 0;
+  }
+
+  .wizard-page-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  .wizard-page-source {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-dim);
+  }
+
+  .wizard-page-body {
+    padding: 12px 18px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .wizard-page-body ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 6px;
+  }
+
+  .wizard-page-body ul li::before {
+    content: '▸ ';
+    color: var(--brand-blue-pale);
+    font-size: 10px;
+  }
+
+  /* ── File/path blocks ── */
+  .path-block {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    color: var(--code-text);
+    border: 1px solid var(--border-subtle);
+    border-radius: 5px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    line-height: 1.8;
+  }
+
+  .path-block .comment {
+    color: #3A6A50;
+  }
+
+  /* ── Open questions ── */
+  .oq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .oq-item {
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: 5px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .oq-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--status-warn);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── Stack badge row ── */
+  .stack-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 0;
+  }
+
+  .stack-badge {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+
+  .stack-badge.blue {
+    background: var(--status-info-bg);
+    color: var(--brand-blue-bright);
+    border-color: var(--status-info-bd);
+  }
+
+  .stack-badge.red {
+    background: var(--status-error-bg, #200A0A);
+    color: var(--brand-red-soft);
+    border-color: var(--brand-red-muted);
+  }
+
+  .stack-badge.green {
+    background: var(--status-success-bg);
+    color: var(--status-success);
+    border-color: var(--status-success-bd);
+  }
+
+  .stack-badge.muted {
+    background: var(--surface-raised);
+    color: var(--text-muted);
+    border-color: var(--border-default);
+  }
+
+  /* ── Footer ── */
+  .doc-footer {
+    margin-left: 260px;
+    background: var(--surface-raised);
+    border-top: 1px solid var(--border-default);
+    padding: 16px 56px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .doc-footer { margin-left: 0; }
+    .content { padding: 24px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ── SIDEBAR ── -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="company">Databranch</div>
+    <div class="doc-title">Arnot Onboarding App<br>Project Specification</div>
+    <div class="doc-ver">v1.0.0.0 · Feb 2026</div>
+  </div>
+
+  <div class="nav-section-label">Overview</div>
+  <a href="#overview" class="nav-link active">Project Overview</a>
+  <a href="#stack" class="nav-link">Technology Stack</a>
+  <a href="#architecture" class="nav-link">Architecture</a>
+  <a href="#data-model" class="nav-link">Data Model & Files</a>
+
+  <div class="nav-section-label">Application</div>
+  <a href="#app-structure" class="nav-link">App Structure</a>
+  <a href="#wizard" class="nav-link">Wizard Pages</a>
+  <a href="#ui-design" class="nav-link">UI Design System</a>
+
+  <div class="nav-section-label">Planning</div>
+  <a href="#milestones" class="nav-link">Milestones & Tasks</a>
+  <a href="#open-questions" class="nav-link">Open Questions</a>
+  <a href="#future" class="nav-link">Future / Multi-Customer</a>
+  <a href="#conventions" class="nav-link">Conventions</a>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+<!-- Cover -->
+<div class="cover">
+  <div class="cover-eyebrow">Databranch — Internal Application Project</div>
+  <h1>Arnot Realty Onboarding App</h1>
+  <div class="cover-subtitle">Project Specification & Milestone Reference · v1.0.0.0</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="label">Author</div>
+      <div class="value">Sam Kirsch</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Client</div>
+      <div class="value">Arnot Realty</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Created</div>
+      <div class="value">2026-02-22</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Version</div>
+      <div class="value">1.0.0.0</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Stack</div>
+      <div class="value">C# / WinForms</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Target</div>
+      <div class="value">.NET Framework 4.8</div>
+    </div>
+  </div>
+</div>
+
+<!-- Content -->
+<div class="content">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="overview">
+  <h1>Project Overview</h1>
+
+  <p>This application streamlines the process by which Arnot Realty staff submit new employee onboarding requests to Databranch. Rather than filling out a Word document and emailing it, the requestor runs a guided wizard that collects all required information, saves it to a network share as a structured PDF + JSON pair, and maintains an indexed library of all onboarding records.</p>
+
+  <p>The application is designed for Arnot Realty as the initial client, but its architecture must support rapid reconfiguration for other Databranch MSP clients. Customer-specific data (form fields, email domain, branding, network paths) is externalized into a configuration layer so a new customer profile can be applied without recompiling.</p>
+
+  <h2>Core Goals</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Goal</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Guided Wizard</td><td>Multi-page step-by-step interview covering all fields from the Arnot New User IT Request Form</td></tr>
+        <tr><td>Auto-Save & Recovery</td><td>All field changes write immediately to a local draft JSON; no data lost on crash or unexpected close</td></tr>
+        <tr><td>In-Progress Management</td><td>Named draft onboardings can be saved and resumed at any time</td></tr>
+        <tr><td>Finalize & Export</td><td>Produces a formatted PDF matching the original form layout + a companion JSON on the network share</td></tr>
+        <tr><td>Record Library</td><td>App maintains an indexed reference of all exported onboardings for search and review</td></tr>
+        <tr><td>Edit Past Records</td><td>Finalized records can be re-opened, edited (with file locking), and re-exported</td></tr>
+        <tr><td>Multi-Client Ready</td><td>Customer profile/config layer allows rapid adaptation for other clients</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Non-Goals (v1.0)</h2>
+  <p>The engineer-facing automation tool that consumes the JSON is explicitly out of scope for this version. The JSON schema is designed to support it in the future. No web or cloud components. No Active Directory integration in this app (that belongs in the engineer tool).</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="stack">
+  <h1>Technology Stack</h1>
+
+  <div class="stack-row">
+    <span class="stack-badge blue">C# · Windows Forms</span>
+    <span class="stack-badge blue">.NET Framework 4.8</span>
+    <span class="stack-badge blue">Visual Studio Community</span>
+    <span class="stack-badge green">Standalone EXE output</span>
+    <span class="stack-badge muted">PdfSharp (NuGet)</span>
+    <span class="stack-badge muted">Newtonsoft.Json (NuGet)</span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>Technology</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr><td>UI Framework</td><td>Windows Forms (.NET 4.8)</td><td>Broadest Windows compatibility, easy standalone EXE, no installer needed</td></tr>
+        <tr><td>PDF Export</td><td>PdfSharp 1.5x</td><td>Free, no Office dependency, programmatic PDF layout control, MIT license</td></tr>
+        <tr><td>JSON Serialization</td><td>Newtonsoft.Json</td><td>Industry standard, human-readable output, easy schema versioning</td></tr>
+        <tr><td>Local Config</td><td>JSON file via Newtonsoft</td><td>Settings, paths, requestor profile stored in <code class="inline">%AppData%\Databranch\ArnotOnboarding\</code></td></tr>
+        <tr><td>Draft Storage</td><td>Local JSON files</td><td><code class="inline">%AppData%\Databranch\ArnotOnboarding\Drafts\</code> — survives crashes, independent of network</td></tr>
+        <tr><td>Export Storage</td><td>Mapped network drive</td><td>PDF + JSON written to configurable UNC/mapped path on finalization</td></tr>
+        <tr><td>Record Index</td><td>Local JSON index file</td><td>App-maintained manifest of all exported records with metadata for fast lookup</td></tr>
+        <tr><td>File Locking</td><td><code class="inline">.lock</code> sidecar file</td><td>Dropped next to network JSON when opened for editing; contains locking user + machine + timestamp</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">ℹ</div>
+    <div class="callout-body">
+      <div class="callout-label">NuGet Packages</div>
+      <div class="callout-text">Two NuGet packages are required: <code class="inline">PdfSharp</code> (v1.50.5147 or latest stable) and <code class="inline">Newtonsoft.Json</code> (v13.x). Both are free, widely used, and have no runtime dependencies beyond .NET 4.8. The compiled EXE can be published as a single-file executable using ILMerge or by publishing with embedded dependencies.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="architecture">
+  <h1>Architecture</h1>
+
+  <h2>High-Level Component Map</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><strong>MainShell</strong></td><td>Top-level form. Navigation sidebar, view host panel, title bar branding. All views load inside this shell.</td></tr>
+        <tr><td><strong>WizardView</strong></td><td>Multi-page panel controller. Hosts individual WizardPage user controls. Manages Back/Next navigation, progress indicator, auto-save trigger.</td></tr>
+        <tr><td><strong>WizardPage (×13)</strong></td><td>One UserControl per wizard page. Each page owns its fields and exposes a <code class="inline">GetPageData()</code> / <code class="inline">LoadPageData()</code> interface.</td></tr>
+        <tr><td><strong>DraftManager</strong></td><td>Reads/writes the local draft JSON on every field change. Maintains draft index. Handles recovery on launch.</td></tr>
+        <tr><td><strong>ExportManager</strong></td><td>Orchestrates finalization: validates data, writes PDF via PdfRenderer, writes JSON to network path, updates record index, cleans up draft.</td></tr>
+        <tr><td><strong>PdfRenderer</strong></td><td>Consumes the OnboardingRecord model and produces a formatted PDF that mirrors the original form layout using PdfSharp.</td></tr>
+        <tr><td><strong>LockManager</strong></td><td>Creates, checks, and releases <code class="inline">.lock</code> sidecar files on the network share. Surfaces locking user info in UI.</td></tr>
+        <tr><td><strong>RecordLibrary</strong></td><td>View for browsing, searching, and opening finalized onboarding records. Reads from the local index file.</td></tr>
+        <tr><td><strong>SettingsView</strong></td><td>Configure network export path, app behavior, manage index file, reset drafts.</td></tr>
+        <tr><td><strong>RequestorView</strong></td><td>Manage the current user's contact info that pre-fills the Requestor page of the wizard.</td></tr>
+        <tr><td><strong>OnboardingRecord</strong></td><td>Central data model (C# class). All wizard fields map to properties here. Serializes cleanly to/from JSON.</td></tr>
+        <tr><td><strong>CustomerProfile</strong></td><td>Config object defining customer-specific values (name, email domain, network path template, form field visibility rules). Loaded from JSON config file.</td></tr>
+        <tr><td><strong>AppSettings</strong></td><td>Application-level settings persisted to <code class="inline">%AppData%</code>. Network path, window state, last-used records, etc.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>File System Layout</h2>
+  <div class="path-block">
+<span class="comment"># Local app data (per-user, survives without network)</span>
+%AppData%\Databranch\ArnotOnboarding\
+  ├── settings.json              <span class="comment"># AppSettings: network path, window prefs, etc.</span>
+  ├── requestor.json             <span class="comment"># Saved requestor profile (My Information)</span>
+  ├── customer-profile.json      <span class="comment"># Customer config (Arnot-specific field rules, email domain)</span>
+  ├── record-index.json          <span class="comment"># Manifest of all exported records (path, name, date, id)</span>
+  └── Drafts\
+        ├── {guid}_draft.json    <span class="comment"># One file per in-progress onboarding</span>
+        └── ...
+
+<span class="comment"># Network share (mapped drive, path configurable)</span>
+\\server\share\Onboarding\
+  ├── 2026\
+  │     └── {YYYY-MM-DD}_{LastName}_{FirstName}\
+  │           ├── {LastName}_{FirstName}_Onboarding.pdf
+  │           ├── {LastName}_{FirstName}_Onboarding.json
+  │           └── {LastName}_{FirstName}_Onboarding.json.lock  <span class="comment"># Present only while being edited</span>
+  └── ...
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="data-model">
+  <h1>Data Model & Files</h1>
+
+  <h2>OnboardingRecord JSON Schema (top-level)</h2>
+  <p>The JSON is the canonical source of truth. Both the PDF and the UI are generated from this model. Future engineer automation tools consume this file directly.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Section</th><th>Key Fields</th></tr></thead>
+      <tbody>
+        <tr><td>Meta</td><td><code class="inline">recordId</code>, <code class="inline">schemaVersion</code>, <code class="inline">status</code> (draft/finalized), <code class="inline">createdAt</code>, <code class="inline">finalizedAt</code>, <code class="inline">customerProfile</code></td></tr>
+        <tr><td>Requestor</td><td><code class="inline">requestorName</code>, <code class="inline">requestorTitle</code>, <code class="inline">requestorPhone</code>, <code class="inline">requestorEmail</code>, <code class="inline">requestorDate</code></td></tr>
+        <tr><td>Scheduling</td><td><code class="inline">startDate</code>, <code class="inline">appointmentDate</code>, <code class="inline">appointmentTime</code></td></tr>
+        <tr><td>UserInfo</td><td><code class="inline">firstName</code>, <code class="inline">lastName</code>, <code class="inline">title</code>, <code class="inline">department</code>, <code class="inline">directReportsTo</code>, <code class="inline">officeLocation</code>, <code class="inline">workPhone</code>, <code class="inline">cellPhone</code>, <code class="inline">emailAddress</code></td></tr>
+        <tr><td>AccountSetup</td><td><code class="inline">newAccount</code>, <code class="inline">modifyExisting</code>, <code class="inline">copyFromUser</code>, <code class="inline">domainUsername</code>, <code class="inline">initialPassword</code>, <code class="inline">passwordChangeRequired</code></td></tr>
+        <tr><td>Email</td><td><code class="inline">emailType</code>, <code class="inline">emailUsername</code>, <code class="inline">emailPassword</code>, <code class="inline">emailLicenseType</code>, <code class="inline">distributionLists</code>[], <code class="inline">sharedMailboxes</code>[], <code class="inline">calendarDelegates</code>[]</td></tr>
+        <tr><td>Applications</td><td><code class="inline">applications</code>[] — array of app names (checkboxes incl. Ironworks)</td></tr>
+        <tr><td>Computer</td><td><code class="inline">computerType</code> (new/existing), <code class="inline">existingComputerName</code>, <code class="inline">printers</code>[], <code class="inline">monitors</code> count, <code class="inline">monitorTypes</code>[]</td></tr>
+        <tr><td>RemoteAccess</td><td><code class="inline">vpnRequired</code>, <code class="inline">vpnType</code>, <code class="inline">remoteDesktopRequired</code></td></tr>
+        <tr><td>Phone</td><td><code class="inline">deskPhoneRequired</code>, <code class="inline">extension</code>, <code class="inline">phoneModel</code>, <code class="inline">voicemailSetup</code></td></tr>
+        <tr><td>Mobile</td><td><code class="inline">mobileDeviceType</code>, <code class="inline">mobileNumber</code>, <code class="inline">mobileCarrier</code>, <code class="inline">mdmEnrollment</code>, <code class="inline">mdmNote</code></td></tr>
+        <tr><td>Misc</td><td><code class="inline">miscNotes</code> — free text</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Schema Versioning</h2>
+  <p>Every JSON file includes <code class="inline">"schemaVersion": "1.0"</code>. When field changes require model updates, the version increments and the app includes a migration handler to upgrade older records on open.</p>
+
+  <h2>Lock File Format</h2>
+  <div class="path-block">
+{
+  "lockedBy": "Sam Kirsch",
+  "lockedByMachine": "DATABRANCH-SAM",
+  "lockedAt": "2026-02-22T14:33:00Z",
+  "recordId": "a1b2c3d4-..."
+}
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠</div>
+    <div class="callout-body">
+      <div class="callout-label">Stale Lock Handling</div>
+      <div class="callout-text">If a lock file is older than 2 hours, the app prompts the user: "This record appears locked by [Name] on [Machine] since [time]. That lock may be stale. Would you like to override it?" Overriding deletes the lock and allows editing. This prevents permanent lock-outs if the app crashes without cleanup.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="app-structure">
+  <h1>App Structure & Navigation</h1>
+
+  <p>The app uses a persistent left-side navigation shell (inspired by the Databranch design system) with a main content area that swaps views. The nav rail is always visible and provides one-click access to all major areas.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Nav Item</th><th>View</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>➕ New Onboarding</td><td>WizardView (new)</td><td>Starts a fresh wizard, prompts for employee name, initializes draft</td></tr>
+        <tr><td>📋 In Progress</td><td>DraftListView</td><td>List of all local drafts. Click to resume. Shows name + date started.</td></tr>
+        <tr><td>📁 Past Records</td><td>RecordLibraryView</td><td>Indexed list of all finalized exports. Search, filter by date. Open to review or edit.</td></tr>
+        <tr><td>👤 My Information</td><td>RequestorView</td><td>Edit the requestor profile that pre-fills wizard page 4</td></tr>
+        <tr><td>⚙ Settings</td><td>SettingsView</td><td>Network path, index management, customer profile, app options</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Wizard Navigation</h2>
+  <p>The wizard shows a horizontal progress bar or step indicator at the top displaying all pages with the current page highlighted. Left/Right arrow buttons and Back/Next labeled buttons both navigate. The wizard remembers the last active page when resuming a draft. Clicking a step indicator dot can jump directly to any previously visited page.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="wizard">
+  <h1>Wizard Pages</h1>
+  <p>Thirteen pages derived from the Arnot New User IT Request Form, grouped logically to limit cognitive load per screen. Form step numbers reference the original document.</p>
+
+  <div class="milestone-grid">
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">01</div>
+        <div class="wizard-page-title">Start — Employee Name</div>
+        <div class="wizard-page-source">Wizard Entry</div>
+      </div>
+      <div class="wizard-page-body">
+        Single field: Employee full name. Entering a name and clicking Next creates the draft JSON, saves the name and creation timestamp, and moves to page 2. This is the recovery anchor for in-progress sessions.
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">02</div>
+        <div class="wizard-page-title">Scheduling — Due Dates & Appointment</div>
+        <div class="wizard-page-source">Form: Header Section</div>
+      </div>
+      <div class="wizard-page-body">
+        <ul>
+          <li>Start date (DateTimePicker, date only)</li>
+          <li>Appointment date + time (DateTimePicker with time)</li>
+          <li>Optional notes field for scheduling context</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">03</div>
+        <div class="wizard-page-title">User Information</div>
+        <div class="wizard-page-source">Form: Steps 1–3</div>
+      </div>
+      <div class="wizard-page-body">
+        All text fields. First/Last name auto-populated from page 1 (editable). Email auto-generated as <code class="inline">firstInitialLastName@arnotrealty.com</code> with checkbox to override and type custom email. Fields: title, department, reports-to, office location, work phone, cell phone.
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">04</div>
+        <div class="wizard-page-title">Requestor Information</div>
+        <div class="wizard-page-source">Form: Requestor Block</div>
+      </div>
+      <div class="wizard-page-body">
+        Pre-filled from the saved Requestor Profile (My Information view). All fields editable inline for one-off customization without modifying the saved profile. Includes a "Reset to Saved Profile" button. Fields: name, title, phone, email, date.
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">05</div>
+        <div class="wizard-page-title">Account Setup — Domain & Credentials</div>
+        <div class="wizard-page-source">Form: Steps 4–7</div>
+      </div>
+      <div class="wizard-page-body">
+        <ul>
+          <li>Step 4: New account / Modify existing — <strong>checkboxes</strong> (both can be true)</li>
+          <li>Step 5: Copy permissions from existing user — <strong>radio button</strong> (Yes/No)</li>
+          <li>Step 6: Copy from which user — text field (visible when Step 5 = Yes)</li>
+          <li>Step 7a: Domain username — text, auto-suggested from name (editable)</li>
+          <li>Step 7b: Initial password — plain text field (no masking per spec)</li>
+          <li>Step 7c: Force password change on first login — <strong>radio button</strong> (Yes/No)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">06</div>
+        <div class="wizard-page-title">Email Setup</div>
+        <div class="wizard-page-source">Form: Step 8</div>
+      </div>
+      <div class="wizard-page-body">
+        <ul>
+          <li>Step 8a: Email address — linked to page 3 email field (editing either updates both)</li>
+          <li>Step 8b: Email password — plain text</li>
+          <li>Step 8c: License type — text field</li>
+          <li>Step 8d: New or existing mailbox — <strong>radio button</strong></li>
+          <li>Distribution lists, shared mailboxes, calendar delegates — scrollable multi-line text boxes (one entry per line), vertically resizable within the form</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">07</div>
+        <div class="wizard-page-title">Applications</div>
+        <div class="wizard-page-source">Form: Step 9</div>
+      </div>
+      <div class="wizard-page-body">
+        Full list of available applications as checkboxes. Includes all items from the original form plus <strong>Ironworks</strong> (added per spec). Applications are loaded from the customer profile config so new apps can be added without recompiling.
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">08</div>
+        <div class="wizard-page-title">Computer Setup</div>
+        <div class="wizard-page-source">Form: Steps 10–14</div>
+      </div>
+      <div class="wizard-page-body">
+        <ul>
+          <li>Step 10: New or existing computer — <strong>radio button</strong></li>
+          <li>Step 12b: Existing computer name — text field (shown when existing selected)</li>
+          <li>Step 13a: Printer(s) — text field</li>
+          <li>Step 14c: Monitor count (1 or 2) — <strong>radio button</strong></li>
+          <li>Monitor type per monitor — separate radio button set per monitor (second set appears when count = 2)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">09</div>
+        <div class="wizard-page-title">Remote Access & VPN</div>
+        <div class="wizard-page-source">Form: Steps 15–16</div>
+      </div>
+      <div class="wizard-page-body">
+        <ul>
+          <li>Step 15a: VPN required — <strong>radio button</strong> (Yes/No)</li>
+          <li>Step 15b: VPN username — single text field</li>
+          <li>Step 15c: VPN type — <strong>radio button</strong> group</li>
+          <li>Step 15d: Monitor config per monitor count (second radio set appears conditionally)</li>
+          <li>Step 16: Remote Desktop — checkboxes</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">10</div>
+        <div class="wizard-page-title">Software & Access Rights</div>
+        <div class="wizard-page-source">Form: Steps 17–18</div>
+      </div>
+      <div class="wizard-page-body">
+        Steps 17a and 18a: Multi-select checkbox lists for software access and rights. Ironworks included here as well per spec. Groups presented with clear section labels.
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">11</div>
+        <div class="wizard-page-title">Additional Access & Security</div>
+        <div class="wizard-page-source">Form: Steps 19–20</div>
+      </div>
+      <div class="wizard-page-body">
+        All checkboxes. Two groups presented side-by-side or stacked depending on count. Clear section headers per original form groupings.
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">12</div>
+        <div class="wizard-page-title">Office Telephone & Mobile Device</div>
+        <div class="wizard-page-source">Form: Steps 21–31</div>
+      </div>
+      <div class="wizard-page-body">
+        <ul>
+          <li>Office phone section: extension, phone model, voicemail setup (checkboxes)</li>
+          <li>Email distribution/shared mailbox/calendar lists: scrollable text areas (Steps 21a, 22a, 25a)</li>
+          <li>Mobile: device type, number (separate field), carrier (separate field), split from original combined fields</li>
+          <li>Step 31: MDM enrollment — Yes/No radio, note displayed: <em>"Christina usually handles this. Databranch engineer only under special circumstances."</em></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="wizard-page">
+      <div class="wizard-page-header">
+        <div class="page-num">13</div>
+        <div class="wizard-page-title">Miscellaneous Notes & Finalize</div>
+        <div class="wizard-page-source">Form: Misc Section</div>
+      </div>
+      <div class="wizard-page-body">
+        Large multi-line text box for free-form notes. Below it: two action buttons — <strong>Save &amp; Close</strong> (drafts already saved, just closes the wizard) and <strong>Finalize &amp; Export</strong> (triggers path picker dialog, PDF generation, network write, index update, draft cleanup).
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="ui-design">
+  <h1>UI Design System</h1>
+
+  <p>All UI styling follows the Databranch Design System as defined in <code class="inline">Databranch_UIDesignSpec.html</code>. The WinForms implementation translates the CSS design tokens into C# <code class="inline">Color</code> constants and applied via <code class="inline">BackColor</code>, <code class="inline">ForeColor</code>, and custom-painted controls where needed.</p>
+
+  <h2>Color Palette (WinForms Translations)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Token</th><th>Hex</th><th>WinForms Usage</th></tr></thead>
+      <tbody>
+        <tr><td>surface-base</td><td><code class="inline">#0D1520</code></td><td>Form background, main shell BackColor</td></tr>
+        <tr><td>surface-raised</td><td><code class="inline">#111C2E</code></td><td>Navigation panel, sidebar BackColor</td></tr>
+        <tr><td>surface-card</td><td><code class="inline">#162238</code></td><td>Panel/GroupBox backgrounds, wizard page area</td></tr>
+        <tr><td>surface-elevated</td><td><code class="inline">#1D2E48</code></td><td>Hover state, active panel highlight</td></tr>
+        <tr><td>brand-red-soft</td><td><code class="inline">#C0404A</code></td><td>Primary action buttons (Finalize, Next), active nav indicator</td></tr>
+        <tr><td>brand-blue-bright</td><td><code class="inline">#2E8BFF</code></td><td>Secondary buttons, links, focus rings, headings</td></tr>
+        <tr><td>text-primary</td><td><code class="inline">#F0F4FF</code></td><td>Labels, headings, important field text</td></tr>
+        <tr><td>text-secondary</td><td><code class="inline">#A8BDD8</code></td><td>Body text, field values</td></tr>
+        <tr><td>text-muted</td><td><code class="inline">#607090</code></td><td>Placeholder text, helper labels, metadata</td></tr>
+        <tr><td>status-success</td><td><code class="inline">#22C55E</code></td><td>Success messages, completion indicators</td></tr>
+        <tr><td>status-warn</td><td><code class="inline">#E8A020</code></td><td>Lock warnings, validation warnings</td></tr>
+        <tr><td>status-error</td><td><code class="inline">#C84040</code></td><td>Validation errors, failure states</td></tr>
+        <tr><td>border-default</td><td><code class="inline">#213A58</code></td><td>Panel borders, GroupBox borders, TextBox borders</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">ℹ</div>
+    <div class="callout-body">
+      <div class="callout-label">WinForms Dark Mode Note</div>
+      <div class="callout-text">Standard WinForms controls don't fully support dark theming. A static color constants class (<code class="inline">AppColors</code>) will be defined at project start. Custom-painted controls (nav sidebar, progress steps) will use <code class="inline">OnPaint</code> overrides. Standard controls (TextBox, CheckBox, RadioButton) will have BackColor/ForeColor set in a central <code class="inline">ThemeHelper.ApplyTheme(Control)</code> method called on form load.</div>
+    </div>
+  </div>
+
+  <h2>Typography</h2>
+  <p>IBM Plex Sans is not available as a WinForms system font by default. The application will use <strong>Segoe UI</strong> as the primary font (closest match available on all Windows 10/11 systems) with <strong>Consolas</strong> for monospace/code elements (file paths, version numbers, usernames). Font sizes: headings 14–16pt, body 10pt, labels 9pt.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="milestones">
+  <h1>Milestones & Task Tracker</h1>
+
+  <div class="callout success">
+    <div class="callout-icon">✅</div>
+    <div class="callout-body">
+      <div class="callout-label">How to use this tracker</div>
+      <div class="callout-text">This document is the living reference. At the start of each build session, paste this spec into the conversation for context alignment. Tasks marked ○ are to-do; ● are done. Request a spec update whenever a phase completes or decisions change.</div>
+    </div>
+  </div>
+
+  <div class="milestone-grid">
+
+    <div class="milestone-card phase-1">
+      <div class="milestone-header">
+        <div class="milestone-phase">Phase 1</div>
+        <div class="milestone-title">Project Foundation & Shell</div>
+        <span class="milestone-badge badge-todo">To Do</span>
+      </div>
+      <ul class="task-list">
+        <li>Create Visual Studio solution: <code class="inline">ArnotOnboarding.sln</code> with WinForms (.NET 4.8) project</li>
+        <li>Add NuGet packages: PdfSharp, Newtonsoft.Json</li>
+        <li>Define <code class="inline">AppColors</code> static class with all design token constants</li>
+        <li>Build <code class="inline">MainShell</code> form: nav rail, content panel host, title bar</li>
+        <li>Implement <code class="inline">ThemeHelper.ApplyTheme()</code> for dark mode control styling</li>
+        <li>Stub all five nav views as placeholder panels (no logic yet)</li>
+        <li>Implement nav rail: click to swap active view, active indicator styling</li>
+        <li>Define <code class="inline">OnboardingRecord</code> model class with all fields</li>
+        <li>Define <code class="inline">AppSettings</code>, <code class="inline">RequestorProfile</code>, <code class="inline">CustomerProfile</code> model classes</li>
+        <li>Implement <code class="inline">AppSettingsManager</code>: load/save to <code class="inline">%AppData%</code> JSON</li>
+      </ul>
+    </div>
+
+    <div class="milestone-card phase-2">
+      <div class="milestone-header">
+        <div class="milestone-phase">Phase 2</div>
+        <div class="milestone-title">Draft System & Auto-Save</div>
+        <span class="milestone-badge badge-todo">To Do</span>
+      </div>
+      <ul class="task-list">
+        <li>Implement <code class="inline">DraftManager</code>: create, update, load, delete draft JSON files</li>
+        <li>Implement draft index (list of in-progress records with name, GUID, created date)</li>
+        <li>Build <code class="inline">DraftListView</code>: shows all local drafts, resume/delete actions</li>
+        <li>Implement auto-save trigger: field <code class="inline">TextChanged</code> / <code class="inline">CheckedChanged</code> events → debounced save (500ms)</li>
+        <li>Implement startup recovery check: if unsaved draft detected on launch, offer to resume</li>
+      </ul>
+    </div>
+
+    <div class="milestone-card phase-3">
+      <div class="milestone-header">
+        <div class="milestone-phase">Phase 3</div>
+        <div class="milestone-title">Wizard — All 13 Pages</div>
+        <span class="milestone-badge badge-todo">To Do</span>
+      </div>
+      <ul class="task-list">
+        <li>Build <code class="inline">WizardView</code> controller: page host, Back/Next, step indicator progress bar</li>
+        <li>Define <code class="inline">IWizardPage</code> interface: <code class="inline">GetPageData()</code>, <code class="inline">LoadPageData()</code>, <code class="inline">Validate()</code></li>
+        <li><strong>Page 01</strong>: Employee name entry, draft initialization on Next</li>
+        <li><strong>Page 02</strong>: DateTimePicker controls for start date, appointment date + time</li>
+        <li><strong>Page 03</strong>: User info fields, auto-populate name + email, override checkbox</li>
+        <li><strong>Page 04</strong>: Requestor info pre-fill from profile, inline edit, reset button</li>
+        <li><strong>Page 05</strong>: Account setup — checkboxes, radio buttons, conditional fields</li>
+        <li><strong>Page 06</strong>: Email setup — linked email field, scrollable list text areas</li>
+        <li><strong>Page 07</strong>: Applications checkboxes from customer profile config</li>
+        <li><strong>Page 08</strong>: Computer setup — radio buttons, conditional computer name field, monitor config</li>
+        <li><strong>Page 09</strong>: Remote access — VPN radio buttons, conditional username field</li>
+        <li><strong>Page 10</strong>: Software & access rights checkboxes (Steps 17–18)</li>
+        <li><strong>Page 11</strong>: Additional access checkboxes (Steps 19–20)</li>
+        <li><strong>Page 12</strong>: Office phone + mobile device fields, MDM note</li>
+        <li><strong>Page 13</strong>: Misc notes text area, Save &amp; Close / Finalize &amp; Export buttons</li>
+        <li>Wire all pages to auto-save on field change</li>
+      </ul>
+    </div>
+
+    <div class="milestone-card phase-4">
+      <div class="milestone-header">
+        <div class="milestone-phase">Phase 4</div>
+        <div class="milestone-title">Export — PDF & JSON to Network</div>
+        <span class="milestone-badge badge-todo">To Do</span>
+      </div>
+      <ul class="task-list">
+        <li>Implement <code class="inline">PdfRenderer</code>: PdfSharp-based layout matching original form design</li>
+        <li>Implement <code class="inline">ExportManager</code>: path picker dialog, folder naming convention, write PDF + JSON</li>
+        <li>Implement <code class="inline">RecordIndexManager</code>: update local index manifest on export</li>
+        <li>Draft cleanup on successful finalization (delete local draft file + index entry)</li>
+        <li>Handle export to inaccessible network path (graceful error, retain draft)</li>
+        <li>Test PDF output against original form for field coverage parity</li>
+      </ul>
+    </div>
+
+    <div class="milestone-card phase-5">
+      <div class="milestone-header">
+        <div class="milestone-phase">Phase 5</div>
+        <div class="milestone-title">Record Library & File Locking</div>
+        <span class="milestone-badge badge-todo">To Do</span>
+      </div>
+      <ul class="task-list">
+        <li>Build <code class="inline">RecordLibraryView</code>: searchable list from index, date filter, open/review actions</li>
+        <li>Implement <code class="inline">LockManager</code>: create lock on edit open, release on close/save, stale lock detection (2hr threshold)</li>
+        <li>Edit flow: open finalized record → check lock → load into wizard (edit mode) → re-export on finalize → release lock</li>
+        <li>Read-only preview mode for locked records (view PDF or field summary without editing)</li>
+        <li>Stale lock override dialog with user/machine/time info</li>
+      </ul>
+    </div>
+
+    <div class="milestone-card phase-6">
+      <div class="milestone-header">
+        <div class="milestone-phase">Phase 6</div>
+        <div class="milestone-title">Settings, Requestor Profile & Polish</div>
+        <span class="milestone-badge badge-todo">To Do</span>
+      </div>
+      <ul class="task-list">
+        <li>Build <code class="inline">SettingsView</code>: network path config, test connection button, index file management</li>
+        <li>Build <code class="inline">RequestorView</code>: edit and save requestor profile to local JSON</li>
+        <li>Validate all wizard fields with inline error display (red border + tooltip)</li>
+        <li>Add keyboard navigation: Tab order, Enter to advance, Escape to go back</li>
+        <li>Add About/version dialog</li>
+        <li>Polish: loading indicators, success toasts, empty state messages</li>
+        <li>End-to-end test: full onboarding from scratch → export → find in library → edit → re-export</li>
+        <li>Build release EXE (ILMerge or self-contained publish)</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="open-questions">
+  <h1>Open Questions</h1>
+  <p>The following decisions need your input before or during the relevant build phase. They do not block Phase 1.</p>
+
+  <div class="oq-list">
+    <div class="oq-item">
+      <div class="oq-num">OQ-01</div>
+      <div><strong>Network path:</strong> Do you have a specific UNC path or mapped drive letter already in use at Arnot for storing documents like this? This will inform the Settings default value and path validation logic.</div>
+    </div>
+    <div class="oq-item">
+      <div class="oq-num">OQ-02</div>
+      <div><strong>In-progress vs. network drafts:</strong> Confirmed approach is local <code class="inline">%AppData%</code> for drafts. Is there any need for in-progress drafts to also sync to the network (for use on another machine), or is strictly local fine?</div>
+    </div>
+    <div class="oq-item">
+      <div class="oq-num">OQ-03</div>
+      <div><strong>Multi-client architecture:</strong> One EXE per customer (recompile with new config) or one EXE that loads a customer profile at runtime from a JSON file? Runtime switching is more flexible; compiled-per-client allows tighter branding. Which do you prefer?</div>
+    </div>
+    <div class="oq-item">
+      <div class="oq-num">OQ-04</div>
+      <div><strong>Requestor identity:</strong> Is the requestor always a single person (one profile), or do multiple Arnot staff share the app and need separate requestor profiles? This affects whether "My Information" is single-profile or a selectable list.</div>
+    </div>
+    <div class="oq-item">
+      <div class="oq-num">OQ-05</div>
+      <div><strong>Application list (Page 7):</strong> Please supply the full list of applications from the original form (the Word doc text wasn't fully parseable from the upload). This will populate the customer profile config for Arnot.</div>
+    </div>
+    <div class="oq-item">
+      <div class="oq-num">OQ-06</div>
+      <div><strong>PDF branding:</strong> Should the exported PDF include the Databranch logo, Arnot Realty logo, or both? And should it look exactly like the original Word form, or is a cleaner formatted version acceptable?</div>
+    </div>
+    <div class="oq-item">
+      <div class="oq-num">OQ-07</div>
+      <div><strong>ILMerge vs. self-contained:</strong> For the final EXE, do you want a single EXE with all dependencies merged (ILMerge, slightly larger file) or is copying the EXE + DLLs to a shared folder acceptable? Single EXE is cleaner for distribution.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="future">
+  <h1>Future Work & Multi-Customer Architecture</h1>
+
+  <h2>Customer Profile Config</h2>
+  <p>The <code class="inline">CustomerProfile</code> JSON object externalizes all client-specific values. To adapt the app for a new client, a new profile JSON is authored (or generated via a template tool) and the app loads it on startup. No recompile required under this model.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Profile Field</th><th>Example (Arnot)</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">customerName</code></td><td>Arnot Realty</td><td>Displayed in app title bar and PDF header</td></tr>
+        <tr><td><code class="inline">emailDomain</code></td><td>arnotrealty.com</td><td>Auto-generates email address on page 3</td></tr>
+        <tr><td><code class="inline">emailFormat</code></td><td>firstInitialLastName</td><td>Enum: firstInitialLastName, firstDotLast, firstLast</td></tr>
+        <tr><td><code class="inline">networkExportPath</code></td><td>\\server\share\Onboarding</td><td>Default export path (overridable in Settings)</td></tr>
+        <tr><td><code class="inline">applicationsList</code></td><td>[…]</td><td>Array of app names for Page 7 checkboxes</td></tr>
+        <tr><td><code class="inline">hiddenFields</code></td><td>[…]</td><td>Array of field IDs to hide for this client</td></tr>
+        <tr><td><code class="inline">requiredFields</code></td><td>[…]</td><td>Array of field IDs that must be filled before export</td></tr>
+        <tr><td><code class="inline">mdmNote</code></td><td>"Christina usually does this…"</td><td>Contextual note on MDM page</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Engineer Automation Tool (Future)</h2>
+  <p>The JSON schema produced by this app is designed for machine consumption. A future engineer-facing tool will read the exported JSON and automate AD account creation, email provisioning, and application license assignment. The schema uses consistent, unambiguous field names and a stable <code class="inline">schemaVersion</code> field to support forward compatibility.</p>
+
+  <h2>Application Design Spec Template</h2>
+  <p>Per your request, this project will serve as the template for a general-purpose "Application Project Spec" document — analogous to the Script Library spec but for C# applications. That template will be produced as a separate deliverable once Phase 1 is underway and the patterns are proven.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="conventions">
+  <h1>Conventions & Standards</h1>
+
+  <h2>Version Numbering</h2>
+  <p>Application version follows <code class="inline">Major.Minor.Revision.Build</code> (same as script library standard). Assembly version in <code class="inline">AssemblyInfo.cs</code> matches. Displayed in About dialog and PDF footer.</p>
+
+  <h2>C# Naming & Code Style</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Element</th><th>Convention</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>Classes</td><td>PascalCase</td><td><code class="inline">DraftManager</code>, <code class="inline">OnboardingRecord</code></td></tr>
+        <tr><td>Methods</td><td>PascalCase</td><td><code class="inline">LoadDraft()</code>, <code class="inline">ExportToPdf()</code></td></tr>
+        <tr><td>Private fields</td><td>_camelCase</td><td><code class="inline">_draftManager</code>, <code class="inline">_currentRecord</code></td></tr>
+        <tr><td>Constants</td><td>ALL_CAPS</td><td><code class="inline">AppColors.SURFACE_BASE</code></td></tr>
+        <tr><td>Events</td><td>On + PascalCase</td><td><code class="inline">OnDraftSaved</code>, <code class="inline">OnExportComplete</code></td></tr>
+        <tr><td>Form files</td><td>PascalCase + View/Form</td><td><code class="inline">MainShell.cs</code>, <code class="inline">WizardView.cs</code></td></tr>
+        <tr><td>JSON keys</td><td>camelCase</td><td><code class="inline">"firstName"</code>, <code class="inline">"emailAddress"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>File Header Block</h2>
+  <p>Every <code class="inline">.cs</code> file includes a header comment block:</p>
+  <div class="path-block">
+// =============================================================
+// ArnotOnboarding — {ClassName}.cs
+// Version    : 1.0.0.0
+// Author     : Sam Kirsch
+// Company    : Databranch
+// Created    : 2026-02-22
+// Modified   : 2026-02-22
+// Description: {One-line description}
+// =============================================================
+  </div>
+
+  <h2>Changelog</h2>
+  <p>A <code class="inline">CHANGELOG.md</code> at the solution root tracks all version increments with date, version number, and change summary. This mirrors the <code class="inline">.CHANGELOG</code> block convention from the PowerShell script standard.</p>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- Footer -->
+<div class="doc-footer">
+  <div>Databranch — Internal Project Reference — Confidential</div>
+  <div>ArnotOnboarding_ProjectSpec.html &nbsp;|&nbsp; v1.0.0.0 &nbsp;|&nbsp; 2026-02-22</div>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

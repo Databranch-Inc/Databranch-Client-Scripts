@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>ArnotOnboarding</RootNamespace>
+    <AssemblyName>ArnotOnboarding</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp">
+      <HintPath>..\packages\PdfSharp.1.50.5147\lib\net40\PdfSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Models -->
+    <Compile Include="Models\OnboardingRecord.cs" />
+    <Compile Include="Models\AppSettings.cs" />
+    <Compile Include="Models\RequestorProfile.cs" />
+    <Compile Include="Models\CustomerProfile.cs" />
+    <Compile Include="Models\DraftIndex.cs" />
+    <Compile Include="Models\RecordIndex.cs" />
+    <Compile Include="Models\LockFile.cs" />
+    <!-- Managers -->
+    <Compile Include="Managers\AppSettingsManager.cs" />
+    <Compile Include="Managers\DraftManager.cs" />
+    <!-- Theme -->
+    <Compile Include="Theme\AppColors.cs" />
+    <Compile Include="Theme\AppFonts.cs" />
+    <Compile Include="Theme\ThemeHelper.cs" />
+    <!-- Views -->
+    <Compile Include="Views\MainShell.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Views\MainShell.Designer.cs">
+      <DependentUpon>MainShell.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DashboardView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\DashboardView.Designer.cs">
+      <DependentUpon>DashboardView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DraftListView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\DraftListView.Designer.cs">
+      <DependentUpon>DraftListView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\RecordLibraryView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\RecordLibraryView.Designer.cs">
+      <DependentUpon>RecordLibraryView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\RequestorView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\RequestorView.Designer.cs">
+      <DependentUpon>RequestorView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SettingsView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\SettingsView.Designer.cs">
+      <DependentUpon>SettingsView.cs</DependentUpon>
+    </Compile>
+    <!-- Utilities -->
+    <Compile Include="Utilities\PathHelper.cs" />
+    <!-- Entry Point -->
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

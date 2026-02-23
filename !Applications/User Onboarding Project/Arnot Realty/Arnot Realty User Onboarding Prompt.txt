@@ -1,0 +1,98 @@
+Arnot Realty User Onboarding Prompt
+
+We are going to start building a new Windows application.
+
+I assume we'll use C# and Windows Forms but I will let you decide based on the other specs.  I want to build it in visual studio community edition and eventually compile it as a standalone exe.
+
+We have customers who often onboard new users.  They need to send us, their IT MSP, information on the user in order to correctly set up their accounts and programs.  I would like to build an application that streamlines this process.  We are going to build this for one customer initially, but I want you to build the app out in such a way that I can just request a template spec sheet to be built from this app that can then be used to customize the app for other customers.
+
+The app is going to have several main functions
+
+-The main 'interview' wizard that helps create the new user spec sheet ("New Onboarding Request")
+-The ability to return to in-progress onboardings that have not been finalized/submitted and stored permanently on the mapped network drive.
+-The ability to review and re-open past onboardings into the wizard again ("Edit Past Onboarding Request")
+-A settings screen to manage the app database and other files ("Settings")
+-A 'Requestor' editor that lets the user customize the app with their individual requestor details (The name, contact information, etc of the person making the onboarding request ("My Information")
+
+
+The app is going to have several other features
+
+-The goal is to save a PDF (or Word file, if easier) to a network drive, with a companion JSON file, that contain all the data for the sake of record keeping and passing the information along to us.  
+--The app should track where data is saved to so it can keep a reference library of all onboardings
+--As the wizard is progressed through and data is entered, the app should also track this in a local JSON file so data is saved immediately to a cache and not lost if the app crashes or closes unexpectedly, also allows the user to save and exit with current progress without doing the final export & save.
+-The JSON should be formatted in such a way that it can then be imported into another app, an engineers copy which reads the data and hopefully automates some of the steps - but we will tackle that much later, just make sure the JSON is easy to read by other programs, or suggest another file format
+-When editing the JSON data for already fully finalized and exported files, the ones that sit on the network drive, you'll have to create a 'lock file' or something that locks another instance of the program, being run by someone else, from editing that file for the time being.
+
+
+The main interview will consist of the onboarding data broken down into subsections that make sense and limit how much info is on each 'screen' or 'page'.  You click next or a right/left arrow to browse back and forth between pages of data entry.
+
+I am supplying 5 files for your review.
+
+The first four files are design specs
+
+ScriptLibrary_ProjectSpec is an entirely different project altogether for writing scripts in powershell, this is an example of the design process I want to use however, adapt this document to be relevant to the kind of app we are creating now.  I will eventually ask you to use this new project as a way to create a general-use template for 'application design' as opposed to 'script design'.
+
+Invoke-ScriptTemplate is also for an entirely different powershell related project, and should only be used as general influence to help design the project specs for this project - same as the general ScriptLibrary_ProjectSpec should be considered (its from the same project)
+
+DocumentationSpec is also keyed towards powershell, but is a general use template you can use to plan documentation for this project later on.  I don't need you to produce any documentation yet, but keep this in mind.
+
+UIDesignSpec is a document much more relevant to this project from the get-go.  This document will inform and influence your UI design choices and ESPECIALLY color scheme for the application.
+
+Arnot New User IT Request Form - this word document is the main source of information for designing the wizard.  This is the actual onboarding form that the customer sends over to us.  
+
+
+The Wizard Workflow
+
+Starting a new Wizard should ask for a Name and the option to progress to the next screen, entering a name saves the initial cached json file and starts collecting data (like the name) and the creation date of the file into the json data.  This allows you to recover the onboarding process and go in and edit 'in progress' ones.  Next page is the Due dates and appointment time which can be selected from a date/time calendar-style selector menu.  Next page is the user information.  You can pre-fill the Employee name from the data set on the first page, and email address (for this client, firstintialLastname@arnotrealty.com) but give me a checkbox or something to allow customization.  Everything here is a text field essentially. 
+Next page lets you confirm the requestor data that is saved in the other view in the app, and customize it if you want.  Next page is new user setup.  Step 4 are checkboxes, both options can be true.  Step 5 should be a radio button, only one option can be true.  Step 6 is also a radio button.  
+Step 7a can also auto-populate data based on the name, 7b is a plaintext textbox - no need to mask this password field, 7c is a radio button.
+Step 8 substeps follow the same logic as step 7, email populates from the previous email field (editing it edits the data for both spots).  8d is a radio button.
+Step 9 should be on a new page.  These are all tick boxes/checkboxes
+The format for keeping checkboxes or changing to radio buttons should be becoming clear, yes/no and new/existing or other absolutes are radio buttons, actual options are checkboxes
+So we start Computer on yet another new page.  10 is a radio button.
+12b is a text box
+13a is a text box
+14c is a radio button
+15 & 16 should probably be yet another new page
+15a radio button, 15b can be one text box now and 15c one set of radio buttons, don't need to keep the impromptu 'columns' under '1' or '2'.  15d is the only exception, you'll need a set of radio buttons for each monitor if '2' is selected.
+New page for 17 and 18
+17a & 18a are a series of checkboxes, and we need to add a checkbox for 'Ironworks'
+New page for 19 and 20, all checkboxes
+
+Email section yet another new page
+21a, 22a & 25a can be a long list, text box with a scrollbar and ability to adjust the size of the text box within the form, each email address on a new line
+
+New page for Office Telephone
+
+New page for Mobile devices.  30a and 30c should get split up into separate text boxes.  31 needs a yes/no box with a note that Christina usually does this, databranch engineer only under special circumstances
+
+
+Final page of the main wizard is the misc setup, this is just a big text box
+
+After the wizard is done you get the option to just save & close or finalize and export
+
+save just closes because we should have been saving all along as fields are edited
+
+finalize and export gives a dialog box to set a path, this path is tracked by the app so the app knows where all the onboarding forms it has created reside, this creates a PDF that should look as similar to the original form as possible, and exports the json.  You can cleanup the local json at this point and remove it from in progress.
+
+
+I know thats a lot, I'm sure we'll be building this in sections, establish a milestone document and to-do list that I can reference.  Please ask me any questions before we start building.
+
+
+====================================================================
+
+I didn't have the opportunity to answer some of your other questions:
+
+Network drive assumptions - no, its not hardcoded or set in settings, each individual file will save a full path when its exported, these live in individual directories on a shared network drive, think  Executive Drive > Human Resources > Employee Files > Employee Name > Onboarding Documents > IT Onboarding Forms > Individual Exported PDF and JSON
+
+Lock file - yes use a lock file and note the name and machine
+
+In Progress is indeed saved locally, we might add the option to export and import in progress forms as well - actually that probably makes sense.  
+
+No, one entirely independent EXE per customer, we don't want cross-pollination between customers
+
+Requestor is the current user, since all of this is saved to appdata, this should take care of itself.  
+
+Databranch logo, 'A Databranch Onboarding form for Arnot Realty'
+
+Its gonna be a single EXE with all dependencies merged.
