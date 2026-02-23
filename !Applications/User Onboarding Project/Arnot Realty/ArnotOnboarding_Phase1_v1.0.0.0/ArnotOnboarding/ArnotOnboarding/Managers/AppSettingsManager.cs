@@ -89,7 +89,8 @@ namespace ArnotOnboarding.Managers
                 try
                 {
                     string json = File.ReadAllText(filePath);
-                    return JsonConvert.DeserializeObject<T>(json, _jsonSettings) ?? new T();
+                    var result = JsonConvert.DeserializeObject<T>(json, _jsonSettings);
+                    return result != null ? result : new T();
                 }
                 catch (Exception ex)
                 {

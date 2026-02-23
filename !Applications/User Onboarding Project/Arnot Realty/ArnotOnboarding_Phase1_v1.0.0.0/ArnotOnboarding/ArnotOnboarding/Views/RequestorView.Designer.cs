@@ -60,7 +60,7 @@ namespace ArnotOnboarding.Views
             _pageSubtitle.Location  = new System.Drawing.Point(48, 72);
 
             // ── Fields (2-column-ish layout at fixed coords) ──────────
-            int lx = 48, fx = 200, fw = 340, lh = 24, fh = 28, rowH = 48, startY = 130;
+            int lx = 48, fx = 200, fw = 340, fh = 28, rowH = 48, startY = 130;
 
             SetupLabel(_lblName,       "Full Name",   lx, startY);
             SetupField(_txtName,       fx, startY,    fw, fh);

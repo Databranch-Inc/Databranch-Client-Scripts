@@ -181,29 +181,25 @@ namespace ArnotOnboarding.Views
             int panelWidth = _navPanel.Width;
 
             // ── Logo/Title Area ───────────────────────────────────────
+            // RULE: AppFonts static fields must NEVER be in using() blocks.
+            // They are shared instances — disposing them corrupts all subsequent draws.
+            // Only objects created with 'new' go in using() blocks.
+
             using (var logoBg = new SolidBrush(AppColors.SurfaceVoid))
                 g.FillRectangle(logoBg, 0, 0, panelWidth, NAV_LOGO_HEIGHT);
 
-            // Red accent bar at top
             using (var accentBar = new SolidBrush(AppColors.BrandRedSoft))
                 g.FillRectangle(accentBar, 0, 0, 3, NAV_LOGO_HEIGHT);
 
-            // Company eyebrow
-            using (var eyebrowFont = AppFonts.EyebrowLabel)
             using (var eyebrowBrush = new SolidBrush(AppColors.BrandRedSoft))
-                g.DrawString("DATABRANCH", eyebrowFont, eyebrowBrush, NAV_ITEM_INDENT + 4, 18);
+                g.DrawString("DATABRANCH", AppFonts.EyebrowLabel, eyebrowBrush, NAV_ITEM_INDENT + 4, 18);
 
-            // App title
-            using (var titleFont = AppFonts.Heading3)
             using (var titleBrush = new SolidBrush(AppColors.TextPrimary))
-                g.DrawString("Arnot Onboarding", titleFont, titleBrush, NAV_ITEM_INDENT + 4, 38);
+                g.DrawString("Arnot Onboarding", AppFonts.Heading3, titleBrush, NAV_ITEM_INDENT + 4, 38);
 
-            // Version
-            using (var verFont = AppFonts.Version)
             using (var verBrush = new SolidBrush(AppColors.TextDim))
-                g.DrawString("v1.0.0.0", verFont, verBrush, NAV_ITEM_INDENT + 4, 66);
+                g.DrawString("v1.0.0.0", AppFonts.Version, verBrush, NAV_ITEM_INDENT + 4, 66);
 
-            // Divider below logo
             using (var divPen = new Pen(AppColors.BorderSubtle))
                 g.DrawLine(divPen, 0, NAV_LOGO_HEIGHT - 1, panelWidth, NAV_LOGO_HEIGHT - 1);
 
@@ -221,34 +217,34 @@ namespace ArnotOnboarding.Views
                     continue;
                 }
 
-                bool isActive = (_activeNavItem?.Id == item.Id);
+                bool isActive = (_activeNavItem != null && _activeNavItem.Id == item.Id);
                 Rectangle itemRect = new Rectangle(0, yOffset, panelWidth, NAV_ITEM_HEIGHT);
 
-                // Active or hover background
+                // Active background + red left indicator
                 if (isActive)
                 {
                     using (var activeBg = new SolidBrush(AppColors.SurfaceCard))
                         g.FillRectangle(activeBg, itemRect);
-
-                    // Red left indicator bar
                     using (var indicator = new SolidBrush(AppColors.BrandRedSoft))
                         g.FillRectangle(indicator, 0, yOffset, 3, NAV_ITEM_HEIGHT);
                 }
 
-                // Icon
-                using (var iconFont = new Font("Segoe UI Symbol", 12f))
+                // Icon — new Font() here so it is safe to dispose
+                using (var iconFont = new Font("Segoe UI Symbol", 12f, FontStyle.Regular, GraphicsUnit.Point))
                 using (var iconBrush = new SolidBrush(isActive ? AppColors.BrandRedSoft : AppColors.TextMuted))
                 {
                     g.DrawString(item.Icon, iconFont, iconBrush,
-                        NAV_ITEM_INDENT + 4, yOffset + (NAV_ITEM_HEIGHT - 18) / 2);
+                        (float)(NAV_ITEM_INDENT + 4),
+                        (float)(yOffset + (NAV_ITEM_HEIGHT - 18) / 2));
                 }
 
-                // Label
-                using (var labelFont = isActive ? AppFonts.NavItemActive : AppFonts.NavItem)
+                // Label — AppFonts reference only, no using wrapper
+                Font labelFont = isActive ? AppFonts.NavItemActive : AppFonts.NavItem;
                 using (var labelBrush = new SolidBrush(isActive ? AppColors.TextPrimary : AppColors.TextMuted))
                 {
                     g.DrawString(item.Label, labelFont, labelBrush,
-                        NAV_ITEM_INDENT + 30, yOffset + (NAV_ITEM_HEIGHT - 16) / 2);
+                        (float)(NAV_ITEM_INDENT + 30),
+                        (float)(yOffset + (NAV_ITEM_HEIGHT - 16) / 2));
                 }
 
                 // Badge (e.g. draft count)
@@ -258,27 +254,22 @@ namespace ArnotOnboarding.Views
                     if (count > 0)
                     {
                         string badgeText = count.ToString();
-                        var badgeFont    = AppFonts.MonoSmall;
-                        var badgeSize    = g.MeasureString(badgeText, badgeFont);
-                        int badgeW       = Math.Max((int)badgeSize.Width + 10, 22);
-                        int badgeH       = 18;
-                        int badgeX       = panelWidth - badgeW - 10;
-                        int badgeY       = yOffset + (NAV_ITEM_HEIGHT - badgeH) / 2;
+                        SizeF  badgeSize = g.MeasureString(badgeText, AppFonts.MonoSmall);
+                        int    badgeW    = Math.Max((int)badgeSize.Width + 10, 22);
+                        int    badgeH    = 18;
+                        int    badgeX    = panelWidth - badgeW - 10;
+                        int    badgeY    = yOffset + (NAV_ITEM_HEIGHT - badgeH) / 2;
 
                         using (var badgeBg = new SolidBrush(AppColors.BrandRedMuted))
-                        {
                             g.FillRectangle(badgeBg, badgeX, badgeY, badgeW, badgeH);
-                        }
+
                         using (var badgeFg = new SolidBrush(AppColors.TextPrimary))
-                        {
-                            g.DrawString(badgeText, badgeFont, badgeFg,
-                                badgeX + (badgeW - badgeSize.Width) / 2,
-                                badgeY + (badgeH - badgeSize.Height) / 2);
-                        }
+                            g.DrawString(badgeText, AppFonts.MonoSmall, badgeFg,
+                                (float)(badgeX + (badgeW - badgeSize.Width) / 2),
+                                (float)(badgeY + (badgeH - badgeSize.Height) / 2));
                     }
                 }
 
-                // Store the hit rect for mouse click detection
                 item.HitRect = itemRect;
                 yOffset += NAV_ITEM_HEIGHT;
             }
@@ -288,22 +279,21 @@ namespace ArnotOnboarding.Views
             using (var divPen = new Pen(AppColors.BorderSubtle))
                 g.DrawLine(divPen, 0, bottomY, panelWidth, bottomY);
 
-            string userName = AppSettingsManager.Instance.Requestor?.Name;
+            string userName = AppSettingsManager.Instance.Requestor != null
+                ? AppSettingsManager.Instance.Requestor.Name
+                : null;
+
             if (!string.IsNullOrWhiteSpace(userName))
             {
-                using (var userFont = AppFonts.Caption)
-                using (var userBrush = new SolidBrush(AppColors.TextDim))
-                {
-                    g.DrawString("Signed in as", userFont, userBrush, NAV_ITEM_INDENT, bottomY + 8);
-                    g.DrawString(userName, AppFonts.LabelBold,
-                        new SolidBrush(AppColors.TextMuted), NAV_ITEM_INDENT, bottomY + 24);
-                }
+                using (var dimBrush = new SolidBrush(AppColors.TextDim))
+                    g.DrawString("Signed in as", AppFonts.Caption, dimBrush, NAV_ITEM_INDENT, bottomY + 8);
+                using (var mutedBrush = new SolidBrush(AppColors.TextMuted))
+                    g.DrawString(userName, AppFonts.LabelBold, mutedBrush, NAV_ITEM_INDENT, bottomY + 24);
             }
             else
             {
-                using (var userFont = AppFonts.Caption)
-                using (var userBrush = new SolidBrush(AppColors.TextDim))
-                    g.DrawString("Set up your profile →", userFont, userBrush, NAV_ITEM_INDENT, bottomY + 16);
+                using (var dimBrush = new SolidBrush(AppColors.TextDim))
+                    g.DrawString("Set up your profile →", AppFonts.Caption, dimBrush, NAV_ITEM_INDENT, bottomY + 16);
             }
         }
 
@@ -373,7 +363,7 @@ namespace ArnotOnboarding.Views
 
     // ── NavItem helper class ──────────────────────────────────────────
 
-    internal class NavItem
+    public class NavItem
     {
         public string        Id         { get; set; }
         public string        Icon       { get; set; }
