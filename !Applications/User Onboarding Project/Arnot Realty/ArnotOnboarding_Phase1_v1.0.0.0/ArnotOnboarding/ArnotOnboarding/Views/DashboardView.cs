@@ -1,14 +1,14 @@
 // =============================================================
 // ArnotOnboarding — DashboardView.cs
-// Version    : 1.0.0.0
+// Version    : 1.2.0.0
 // Author     : Sam Kirsch
 // Company    : Databranch
 // Created    : 2026-02-22
 // Modified   : 2026-02-22
-// Description: Landing view shown when the app opens. Displays a
-//              "Start New Onboarding" prompt and a quick-access
-//              list of recent in-progress drafts. Phase 3 will
-//              replace this stub with the full wizard launcher.
+// Description: Landing "New Onboarding" view. Shows a start button
+//              and a subtle recovery banner when in-progress drafts
+//              exist. Phase 3 will wire the start button into the
+//              full wizard.
 // =============================================================
 
 using System;
@@ -25,38 +25,53 @@ namespace ArnotOnboarding.Views
         {
             InitializeComponent();
             ThemeHelper.ApplyTheme(this);
-            LoadRecentDrafts();
         }
 
-        private void LoadRecentDrafts()
+        /// <summary>
+        /// Called by MainShell after the form loads. Checks for existing drafts
+        /// and shows or hides the recovery banner accordingly.
+        /// </summary>
+        public void CheckForDrafts()
         {
-            _recentLabel.Text = string.Empty;
             try
             {
-                var dm = new DraftManager(AppSettingsManager.Instance);
+                var dm     = new DraftManager(AppSettingsManager.Instance);
                 var drafts = dm.GetAllDrafts();
-                if (drafts.Count == 0)
+
+                if (drafts.Count > 0)
                 {
-                    _recentLabel.Text = "No in-progress onboardings. Click below to start one.";
+                    string noun = drafts.Count == 1 ? "onboarding" : "onboardings";
+                    _bannerLabel.Text =
+                        string.Format("  {0} in-progress {1} waiting — click \"In Progress\" to resume.",
+                            drafts.Count, noun);
+                    _recoveryBanner.Visible = true;
                 }
                 else
                 {
-                    _recentLabel.Text = $"{drafts.Count} onboarding(s) in progress. " +
-                                        "Use the \"In Progress\" section to resume.";
+                    _recoveryBanner.Visible = false;
                 }
             }
-            catch { }
+            catch
+            {
+                _recoveryBanner.Visible = false;
+            }
         }
 
         private void btnNewOnboarding_Click(object sender, EventArgs e)
         {
-            // Phase 3: open wizard. For now, show message.
-            MessageBox.Show(
-                "The wizard will be available in Phase 3.\n\n" +
-                "Foundation (Phase 1) is complete — models, managers, shell, and theme are all wired up.",
-                "Coming in Phase 3",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            var shell = this.FindForm() as MainShell;
+            if (shell == null) return;
+
+            var wizard = WizardView.StartNew();
+            if (wizard == null) return; // User cancelled name dialog
+
+            shell.ShowWizard(wizard);
+        }
+
+        private void btnGoToInProgress_Click(object sender, EventArgs e)
+        {
+            var shell = this.FindForm() as MainShell;
+            if (shell != null) shell.NavigateTo("drafts");
         }
     }
 }

@@ -101,8 +101,35 @@
     <Compile Include="Views\SettingsView.Designer.cs">
       <DependentUpon>SettingsView.cs</DependentUpon>
     </Compile>
+    <!-- Wizard -->
+    <Compile Include="Views\WizardView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\WizardView.Designer.cs">
+      <DependentUpon>WizardView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\NewEmployeeDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <!-- Wizard Pages -->
+    <Compile Include="Views\WizardPages\IWizardPage.cs" />
+    <Compile Include="Views\WizardPages\WizardPageBase.cs" />
+    <Compile Include="Views\WizardPages\Page01_EmployeeName.cs" />
+    <Compile Include="Views\WizardPages\Page02_Scheduling.cs" />
+    <Compile Include="Views\WizardPages\Page03_UserInformation.cs" />
+    <Compile Include="Views\WizardPages\Page04_RequestorInfo.cs" />
+    <Compile Include="Views\WizardPages\Page05_AccountSetup.cs" />
+    <Compile Include="Views\WizardPages\Page06_EmailSetup.cs" />
+    <Compile Include="Views\WizardPages\Page07_Applications.cs" />
+    <Compile Include="Views\WizardPages\Page08_ComputerSetup.cs" />
+    <Compile Include="Views\WizardPages\Page09_RemoteAccess.cs" />
+    <Compile Include="Views\WizardPages\Page10_SoftwareAccess.cs" />
+    <Compile Include="Views\WizardPages\Page11_AdditionalAccess.cs" />
+    <Compile Include="Views\WizardPages\Page12_PhoneMobile.cs" />
+    <Compile Include="Views\WizardPages\Page13_MiscNotes.cs" />
     <!-- Utilities -->
     <Compile Include="Utilities\PathHelper.cs" />
+    <Compile Include="Utilities\AutoSaveTimer.cs" />
     <!-- Entry Point -->
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

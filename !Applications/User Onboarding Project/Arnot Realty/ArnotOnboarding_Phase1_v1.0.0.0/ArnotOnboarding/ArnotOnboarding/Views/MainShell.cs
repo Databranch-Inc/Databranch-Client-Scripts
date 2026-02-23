@@ -1,6 +1,6 @@
 // =============================================================
 // ArnotOnboarding — MainShell.cs
-// Version    : 1.0.0.0
+// Version    : 1.2.0.0
 // Author     : Sam Kirsch
 // Company    : Databranch
 // Created    : 2026-02-22
@@ -356,7 +356,34 @@ namespace ArnotOnboarding.Views
         {
             // Activate the "New Onboarding" view by default
             _activeNavItem = _navItems.Find(n => n.Id == "new");
-            ShowView(GetDashboardView(), _activeNavItem);
+            var dashboard = GetDashboardView() as DashboardView;
+            ShowView(dashboard, _activeNavItem);
+            _navPanel.Invalidate();
+
+            // Check for in-progress drafts and show recovery banner if any exist
+            dashboard.CheckForDrafts();
+        }
+
+        // ── Public Navigation Helpers ─────────────────────────────────
+
+        /// <summary>
+        /// Refreshes the nav rail repaint — call after any operation that changes
+        /// the draft count so the badge number updates immediately.
+        /// </summary>
+        public void RefreshNav()
+        {
+            _navPanel.Invalidate();
+        }
+
+        /// <summary>
+        /// Loads a WizardView into the content panel and activates the "new" nav item.
+        /// Called by DashboardView and DraftListView when starting or resuming a wizard.
+        /// </summary>
+        public void ShowWizard(WizardView wizard)
+        {
+            // Set the nav item to "new" (New Onboarding) while wizard is active
+            _activeNavItem = _navItems.Find(n => n.Id == "new");
+            ShowView(wizard, _activeNavItem);
             _navPanel.Invalidate();
         }
     }
