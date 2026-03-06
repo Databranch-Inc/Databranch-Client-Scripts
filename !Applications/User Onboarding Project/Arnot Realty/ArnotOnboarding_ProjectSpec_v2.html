@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arnot Onboarding App — Project Specification v2.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+  :root {
+    --brand-red:          #B01020;
+    --brand-red-muted:    #8B2030;
+    --brand-red-soft:     #C0404A;
+    --brand-red-pale:     #D07080;
+    --brand-blue-bright:  #2E8BFF;
+    --brand-blue-muted:   #2A5FA8;
+    --brand-blue-pale:    #4A8FD4;
+    --brand-blue-dim:     #1A3A6A;
+    --surface-void:       #080C14;
+    --surface-base:       #0D1520;
+    --surface-raised:     #111C2E;
+    --surface-card:       #162238;
+    --surface-elevated:   #1D2E48;
+    --surface-overlay:    #243558;
+    --surface-high:       #2C3F68;
+    --text-primary:       #F0F4FF;
+    --text-secondary:     #A8BDD8;
+    --text-muted:         #607090;
+    --text-dim:           #3A5070;
+    --text-inverse:       #080C14;
+    --border-subtle:      #1A2D48;
+    --border-default:     #213A58;
+    --border-mid:         #2A4A70;
+    --border-accent-blue: #1E6ABF;
+    --border-accent-red:  #8B2030;
+    --status-success:     #22C55E;
+    --status-success-bg:  #0A2818;
+    --status-success-bd:  #1A5030;
+    --status-warn:        #E8A020;
+    --status-warn-bg:     #1E1800;
+    --status-warn-bd:     #6A4800;
+    --status-error:       #C84040;
+    --status-info:        #2E8BFF;
+    --status-info-bg:     #091828;
+    --status-info-bd:     #1A3A6A;
+    --code-bg:            #060E1A;
+    --code-text:          #7DD3FC;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--surface-base);
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 270px; min-width: 270px;
+    background: var(--surface-raised);
+    border-right: 1px solid var(--border-default);
+    position: fixed; top: 0; left: 0; bottom: 0;
+    overflow-y: auto; display: flex; flex-direction: column;
+  }
+
+  .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid var(--border-subtle); }
+  .sidebar-logo .company { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand-red-soft); margin-bottom: 4px; }
+  .sidebar-logo .doc-title { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
+  .sidebar-logo .doc-ver { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+  .nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); padding: 20px 24px 6px; }
+  .nav-link { display: block; padding: 7px 24px 7px 20px; font-size: 13px; color: var(--text-muted); text-decoration: none; border-left: 3px solid transparent; transition: all 0.15s ease; line-height: 1.4; }
+  .nav-link:hover { color: var(--text-secondary); background: var(--surface-elevated); border-left-color: var(--border-mid); }
+  .nav-link.active { color: var(--text-primary); background: var(--surface-card); border-left-color: var(--brand-red-soft); font-weight: 500; }
+  .nav-link.sub { padding-left: 36px; font-size: 12px; }
+
+  .main { margin-left: 270px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .content { max-width: 960px; padding: 48px 56px; flex: 1; }
+
+  .cover {
+    background: linear-gradient(135deg, var(--surface-void) 0%, var(--surface-base) 40%, #0E1E38 100%);
+    border-bottom: 1px solid var(--border-default);
+    padding: 56px 56px 48px; position: relative; overflow: hidden;
+  }
+  .cover::before { content: ''; position: absolute; top: -80px; right: -80px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(176,16,32,0.08) 0%, transparent 70%); pointer-events: none; }
+  .cover::after  { content: ''; position: absolute; bottom: -60px; left: 200px; width: 400px; height: 200px; background: radial-gradient(ellipse, rgba(46,139,255,0.06) 0%, transparent 70%); pointer-events: none; }
+  .cover-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--brand-red-soft); margin-bottom: 14px; }
+  .cover h1 { font-size: 34px; font-weight: 700; color: var(--text-primary); line-height: 1.2; margin-bottom: 10px; letter-spacing: -0.01em; }
+  .cover-subtitle { font-size: 16px; color: var(--text-secondary); margin-bottom: 32px; }
+  .cover-meta { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0; border: 1px solid var(--border-default); border-radius: 6px; overflow: hidden; max-width: 780px; }
+  .cover-meta-item { padding: 12px 18px; border-right: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
+  .cover-meta-item:last-child { border-right: none; }
+  .cover-meta-item .label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3px; }
+  .cover-meta-item .value { font-size: 13px; font-weight: 500; color: var(--text-primary); font-family: 'IBM Plex Mono', monospace; }
+
+  .section { padding: 48px 0; border-bottom: 1px solid var(--border-subtle); }
+  .section:last-child { border-bottom: none; }
+
+  h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+  h1::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, var(--border-mid), transparent); }
+  h2 { font-size: 14px; font-weight: 600; color: var(--brand-blue-bright); text-transform: uppercase; letter-spacing: 0.08em; margin: 28px 0 10px; }
+  h3 { font-size: 14px; font-weight: 600; color: var(--brand-red-pale); margin: 20px 0 8px; }
+  p { margin-bottom: 14px; color: var(--text-secondary); }
+  p:last-child { margin-bottom: 0; }
+  a { color: var(--brand-blue-bright); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 6px; border: 1px solid var(--border-default); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead tr { background: var(--surface-raised); border-bottom: 1px solid var(--border-mid); }
+  thead th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+  tbody tr { border-bottom: 1px solid var(--border-subtle); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--surface-raised); }
+  tbody tr:hover { background: var(--surface-elevated); }
+  tbody td { padding: 10px 16px; color: var(--text-secondary); vertical-align: top; }
+  tbody td:first-child { color: var(--text-primary); font-weight: 500; }
+
+  code.inline { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--code-bg); color: var(--code-text); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border-subtle); }
+
+  .callout { display: flex; gap: 14px; padding: 16px 18px; border-radius: 6px; border: 1px solid; margin: 20px 0; }
+  .callout.info  { background: var(--status-info-bg);    border-color: var(--status-info-bd); }
+  .callout.warn  { background: var(--status-warn-bg);    border-color: var(--status-warn-bd); }
+  .callout.success { background: var(--status-success-bg); border-color: var(--status-success-bd); }
+  .callout.error { background: #1A0808; border-color: #5A1A1A; }
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .callout-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .callout.info .callout-label    { color: var(--status-info); }
+  .callout.warn .callout-label    { color: var(--status-warn); }
+  .callout.success .callout-label { color: var(--status-success); }
+  .callout.error .callout-label   { color: #E84040; }
+  .callout-text { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+
+  .path-block { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--border-subtle); border-radius: 5px; padding: 14px 18px; margin: 12px 0; line-height: 1.8; white-space: pre; overflow-x: auto; }
+  .path-block .comment { color: #3A6A50; }
+  .path-block .key     { color: #A8BDD8; }
+  .path-block .val     { color: #7DD3FC; }
+  .path-block .warn    { color: var(--status-warn); }
+
+  .bug-card { background: var(--surface-card); border: 1px solid var(--border-default); border-left: 4px solid #C84040; border-radius: 6px; padding: 20px 24px; margin-bottom: 16px; }
+  .bug-card.resolved { border-left-color: var(--status-success); }
+  .bug-card-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .bug-id { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+  .bug-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .bug-badge { margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .badge-resolved { background: var(--status-success-bg); color: var(--status-success); border: 1px solid var(--status-success-bd); }
+  .bug-section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 12px 0 4px; }
+  .bug-text { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
+
+  .stack-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+  .stack-badge { font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 4px; border: 1px solid; }
+  .stack-badge.blue  { background: var(--status-info-bg); color: var(--brand-blue-bright); border-color: var(--status-info-bd); }
+  .stack-badge.red   { background: #200A0A; color: var(--brand-red-soft); border-color: var(--brand-red-muted); }
+  .stack-badge.green { background: var(--status-success-bg); color: var(--status-success); border-color: var(--status-success-bd); }
+  .stack-badge.muted { background: var(--surface-raised); color: var(--text-muted); border-color: var(--border-default); }
+
+  .version-row { display: flex; align-items: baseline; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); }
+  .version-row:last-child { border-bottom: none; }
+  .ver-num { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--brand-blue-bright); min-width: 80px; }
+  .ver-date { font-size: 12px; color: var(--text-muted); min-width: 90px; }
+  .ver-desc { font-size: 13px; color: var(--text-secondary); }
+
+  .doc-footer { margin-left: 270px; background: var(--surface-raised); border-top: 1px solid var(--border-default); padding: 16px 56px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; }
+
+  @media print { .sidebar { display: none; } .main { margin-left: 0; } .doc-footer { margin-left: 0; } .content { padding: 24px 32px; } }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ── SIDEBAR ── -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="company">Databranch</div>
+    <div class="doc-title">Arnot Onboarding App<br>Project Specification</div>
+    <div class="doc-ver">v2.0.0 · Feb 2026</div>
+  </div>
+
+  <div class="nav-section-label">Overview</div>
+  <a href="#overview"      class="nav-link active">Project Overview</a>
+  <a href="#stack"         class="nav-link">Technology Stack</a>
+  <a href="#architecture"  class="nav-link">Architecture & Components</a>
+  <a href="#data-model"    class="nav-link">Data Model & Files</a>
+
+  <div class="nav-section-label">Application</div>
+  <a href="#app-structure" class="nav-link">App Structure & Navigation</a>
+  <a href="#mainshell"     class="nav-link">MainShell & Nav Rail</a>
+  <a href="#wizard"        class="nav-link">Wizard Pages</a>
+  <a href="#locking"       class="nav-link">File Locking System</a>
+  <a href="#export"        class="nav-link">Export & PDF Pipeline</a>
+  <a href="#branding"      class="nav-link">Branding & About Dialog</a>
+
+  <div class="nav-section-label">Design</div>
+  <a href="#ui-design"     class="nav-link">UI Design System</a>
+  <a href="#theme"         class="nav-link">Theme Implementation</a>
+  <a href="#painting"      class="nav-link">Custom Painting Patterns</a>
+
+  <div class="nav-section-label">Engineering</div>
+  <a href="#buglog"        class="nav-link">Bug Log & Resolutions</a>
+  <a href="#changelog"     class="nav-link">Version Changelog</a>
+  <a href="#future"        class="nav-link">Future Work</a>
+  <a href="#conventions"   class="nav-link">Conventions & Standards</a>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+<div class="cover">
+  <div class="cover-eyebrow">Databranch — Internal Application Project</div>
+  <h1>Arnot Realty Onboarding App</h1>
+  <div class="cover-subtitle">Comprehensive Project Specification &amp; Engineering Reference · v2.0.0</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><div class="label">Author</div><div class="value">Sam Kirsch</div></div>
+    <div class="cover-meta-item"><div class="label">Client</div><div class="value">Arnot Realty</div></div>
+    <div class="cover-meta-item"><div class="label">Spec Created</div><div class="value">2026-02-22</div></div>
+    <div class="cover-meta-item"><div class="label">Spec Updated</div><div class="value">2026-02-28</div></div>
+    <div class="cover-meta-item"><div class="label">App Version</div><div class="value">1.7.0.7</div></div>
+    <div class="cover-meta-item"><div class="label">Stack</div><div class="value">C# / WinForms</div></div>
+    <div class="cover-meta-item"><div class="label">Target</div><div class="value">.NET 4.8</div></div>
+    <div class="cover-meta-item"><div class="label">Status</div><div class="value">Feature Complete</div></div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="overview">
+  <h1>Project Overview</h1>
+
+  <p>ArnotOnboarding is a Windows Forms desktop application that replaces a paper/Word-document workflow at Arnot Realty Corporation. When a new employee is hired, HR staff run a guided wizard that collects all required IT onboarding information, auto-saves everything locally as JSON drafts, and on finalization generates a formatted PDF and companion JSON file written to a network share. A record library tracks all past onboardings with search and re-edit capability.</p>
+
+  <p>The application is designed for multi-user operation in a shared network environment where multiple HR staff may be open simultaneously. All concurrent-edit conflicts are managed via a file-locking system using sidecar <code class="inline">.lock</code> files on the network share.</p>
+
+  <h2>Core Goals — All Delivered</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Goal</th><th>Description</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Guided Wizard</td><td>10-page wizard covering all fields from the Arnot New User IT Request Form (Steps 1–35)</td><td>✅ Done</td></tr>
+        <tr><td>Auto-Save & Recovery</td><td>All field changes write to a local draft JSON via debounced timer (750ms); no data lost on crash</td><td>✅ Done</td></tr>
+        <tr><td>In-Progress Management</td><td>Named draft onboardings saved locally; resumable from DraftListView</td><td>✅ Done</td></tr>
+        <tr><td>Finalize & Export</td><td>Produces a MigraDoc-rendered PDF + companion JSON on the HR network share</td><td>✅ Done</td></tr>
+        <tr><td>Email Integration</td><td>Auto-detects Classic vs. New Outlook; composes draft email with PDF + JSON attached</td><td>✅ Done</td></tr>
+        <tr><td>Record Library</td><td>Indexed, searchable list of all exported onboardings with open/re-edit/refresh actions</td><td>✅ Done</td></tr>
+        <tr><td>Edit Past Records</td><td>Re-opens finalized records into wizard with full lock negotiation and stale-lock override</td><td>✅ Done</td></tr>
+        <tr><td>Multi-User Locking</td><td>Sidecar .lock files prevent concurrent edits; nav warning banner shows locked records</td><td>✅ Done</td></tr>
+        <tr><td>Branding</td><td>Databranch logo in nav header, title bar, EXE icon; About dialog with full changelog</td><td>✅ Done</td></tr>
+        <tr><td>Multi-Client Ready</td><td>CustomerProfile JSON externalizes all client-specific values; no recompile needed</td><td>✅ Done</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Non-Goals (v1)</h2>
+  <p>The engineer-facing automation tool that consumes the JSON export is out of scope. No web or cloud components. No Active Directory integration (that belongs in the engineer tool). No real-time sync of drafts across machines (drafts are intentionally local-only for resilience).</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="stack">
+  <h1>Technology Stack</h1>
+
+  <div class="stack-row">
+    <span class="stack-badge blue">C# · Windows Forms</span>
+    <span class="stack-badge blue">.NET Framework 4.8</span>
+    <span class="stack-badge blue">Visual Studio Community 2022</span>
+    <span class="stack-badge green">Standalone EXE + DLLs</span>
+    <span class="stack-badge muted">PDFsharp-MigraDoc-gdi 1.50.5147</span>
+    <span class="stack-badge muted">Newtonsoft.Json 13.0.3</span>
+    <span class="stack-badge muted">System.Security.Cryptography.Pkcs 8.0.1</span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>Technology</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>UI Framework</td><td>Windows Forms (.NET 4.8)</td><td>Broadest Windows compatibility; no installer required; all controls custom-painted for dark theme</td></tr>
+        <tr><td>PDF Export</td><td>MigraDoc / PdfSharp-GDI 1.50.5147</td><td>Use the <strong>GDI variant</strong> (<code class="inline">PDFsharp-MigraDoc-gdi</code>) — the standard variant throws GDI+ exceptions on form rendering in .NET 4.8 WinForms environments</td></tr>
+        <tr><td>JSON Serialization</td><td>Newtonsoft.Json 13.0.3</td><td>All model serialization, draft files, index files, settings, lock files</td></tr>
+        <tr><td>Local Config</td><td>JSON files via Newtonsoft</td><td>Stored under <code class="inline">%AppData%\Databranch\ArnotOnboarding\</code></td></tr>
+        <tr><td>Draft Storage</td><td>Local JSON files</td><td><code class="inline">%AppData%\...\Drafts\{guid}_draft.json</code> — local-only, survives network outages</td></tr>
+        <tr><td>Export Storage</td><td>Network share (UNC or mapped drive)</td><td>PDF + JSON written on finalization; path configured in Settings</td></tr>
+        <tr><td>File Locking</td><td><code class="inline">.lock</code> sidecar JSON files</td><td>Written beside the network JSON on edit-open; contains user, machine, timestamp; stale after 2 hours</td></tr>
+        <tr><td>Email</td><td>Classic Outlook COM / New Outlook EML</td><td>Registry-detected at runtime; falls back to <code class="inline">mailto:</code> if neither Outlook variant found</td></tr>
+        <tr><td>Logo / Icon Assets</td><td>PNG + ICO</td><td><code class="inline">databranch_nav.png</code> (60×60) for nav header; <code class="inline">databranch.ico</code> (multi-size: 16/32/48/256px) for title bar, taskbar, EXE</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠</div>
+    <div class="callout-body">
+      <div class="callout-label">Critical NuGet Package Selection</div>
+      <div class="callout-text">Always use <code class="inline">PDFsharp-MigraDoc-gdi</code>, <strong>not</strong> <code class="inline">PDFsharp-MigraDoc</code>. The standard (WPF) variant attempts to use WPF imaging APIs that are not available in a WinForms-only .NET 4.8 project and throws a <code class="inline">TypeInitializationException</code> at runtime. The GDI variant uses GDI+ throughout and works correctly. Package reference: <code class="inline">PDFsharp-MigraDoc-gdi version="1.50.5147"</code>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="architecture">
+  <h1>Architecture & Components</h1>
+
+  <p>The application uses a persistent left-rail shell (MainShell) with a single content panel that swaps views. All views are custom-painted UserControls. No Designer-generated layout code is used for content — all control positioning is done programmatically in code-behind using absolute coordinates against a consistent column grid defined in <code class="inline">WizardPageBase</code>.</p>
+
+  <h2>Component Map</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>File(s)</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td>MainShell</td><td><code class="inline">Views/MainShell.cs</code> + <code class="inline">.Designer.cs</code></td><td>Top-level form. Custom-painted nav rail, content panel host, title bar branding. All views swap inside this shell via <code class="inline">ShowView()</code>.</td></tr>
+        <tr><td>WizardView</td><td><code class="inline">Views/WizardView.cs</code> + <code class="inline">.Designer.cs</code></td><td>Multi-page panel controller. Owns the progress bar strip, Back/Next buttons, auto-save timer, and page transition logic. Exposes factory methods <code class="inline">StartNew()</code> and <code class="inline">Resume(draft)</code> and <code class="inline">Edit(record)</code>.</td></tr>
+        <tr><td>WizardPageBase</td><td><code class="inline">Views/WizardPages/WizardPageBase.cs</code></td><td>Abstract base class for all 10 wizard pages. Defines the shared column grid constants, helper factory methods (MakeLabel, MakeTextBox, MakeCheckBox, MakeSectionHeader, etc.), and the IWizardPage interface contract.</td></tr>
+        <tr><td>Wizard Pages ×10</td><td><code class="inline">Views/WizardPages/Page01_*.cs</code> … <code class="inline">Page10_*.cs</code></td><td>One UserControl per page. Each implements <code class="inline">GetPageData(OnboardingRecord)</code> and <code class="inline">LoadPageData(OnboardingRecord)</code>. See Wizard Pages section for full field inventory.</td></tr>
+        <tr><td>DraftManager</td><td><code class="inline">Managers/DraftManager.cs</code></td><td>Creates, loads, saves, and deletes local draft JSON files. Maintains the draft index. Supports portable draft export/import as <code class="inline">.zip</code>.</td></tr>
+        <tr><td>ExportManager</td><td><code class="inline">Managers/ExportManager.cs</code></td><td>Orchestrates finalization: validates, writes PDF via MigraDoc, writes JSON, updates RecordIndex, prunes stale index entries, cleans up draft, opens Outlook compose window.</td></tr>
+        <tr><td>LockManager</td><td><code class="inline">Managers/LockManager.cs</code></td><td>Creates, checks, and releases <code class="inline">.lock</code> sidecar files on the network share. Surfaces lock info (user, machine, age) for UI dialogs. Detects stale locks (&gt;2hr threshold).</td></tr>
+        <tr><td>AppSettingsManager</td><td><code class="inline">Managers/AppSettingsManager.cs</code></td><td>Singleton. Loads/saves all settings JSON, requestor profile JSON, customer profile JSON. Exposes static path helpers for all <code class="inline">%AppData%</code> directories.</td></tr>
+        <tr><td>DraftListView</td><td><code class="inline">Views/DraftListView.cs</code></td><td>Shows all local drafts. Resume / delete actions. Fires <code class="inline">OnResumeRequested(draft)</code> event back to MainShell.</td></tr>
+        <tr><td>RecordLibraryView</td><td><code class="inline">Views/RecordLibraryView.cs</code></td><td>DataGridView listing of all finalized records. Open PDF, open folder, resend email, edit (with lock negotiation) actions. Refresh button re-queries network share.</td></tr>
+        <tr><td>SettingsView</td><td><code class="inline">Views/SettingsView.cs</code></td><td>Two-segment path editor (base path + sub-path) with live preview. Email recipient configuration. Auto-save debounce control.</td></tr>
+        <tr><td>RequestorView</td><td><code class="inline">Views/RequestorView.cs</code></td><td>"My Information" — edits requestor profile that pre-fills wizard page 3. Auto-saves on every keystroke.</td></tr>
+        <tr><td>AboutDialog</td><td><code class="inline">Views/AboutDialog.cs</code></td><td>Modal dialog. Dark header with version, build date, author. Scrollable changelog. Opened via F1 or the <code class="inline">?</code> footer button.</td></tr>
+        <tr><td>AppColors</td><td><code class="inline">Theme/AppColors.cs</code></td><td>Static class of all design token <code class="inline">Color</code> constants. Single source of truth for all colors in the app.</td></tr>
+        <tr><td>AppFonts</td><td><code class="inline">Theme/AppFonts.cs</code></td><td>Static class of all <code class="inline">Font</code> instances (Heading, Body, BodySmall, Caption, Mono). Created once; reused everywhere.</td></tr>
+        <tr><td>ThemeHelper</td><td><code class="inline">Theme/ThemeHelper.cs</code></td><td><code class="inline">ApplyTheme(Control)</code> recursively walks control tree setting BackColor/ForeColor from AppColors tokens. Called on every form/view load.</td></tr>
+        <tr><td>AutoSaveTimer</td><td><code class="inline">Utilities/AutoSaveTimer.cs</code></td><td>Debounced save trigger. Restarts a <code class="inline">System.Windows.Forms.Timer</code> on every <code class="inline">Bump()</code> call. Fires <code class="inline">SaveFired</code> event after the debounce interval elapses without another bump.</td></tr>
+        <tr><td>OnboardingRecord</td><td><code class="inline">Models/OnboardingRecord.cs</code></td><td>Central data model. All wizard fields map to properties. Serializes cleanly to/from JSON. Includes <code class="inline">schemaVersion</code>, <code class="inline">status</code>, all timestamps.</td></tr>
+        <tr><td>LockFile</td><td><code class="inline">Models/LockFile.cs</code></td><td>POCO for <code class="inline">.lock</code> sidecar contents. Includes computed <code class="inline">IsStale</code> and <code class="inline">AgeDescription</code> properties.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>File System Layout</h2>
+<div class="path-block"><span class="comment"># ── Local (per-user, no network required) ─────────────────────────────────</span>
+%AppData%\Databranch\ArnotOnboarding\
+  ├── settings.json          <span class="comment"># AppSettings: HR path, email recipients, debounce ms, window state</span>
+  ├── requestor.json         <span class="comment"># RequestorProfile: name, title, phone, extension, email, dept</span>
+  ├── customer-profile.json  <span class="comment"># CustomerProfile: domain, email format, app list, hidden fields</span>
+  ├── record-index.json      <span class="comment"># RecordIndex: manifest of all finalized records (path, name, date, id)</span>
+  └── Drafts\
+        ├── {guid}_draft.json  <span class="comment"># One per in-progress wizard session</span>
+        └── draft-index.json   <span class="comment"># DraftIndex: list of active drafts for DraftListView</span>
+
+<span class="comment"># ── Network share (path configured in Settings) ────────────────────────────</span>
+\\server\share\Onboarding\          <span class="comment"># BasePath</span>
+  └── HR\                           <span class="comment"># SubPath (configurable)</span>
+        └── {YYYY-MM-DD}_{Last}_{First}\
+              ├── {Last}_{First}_Onboarding.pdf
+              ├── {Last}_{First}_Onboarding.json
+              └── {Last}_{First}_Onboarding.json.lock   <span class="comment"># Only while being edited</span></div>
+
+  <div class="callout info">
+    <div class="callout-icon">ℹ</div>
+    <div class="callout-body">
+      <div class="callout-label">Path Construction</div>
+      <div class="callout-text">The full export path is <code class="inline">Path.Combine(BasePath, SubPath)</code>. Both segments are configured separately in SettingsView to allow the mapped drive root and the organizational subfolder to be managed independently. SettingsView shows a live preview of the fully-constructed path and displays an accessibility indicator (green/red) that checks <code class="inline">Directory.Exists()</code> in real time.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="data-model">
+  <h1>Data Model & Files</h1>
+
+  <h2>OnboardingRecord — Top-Level Schema</h2>
+  <p>The JSON file is the canonical record. Both the PDF and the wizard UI are generated from this model. All fields use camelCase JSON keys. The schema includes a <code class="inline">schemaVersion</code> field for forward-compatibility migration.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Section</th><th>Key Fields</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Meta</td><td><code class="inline">recordId</code>, <code class="inline">schemaVersion</code>, <code class="inline">status</code>, <code class="inline">createdAt</code>, <code class="inline">finalizedAt</code>, <code class="inline">lastModifiedAt</code></td><td>status: "draft" | "finalized". recordId is a GUID string.</td></tr>
+        <tr><td>Requestor</td><td><code class="inline">requestorName</code>, <code class="inline">requestorTitle</code>, <code class="inline">requestorPhone</code>, <code class="inline">requestorExtension</code>, <code class="inline">requestorEmail</code>, <code class="inline">requestorDepartment</code>, <code class="inline">requestorDate</code></td><td>Pre-filled from RequestorProfile; editable inline per-wizard-session</td></tr>
+        <tr><td>Employee</td><td><code class="inline">firstName</code>, <code class="inline">lastName</code>, <code class="inline">title</code>, <code class="inline">department</code>, <code class="inline">directReportsTo</code>, <code class="inline">officeLocation</code>, <code class="inline">workPhone</code>, <code class="inline">cellPhone</code>, <code class="inline">emailAddress</code></td><td>Email auto-generated as firstInitialLastName@arnotrealty.com; overridable</td></tr>
+        <tr><td>Scheduling</td><td><code class="inline">startDate</code>, <code class="inline">appointmentDate</code>, <code class="inline">appointmentTime</code></td><td>DateTimePicker controls; appointment combines date+time</td></tr>
+        <tr><td>AccountSetup</td><td><code class="inline">newAccount</code>, <code class="inline">modifyExisting</code>, <code class="inline">copyPermissions</code>, <code class="inline">copyFromUser</code>, <code class="inline">domainUsername</code>, <code class="inline">initialPassword</code>, <code class="inline">forcePasswordChange</code></td><td>domainUsername auto-suggested from name</td></tr>
+        <tr><td>Email</td><td><code class="inline">emailUsername</code>, <code class="inline">emailPassword</code>, <code class="inline">emailLicenseType</code>, <code class="inline">newMailbox</code>, <code class="inline">distributionLists</code>[], <code class="inline">sharedMailboxes</code>[], <code class="inline">calendarDelegates</code>[]</td><td>Lists stored as newline-separated strings; split on load</td></tr>
+        <tr><td>Applications</td><td><code class="inline">applications</code>[]</td><td>Array of selected app name strings. Loaded from CustomerProfile.applicationsList</td></tr>
+        <tr><td>Computer</td><td><code class="inline">newComputer</code>, <code class="inline">existingComputerName</code>, <code class="inline">printers</code>, <code class="inline">monitorCount</code>, <code class="inline">monitor1Type</code>, <code class="inline">monitor2Type</code></td><td>monitor2Type only populated when monitorCount=2</td></tr>
+        <tr><td>RemoteAccess</td><td><code class="inline">vpnRequired</code>, <code class="inline">vpnUsername</code>, <code class="inline">vpnType</code>, <code class="inline">remoteDesktopOptions</code>[]</td><td></td></tr>
+        <tr><td>Phone</td><td><code class="inline">deskPhoneRequired</code>, <code class="inline">extension</code>, <code class="inline">phoneModel</code>, <code class="inline">voicemailOptions</code>[]</td><td></td></tr>
+        <tr><td>Mobile</td><td><code class="inline">mobileDeviceType</code>, <code class="inline">mobileNumber</code>, <code class="inline">mobileCarrier</code>, <code class="inline">mdmEnrollment</code></td><td>MDM note: "Christina usually handles this"</td></tr>
+        <tr><td>Access</td><td><code class="inline">softwareAccess</code>[], <code class="inline">securityGroups</code>[], <code class="inline">additionalAccess</code>[]</td><td>All checkbox arrays</td></tr>
+        <tr><td>Misc</td><td><code class="inline">miscNotes</code></td><td>Free-form multi-line text box</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>LockFile Schema</h2>
+<div class="path-block">{
+  <span class="key">"recordId"</span>:        <span class="val">"a1b2c3d4-..."</span>,
+  <span class="key">"lockedBy"</span>:        <span class="val">"Sam Kirsch"</span>,        <span class="comment">// From RequestorProfile.Name</span>
+  <span class="key">"lockedByMachine"</span>: <span class="val">"DATABRANCH-SAM"</span>,   <span class="comment">// Environment.MachineName</span>
+  <span class="key">"lockedByUser"</span>:    <span class="val">"skirsch"</span>,          <span class="comment">// Environment.UserName</span>
+  <span class="key">"lockedAt"</span>:        <span class="val">"2026-02-28T14:33:00Z"</span>  <span class="comment">// UTC; stale after 2 hours</span>
+}</div>
+
+  <h2>RecordIndex Schema</h2>
+  <p>The record index is a local manifest file that lets the app list past records quickly without scanning the network share on every load. It is rebuilt by scanning the network on Refresh. Each entry contains:</p>
+<div class="path-block">{
+  <span class="key">"entries"</span>: [
+    {
+      <span class="key">"recordId"</span>:     <span class="val">"..."</span>,
+      <span class="key">"employeeName"</span>: <span class="val">"Jane Smith"</span>,
+      <span class="key">"department"</span>:   <span class="val">"Finance"</span>,
+      <span class="key">"finalizedAt"</span>:  <span class="val">"2026-02-22T10:00:00Z"</span>,
+      <span class="key">"networkPath"</span>:  <span class="val">"\\\\server\\share\\Onboarding\\HR\\2026-02-22_Smith_Jane"</span>,
+      <span class="key">"pdfPath"</span>:      <span class="val">"\\\\...\\Smith_Jane_Onboarding.pdf"</span>,
+      <span class="key">"jsonPath"</span>:     <span class="val">"\\\\...\\Smith_Jane_Onboarding.json"</span>
+    }
+  ]
+}</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="app-structure">
+  <h1>App Structure & Navigation</h1>
+
+  <p>Navigation is managed entirely within MainShell. The left rail contains nav items; clicking an item calls <code class="inline">ShowView(NavTarget)</code> which creates or retrieves the appropriate UserControl and docks it into the content panel. Only one view is active at a time; the previous view is removed from the panel but not disposed (allowing cheap return navigation).</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Nav Item</th><th>View Class</th><th>Behavior</th></tr></thead>
+      <tbody>
+        <tr><td>➕ New Onboarding</td><td><code class="inline">WizardView.StartNew()</code></td><td>Opens NewEmployeeDialog for first/last name entry, then creates draft and starts wizard at page 1</td></tr>
+        <tr><td>📋 In Progress</td><td><code class="inline">DraftListView</code></td><td>Lists all local drafts. Resume opens WizardView.Resume(draft); Delete removes the draft file and index entry</td></tr>
+        <tr><td>📁 Past Records</td><td><code class="inline">RecordLibraryView</code></td><td>DataGridView from RecordIndex. Open PDF, open folder, resend email, edit (with lock check)</td></tr>
+        <tr><td>👤 My Information</td><td><code class="inline">RequestorView</code></td><td>Edits requestor profile that pre-fills wizard page 3; auto-saves on every change</td></tr>
+        <tr><td>⚙ Settings</td><td><code class="inline">SettingsView</code></td><td>Two-segment path editor, email recipients, auto-save debounce interval</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="mainshell">
+  <h1>MainShell & Nav Rail</h1>
+
+  <p>MainShell is a borderless Form using custom chrome. The left navigation rail (260px wide) is a Panel rendered entirely via <code class="inline">OnPaint</code> override — no standard controls are placed on it. This approach allows full design-system fidelity including the logo image, active indicators, section labels, separator lines, and the footer About button without fighting WinForms theming limitations.</p>
+
+  <h2>Nav Rail Paint Architecture</h2>
+  <p>The paint method draws the following regions from top to bottom in a single pass:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Region</th><th>Height</th><th>Contents</th></tr></thead>
+      <tbody>
+        <tr><td>Logo Header</td><td><code class="inline">NAV_LOGO_HEIGHT</code> (90px)</td><td>Databranch logo image (56×56, cached as <code class="inline">_navLogo</code>), company eyebrow, app title, version string — drawn beside the image</td></tr>
+        <tr><td>Nav Items</td><td>Variable</td><td>Section labels and nav items drawn with hit-rect tracking for click/hover detection. Active item has brand-red left border + elevated background.</td></tr>
+        <tr><td>Lock Warning Banner</td><td>80px (conditional)</td><td>Visible when the user has any finalized record locked for editing. Amber left accent, warning text built from lock count. Disappears when all locks released.</td></tr>
+        <tr><td>Footer</td><td><code class="inline">USER_FOOTER_HEIGHT</code> (52px)</td><td>"Signed in as [name]" on left; <code class="inline">?</code> About button (24×24 circle) on right</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>About Button Hover — Non-Flickering Pattern</h2>
+  <p>A key lesson from this project: calling <code class="inline">_navPanel.Invalidate()</code> unconditionally on every <code class="inline">MouseMove</code> event causes severe flickering because WinForms repaints the entire panel (including the logo image and all text) on every mouse-move event — which fires dozens of times per second. The correct pattern is:</p>
+
+<div class="path-block"><span class="comment">// Track hover state as a field — only repaint when state CHANGES</span>
+private bool _aboutBtnHovered = false;
+private Rectangle _aboutBtnRect;   <span class="comment">// Set during paint</span>
+
+private void navPanel_MouseMove(object sender, MouseEventArgs e)
+{
+    bool overAbout = !_aboutBtnRect.IsEmpty &amp;&amp; _aboutBtnRect.Contains(e.Location);
+
+    <span class="comment">// Update cursor for all interactive regions</span>
+    _navPanel.Cursor = (overAbout || overNavItem) ? Cursors.Hand : Cursors.Default;
+
+    <span class="comment">// ONLY invalidate when hover state transitions — not on every move</span>
+    if (overAbout != _aboutBtnHovered)
+    {
+        _aboutBtnHovered = overAbout;
+        _navPanel.Invalidate(_aboutBtnRect);  <span class="comment">// Invalidate only the 24x24 button rect</span>
+    }
+}
+
+private void navPanel_MouseLeave(object sender, EventArgs e)
+{
+    if (_aboutBtnHovered)
+    {
+        _aboutBtnHovered = false;
+        _navPanel.Invalidate(_aboutBtnRect);
+    }
+    _navPanel.Cursor = Cursors.Default;
+}</div>
+
+  <div class="callout success">
+    <div class="callout-icon">✅</div>
+    <div class="callout-body">
+      <div class="callout-label">Rule: Never Invalidate on Every MouseMove</div>
+      <div class="callout-text">For any custom-painted panel with hover effects, always use a stored boolean state field and only call <code class="inline">Invalidate()</code> when that state transitions. Where possible, pass the affected <code class="inline">Rectangle</code> to <code class="inline">Invalidate()</code> so only that region is repainted. This is especially important when the panel contains images (like the logo) which are expensive to redraw.</div>
+    </div>
+  </div>
+
+  <h2>Branding Assets — Integration</h2>
+  <p>Two asset files are required alongside the EXE. Both are declared as <code class="inline">Content / PreserveNewest</code> in the <code class="inline">.csproj</code> so they copy to the output directory on build:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>File</th><th>Size</th><th>Usage</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">databranch.ico</code></td><td>~90KB</td><td>Multi-size ICO (16/32/48/256px). Set as <code class="inline">ApplicationIcon</code> in .csproj (embeds into EXE). Also loaded at runtime via <code class="inline">new Icon("databranch.ico")</code> for <code class="inline">this.Icon</code>.</td></tr>
+        <tr><td><code class="inline">databranch_nav.png</code></td><td>~7KB</td><td>Pre-scaled 60×60 PNG for nav header. Loaded once on first paint, cached in <code class="inline">_navLogo</code> field, disposed on FormClosing. Using a pre-scaled PNG avoids quality loss from runtime scaling of the high-res source.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+<div class="path-block"><span class="comment">&lt;!-- In .csproj — required for assets to copy to output --&gt;</span>
+&lt;PropertyGroup&gt;
+  &lt;ApplicationIcon&gt;databranch.ico&lt;/ApplicationIcon&gt;
+&lt;/PropertyGroup&gt;
+&lt;ItemGroup&gt;
+  &lt;Content Include="databranch.ico"&gt;
+    &lt;CopyToOutputDirectory&gt;PreserveNewest&lt;/CopyToOutputDirectory&gt;
+  &lt;/Content&gt;
+  &lt;Content Include="databranch_nav.png"&gt;
+    &lt;CopyToOutputDirectory&gt;PreserveNewest&lt;/CopyToOutputDirectory&gt;
+  &lt;/Content&gt;
+&lt;/ItemGroup&gt;</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="wizard">
+  <h1>Wizard Pages</h1>
+
+  <p>The wizard uses 10 pages derived from the Arnot New User IT Request Form (Steps 1–35). All pages extend <code class="inline">WizardPageBase</code>, which defines the shared column grid and helper factory methods. Page construction happens entirely in the constructor using an incrementing <code class="inline">y</code> coordinate.</p>
+
+  <h2>WizardPageBase Column Grid</h2>
+<div class="path-block"><span class="comment">// Constants defined in WizardPageBase — all pages use these for alignment</span>
+protected const int START_Y       = 20;    <span class="comment">// Top of first field</span>
+protected const int COL_LABEL_X   = 20;    <span class="comment">// Label left edge</span>
+protected const int COL_FIELD_X   = 180;   <span class="comment">// Field control left edge</span>
+protected const int COL_LABEL_W   = 155;   <span class="comment">// Label width</span>
+protected const int COL_FIELD_W   = 340;   <span class="comment">// Standard field width</span>
+protected const int COL_FIELD_W_WIDE = 520; <span class="comment">// Wide field (notes, lists)</span>
+protected const int ROW_H         = 30;    <span class="comment">// Standard row height</span>
+protected const int ROW_H_TALL    = 44;    <span class="comment">// Row with multi-select</span></div>
+
+  <h2>Page Inventory</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Page</th><th>Title</th><th>Form Steps</th><th>Key Fields</th></tr></thead>
+      <tbody>
+        <tr><td>01</td><td>Employee Name &amp; Scheduling</td><td>Header</td><td>First name, last name (→ draft created on Next), start date, appointment date + time</td></tr>
+        <tr><td>02</td><td>User Information</td><td>Steps 1–3</td><td>Title, department, reports-to, office location, work phone, cell phone, email (auto-generated, overridable)</td></tr>
+        <tr><td>03</td><td>Requestor Information</td><td>Requestor Block</td><td>Pre-filled from RequestorProfile. All fields editable. Reset-to-profile button. Name, title, phone, ext, email, dept, date.</td></tr>
+        <tr><td>04</td><td>Account Setup</td><td>Steps 4–7</td><td>New account / modify existing (checkboxes), copy permissions (radio), copy-from user (conditional text), domain username (auto-suggested), initial password, force password change (radio)</td></tr>
+        <tr><td>05</td><td>Other Accounts &amp; Access</td><td>Steps 8–11</td><td>MFA/2FA options, shared drive access, Ironworks access, other special access text</td></tr>
+        <tr><td>06</td><td>Computer Setup</td><td>Steps 12–14</td><td>New vs. existing computer (radio), existing computer name (conditional), printer(s), monitor count (radio), monitor 1 type, monitor 2 type (conditional)</td></tr>
+        <tr><td>06b</td><td>Monitors &amp; Applications</td><td>Steps 14–17</td><td>Monitor type selection continued, full application checkbox list (loaded from CustomerProfile)</td></tr>
+        <tr><td>07</td><td>Print, Scan &amp; Network Access</td><td>Steps 17–20</td><td>Scan/copy access, network drive mappings, VPN required (radio), VPN username, VPN type (radio)</td></tr>
+        <tr><td>08</td><td>Email &amp; Collaboration</td><td>Steps 21–25</td><td>Email address (linked to Page 02), email password, license type, new/existing mailbox (radio), distribution lists, shared mailboxes, calendar delegates (all scrollable multi-line text areas)</td></tr>
+        <tr><td>09</td><td>Phone &amp; Mobile Device</td><td>Steps 26–31</td><td>Desk phone (radio), extension, phone model, voicemail setup (checkboxes), mobile device type, mobile number, carrier, MDM enrollment (radio + note)</td></tr>
+        <tr><td>10</td><td>Confirmation &amp; Notes</td><td>Steps 32–35</td><td>Engineer checklist items displayed read-only (informational), free-form misc notes text area, Save &amp; Close / Finalize &amp; Export buttons</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Auto-Save Integration</h2>
+  <p>Each wizard page wires all its controls to call <code class="inline">WizardView.OnFieldChanged()</code> via the shared <code class="inline">AutoSaveTimer</code>. The debounce interval is 750ms by default (configurable in Settings). In addition, every Back/Next navigation triggers an immediate synchronous save flush so no data is lost between pages. The auto-save writes the current record state to the local draft JSON — not to the network.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="locking">
+  <h1>File Locking System</h1>
+
+  <p>The locking system prevents two users from editing the same finalized onboarding record simultaneously. It uses a simple JSON sidecar file (<code class="inline">.lock</code>) placed next to the record's network JSON. No database or server component is required.</p>
+
+  <h2>Lock Lifecycle</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Event</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>User clicks Edit on a record</td><td><code class="inline">LockManager.TryAcquireLock()</code> — checks for existing <code class="inline">.lock</code> file; if absent, writes one with current user info</td></tr>
+        <tr><td>Lock file present, not stale</td><td>Dialog shown: "This record is locked by [Name] on [Machine] ([age]). You can view it read-only or try again later."</td></tr>
+        <tr><td>Lock file present, stale (&gt;2hr)</td><td>Override dialog: "This lock appears to be abandoned. Override it and open for editing?" — Override deletes lock and re-acquires</td></tr>
+        <tr><td>User finalizes or saves &amp; closes</td><td><code class="inline">LockManager.ReleaseLock()</code> — deletes the <code class="inline">.lock</code> file</td></tr>
+        <tr><td>Application closed unexpectedly</td><td>Lock file remains; will be overridable after 2-hour stale threshold</td></tr>
+        <tr><td>FormClosing event</td><td>MainShell iterates all active locks and releases them during graceful shutdown</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Nav Warning Banner</h2>
+  <p>While any record is locked for editing by the current user, a persistent amber warning banner appears in the nav rail below the nav items. It reads: <em>"⚠ Editing [N] completed onboarding[s] — not yet exported — [This file is/These files are] locked for other users."</em> This banner is repainted on every nav panel paint and updates dynamically as locks are acquired or released.</p>
+
+  <h2>LockManager Implementation Notes</h2>
+  <p>The LockManager maintains a <code class="inline">Dictionary&lt;string, string&gt;</code> of <code class="inline">recordId → lockFilePath</code> for all currently-held locks. All file operations are wrapped in try/catch because the network path may be transiently unavailable. The <code class="inline">IsStale</code> property on <code class="inline">LockFile</code> uses a <code class="inline">TimeSpan.FromHours(2)</code> threshold and compares against <code class="inline">DateTime.UtcNow</code>.</p>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠</div>
+    <div class="callout-body">
+      <div class="callout-label">Lock File Path Consistency</div>
+      <div class="callout-text">The lock file path must be derived from the same base path as the JSON it protects: <code class="inline">jsonPath + ".lock"</code>. This means the lock file for <code class="inline">Smith_Jane_Onboarding.json</code> is always <code class="inline">Smith_Jane_Onboarding.json.lock</code>. Do not use the PDF path or the directory path as the base — only the JSON path, because the JSON filename is the stable unique identifier.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="export">
+  <h1>Export & PDF Pipeline</h1>
+
+  <h2>Export Flow</h2>
+  <p>When the user clicks Finalize &amp; Export on page 10, ExportManager executes the following steps sequentially. Any failure before the PDF write retains the draft and shows an error without partial side effects.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Step</th><th>Action</th><th>On Failure</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Validate required fields (name, start date minimum)</td><td>Show validation dialog; abort</td></tr>
+        <tr><td>2</td><td>Verify network path is accessible (<code class="inline">Directory.Exists</code>)</td><td>Show path-unavailable dialog; abort</td></tr>
+        <tr><td>3</td><td>Create employee directory: <code class="inline">{BasePath}\{SubPath}\{YYYY-MM-DD}_{Last}_{First}</code></td><td>Show error; abort</td></tr>
+        <tr><td>4</td><td>Render PDF via MigraDoc and write to employee directory</td><td>Show error; abort; delete partial directory</td></tr>
+        <tr><td>5</td><td>Serialize OnboardingRecord to JSON and write to employee directory</td><td>Show error; abort; delete PDF</td></tr>
+        <tr><td>6</td><td>Update local RecordIndex with new entry</td><td>Log warning; continue (non-fatal)</td></tr>
+        <tr><td>7</td><td>Prune RecordIndex entries whose network paths no longer exist</td><td>Log warning; continue</td></tr>
+        <tr><td>8</td><td>Remove record from DraftIndex and delete local draft file</td><td>Log warning; continue</td></tr>
+        <tr><td>9</td><td>Open Outlook compose window with PDF + JSON attached</td><td>Show warning; continue (user can resend from library)</td></tr>
+        <tr><td>10</td><td>Release lock (if in edit mode)</td><td>Log warning; continue</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>MigraDoc PDF Layout</h2>
+  <p>The PDF uses MigraDoc's document object model rather than PdfSharp's low-level graphics API. This produces well-structured, reflowable content. The document uses a two-column table layout for field/value pairs, matching the visual structure of the original Arnot Word form. Section headers use a colored background row. The PDF footer shows the employee name, finalized timestamp, and app version.</p>
+
+  <h2>Outlook Integration — Multi-Version Detection</h2>
+  <p>The ExportManager detects which version of Outlook is installed by reading the Windows Registry <code class="inline">HKCU\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\mailto\UserChoice</code> key. The <code class="inline">ProgId</code> value is checked: if it contains "Outlook" and matches the new Outlook identifier, an <code class="inline">.eml</code> file is generated and launched. If Classic Outlook is detected, COM interop via <code class="inline">Microsoft.Office.Interop.Outlook</code> is used to create a draft with the PDF and JSON as attachments. If neither is detected, a <code class="inline">mailto:</code> URL is constructed as fallback.</p>
+
+  <h2>Network Share Re-Query (RequeryNetworkShare)</h2>
+  <p>The Refresh button in RecordLibraryView triggers <code class="inline">ExportManager.RequeryNetworkShare()</code> which scans the configured HR path directory tree for <code class="inline">*.json</code> files (excluding <code class="inline">*.lock</code> files), reads each record's metadata, and rebuilds the RecordIndex. This allows one user's finalized records to appear in another user's Past Records list without any server component. Stale index entries (pointing to paths that no longer exist on the share) are pruned automatically during this scan.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="branding">
+  <h1>Branding & About Dialog</h1>
+
+  <h2>AboutDialog</h2>
+  <p>The AboutDialog is a modal form built entirely in code (no Designer). It uses the same dark theme as the rest of the app. Layout from top to bottom:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Region</th><th>Contents</th></tr></thead>
+      <tbody>
+        <tr><td>Header banner (110px, SurfaceVoid)</td><td>DATABRANCH eyebrow label, "Arnot Onboarding" title at 18pt, version string (read live from <code class="inline">Assembly.GetExecutingAssembly().GetName().Version</code>), build date</td></tr>
+        <tr><td>Info row (3 columns)</td><td>Author: Sam Kirsch | Client: Arnot Realty | License: Internal use</td></tr>
+        <tr><td>Changelog (scrollable FlowLayoutPanel)</td><td>All version entries newest-first. Each entry has a version badge + date on one line, bullet points below. Uses AppColors and AppFonts throughout.</td></tr>
+        <tr><td>Footer</td><td>Close button. Escape key also closes. F1 from MainShell opens the dialog.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The version string displayed in the About dialog is always read live from the assembly metadata — it never needs to be manually updated in the dialog code when the assembly version changes.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="ui-design">
+  <h1>UI Design System</h1>
+
+  <p>All UI styling follows the Databranch Design System. WinForms translates the CSS design tokens into C# <code class="inline">Color</code> constants in the static <code class="inline">AppColors</code> class and <code class="inline">Font</code> instances in <code class="inline">AppFonts</code>. The <code class="inline">ThemeHelper.ApplyTheme(Control)</code> method recursively applies these to the entire control tree on load.</p>
+
+  <h2>Color Palette</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Token</th><th>Hex</th><th>C# Property</th><th>Primary Usage</th></tr></thead>
+      <tbody>
+        <tr><td>surface-void</td><td><code class="inline">#080C14</code></td><td><code class="inline">AppColors.SurfaceVoid</code></td><td>Modal headers, darkest backgrounds</td></tr>
+        <tr><td>surface-base</td><td><code class="inline">#0D1520</code></td><td><code class="inline">AppColors.SurfaceBase</code></td><td>Form background, main content area</td></tr>
+        <tr><td>surface-raised</td><td><code class="inline">#111C2E</code></td><td><code class="inline">AppColors.SurfaceRaised</code></td><td>Nav panel, sidebar background</td></tr>
+        <tr><td>surface-card</td><td><code class="inline">#162238</code></td><td><code class="inline">AppColors.SurfaceCard</code></td><td>Panel backgrounds, wizard page area</td></tr>
+        <tr><td>surface-elevated</td><td><code class="inline">#1D2E48</code></td><td><code class="inline">AppColors.SurfaceElevated</code></td><td>Hover states, active highlights</td></tr>
+        <tr><td>brand-red-soft</td><td><code class="inline">#C0404A</code></td><td><code class="inline">AppColors.BrandRedSoft</code></td><td>Primary action buttons, active nav indicator</td></tr>
+        <tr><td>brand-blue-bright</td><td><code class="inline">#2E8BFF</code></td><td><code class="inline">AppColors.BrandBlue</code></td><td>Secondary buttons, links, focus rings, section headings</td></tr>
+        <tr><td>text-primary</td><td><code class="inline">#F0F4FF</code></td><td><code class="inline">AppColors.TextPrimary</code></td><td>Headings, labels, important field text</td></tr>
+        <tr><td>text-secondary</td><td><code class="inline">#A8BDD8</code></td><td><code class="inline">AppColors.TextSecondary</code></td><td>Body text, field values</td></tr>
+        <tr><td>text-muted</td><td><code class="inline">#607090</code></td><td><code class="inline">AppColors.TextMuted</code></td><td>Helper labels, metadata, section labels</td></tr>
+        <tr><td>text-dim</td><td><code class="inline">#3A5070</code></td><td><code class="inline">AppColors.TextDim</code></td><td>Nav section category labels</td></tr>
+        <tr><td>status-success</td><td><code class="inline">#22C55E</code></td><td><code class="inline">AppColors.StatusSuccess</code></td><td>Success messages, completion indicators, "Saved ✓"</td></tr>
+        <tr><td>status-warn</td><td><code class="inline">#E8A020</code></td><td><code class="inline">AppColors.StatusWarn</code></td><td>Lock warnings, stale lock indicators, nav banner</td></tr>
+        <tr><td>status-error</td><td><code class="inline">#C84040</code></td><td><code class="inline">AppColors.StatusError</code></td><td>Validation errors, failure states</td></tr>
+        <tr><td>status-info-bg</td><td><code class="inline">#091828</code></td><td><code class="inline">AppColors.StatusInfoBg</code></td><td>Info callout backgrounds, engineer step labels</td></tr>
+        <tr><td>border-default</td><td><code class="inline">#213A58</code></td><td><code class="inline">AppColors.BorderDefault</code></td><td>Panel borders, GroupBox borders, field dividers</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Typography</h2>
+  <p>IBM Plex Sans (the CSS design system font) is unavailable as a WinForms system font. The app uses <strong>Segoe UI</strong> as the primary font and <strong>Consolas</strong> for monospace elements. Font sizes: 16pt headings, 10pt body, 9pt labels/metadata, 8pt captions. All fonts are pre-instantiated in <code class="inline">AppFonts</code> and reused — never <code class="inline">new Font()</code> inline in control factory methods, which causes handle leaks.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="theme">
+  <h1>Theme Implementation</h1>
+
+  <h2>ThemeHelper Strategy</h2>
+  <p>Standard WinForms controls don't natively support dark theming. The approach used is: <code class="inline">ThemeHelper.ApplyTheme(Control root)</code> recursively walks the control tree and sets <code class="inline">BackColor</code> and <code class="inline">ForeColor</code> based on control type. After this pass, custom-painted controls (the nav rail, progress bar strip) handle all painting themselves via <code class="inline">OnPaint</code> overrides.</p>
+
+  <p>Controls that cannot be themed adequately through BackColor/ForeColor alone (DataGridView, DateTimePicker, ComboBox) are styled with specific workarounds documented inline in the relevant view files.</p>
+
+  <h2>Custom Paint Pattern for Panels</h2>
+  <p>All structural regions that require precise visual control (nav rail, wizard progress bar, modal headers) use a common pattern: the Panel's <code class="inline">Paint</code> event is handled and all rendering is done with <code class="inline">Graphics</code> primitives. The panel's <code class="inline">BackColor</code> is set to <code class="inline">AppColors.SurfaceRaised</code> to prevent white flash during resize, but all actual pixel content is drawn in the handler. Hit rectangles for interactive elements are stored as fields and updated during paint so that <code class="inline">MouseClick</code> and <code class="inline">MouseMove</code> handlers can perform accurate hit testing without needing child controls.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="painting">
+  <h1>Custom Painting Patterns</h1>
+
+  <h2>Variable Scope in navPanel_Paint</h2>
+  <p>The nav panel paint method is large and declares several local variables at different nesting levels. A recurring pitfall is <strong>CS0136: variable name shadowing</strong> — declaring <code class="inline">int textX</code> or <code class="inline">float textX</code> in an inner block when the name was already used in an outer block. The solution is to use descriptive names scoped to their context: <code class="inline">logoTextX</code> for the logo section, <code class="inline">bannerTextX</code> for the warning banner section, <code class="inline">itemTextX</code> for nav items.</p>
+
+  <h2>Logo Image Caching</h2>
+  <p>The nav logo image is loaded once from disk on first paint and stored in a <code class="inline">private Image _navLogo</code> field. It is disposed in <code class="inline">FormClosing</code>. Never load images inside paint handlers — disk I/O in a paint event causes visible stuttering on every repaint.</p>
+
+<div class="path-block">private Image _navLogo;
+
+protected override void OnPaint(PaintEventArgs e)  <span class="comment">// or navPanel_Paint</span>
+{
+    if (_navLogo == null &amp;&amp; File.Exists("databranch_nav.png"))
+        _navLogo = Image.FromFile("databranch_nav.png");
+
+    if (_navLogo != null)
+        e.Graphics.DrawImage(_navLogo, logoRect);
+}
+
+private void MainShell_FormClosing(object sender, FormClosingEventArgs e)
+{
+    _navLogo?.Dispose();
+}</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="buglog">
+  <h1>Bug Log & Resolutions</h1>
+  <p>All significant bugs encountered during development, their root causes, and the applied fixes. This section is the primary reference for future maintainers and for templating purposes.</p>
+
+  <div class="bug-card resolved">
+    <div class="bug-card-header">
+      <div class="bug-id">BUG-001</div>
+      <div class="bug-title">CS0136 — Variable 'textX' cannot be declared in this scope</div>
+      <span class="bug-badge badge-resolved">Resolved · v1.7.0.5</span>
+    </div>
+    <div class="bug-section-label">Symptom</div>
+    <div class="bug-text">Build error: <em>"A local or parameter named 'textX' cannot be declared in this scope because that name is used in an enclosing local scope."</em> Occurring in <code class="inline">MainShell.cs</code> around the nav panel paint method.</div>
+    <div class="bug-section-label">Root Cause</div>
+    <div class="bug-text">The nav panel paint method declares <code class="inline">int textX</code> near the top for logo text positioning. A later addition (the lock warning banner) independently declared <code class="inline">float textX</code> inside a nested <code class="inline">if</code> block in the same method. C# does not allow the same name to be re-declared in any inner scope if it exists in any enclosing scope, even if the type differs.</div>
+    <div class="bug-section-label">Fix</div>
+    <div class="bug-text">Renamed the banner-specific variable to <code class="inline">bannerTextX</code>. General principle: in large paint methods, always use context-qualified variable names rather than generic ones like <code class="inline">x</code>, <code class="inline">y</code>, <code class="inline">textX</code>.</div>
+  </div>
+
+  <div class="bug-card resolved">
+    <div class="bug-card-header">
+      <div class="bug-id">BUG-002</div>
+      <div class="bug-title">CS0219 — Variable 'y' is assigned but its value is never used</div>
+      <span class="bug-badge badge-resolved">Resolved · v1.7.0.5</span>
+    </div>
+    <div class="bug-section-label">Symptom</div>
+    <div class="bug-text">Compiler warning in <code class="inline">AboutDialog.cs</code> line 107: <em>"The variable 'y' is assigned but its value is never used."</em></div>
+    <div class="bug-section-label">Root Cause</div>
+    <div class="bug-text">During iterative development of <code class="inline">BuildLayout()</code>, the original layout approach used a running <code class="inline">int y = 0</code> counter for manual positioning. When the layout was redesigned to use <code class="inline">DockStyle</code> and <code class="inline">FlowLayoutPanel</code>, the <code class="inline">y</code> variable was abandoned but not removed.</div>
+    <div class="bug-section-label">Fix</div>
+    <div class="bug-text">Removed the unused variable declaration. Lesson: when refactoring layout approaches, always scan for leftover coordinate variables.</div>
+  </div>
+
+  <div class="bug-card resolved">
+    <div class="bug-card-header">
+      <div class="bug-id">BUG-003</div>
+      <div class="bug-title">CS1519 — Invalid token '{' / orphaned method body after str_replace insertion</div>
+      <span class="bug-badge badge-resolved">Resolved · v1.7.0.7</span>
+    </div>
+    <div class="bug-section-label">Symptom</div>
+    <div class="bug-text">Cascade of syntax errors starting with <em>"Invalid token '{' in a member declaration"</em> at line 525, followed by tuple-related errors. The file appeared structurally broken.</div>
+    <div class="bug-section-label">Root Cause</div>
+    <div class="bug-text">A string-replace operation inserted <code class="inline">navPanel_MouseLeave()</code> using the opening line of <code class="inline">ShowAboutDialog()</code> as the anchor. The replacement text included the new method but re-used the anchor line as both the end of the new method and the start of the next. This caused the <code class="inline">ShowAboutDialog</code> method signature to be consumed by the replacement, leaving only its body <code class="inline">{ ... }</code> floating at class level — which the compiler sees as a malformed member declaration.</div>
+    <div class="bug-section-label">Fix</div>
+    <div class="bug-text">Restored the orphaned <code class="inline">private void ShowAboutDialog()</code> signature. General principle: when inserting a new method adjacent to an existing one, always include the complete method signature of both the new method AND the next existing method in the replacement to prevent accidentally dropping the signature.</div>
+  </div>
+
+  <div class="bug-card resolved">
+    <div class="bug-card-header">
+      <div class="bug-id">BUG-004</div>
+      <div class="bug-title">Nav panel flickering/blinking on mouse movement</div>
+      <span class="bug-badge badge-resolved">Resolved · v1.7.0.6</span>
+    </div>
+    <div class="bug-section-label">Symptom</div>
+    <div class="bug-text">The entire nav rail — including text, logo, and nav items — visibly blinked and flickered whenever the mouse moved anywhere over the left navigation panel.</div>
+    <div class="bug-section-label">Root Cause</div>
+    <div class="bug-text">The <code class="inline">navPanel_MouseMove</code> handler called <code class="inline">_navPanel.Invalidate()</code> unconditionally on every mouse move event to keep the About button hover highlight current. Mouse move events fire at extremely high frequency (50–100+ times per second during movement), causing the entire custom-painted panel to redraw constantly. The panel contains a logo image load, text rendering, and dozens of GDI+ draw calls — all executing on every pixel of mouse movement.</div>
+    <div class="bug-section-label">Fix</div>
+    <div class="bug-text">Introduced <code class="inline">private bool _aboutBtnHovered</code> state field. <code class="inline">MouseMove</code> only calls <code class="inline">Invalidate(_aboutBtnRect)</code> (region-limited) when the hover state actually transitions (true→false or false→true). <code class="inline">MouseLeave</code> clears the state and invalidates the button rect. The paint method reads <code class="inline">_aboutBtnHovered</code> directly rather than performing a live cursor position check. Result: zero repaints during normal mouse movement; exactly one targeted repaint when the cursor enters or exits the button boundary.</div>
+  </div>
+
+  <div class="bug-card resolved">
+    <div class="bug-card-header">
+      <div class="bug-id">BUG-005</div>
+      <div class="bug-title">Lock file not released after re-export from edit mode</div>
+      <span class="bug-badge badge-resolved">Resolved · v1.7.0.0</span>
+    </div>
+    <div class="bug-section-label">Symptom</div>
+    <div class="bug-text">After editing and re-exporting a finalized record, the <code class="inline">.lock</code> file remained on the network share, permanently blocking other users from editing that record.</div>
+    <div class="bug-section-label">Root Cause</div>
+    <div class="bug-text">ExportManager was deriving the lock file path from the PDF filename rather than the JSON filename. When the record was originally created with one naming pattern and the re-export used a slightly different format, the paths didn't match and the lock file couldn't be located for deletion.</div>
+    <div class="bug-section-label">Fix</div>
+    <div class="bug-text">Lock file path is always <code class="inline">jsonPath + ".lock"</code> — derived solely from the JSON file path, which is the stable canonical identifier for a record. The ExportManager's lock-release step was updated to use this derivation consistently.</div>
+  </div>
+
+  <div class="bug-card resolved">
+    <div class="bug-card-header">
+      <div class="bug-id">BUG-006</div>
+      <div class="bug-title">PdfSharp TypeInitializationException at startup</div>
+      <span class="bug-badge badge-resolved">Resolved · v1.4.0.0</span>
+    </div>
+    <div class="bug-section-label">Symptom</div>
+    <div class="bug-text">Application crashed on first PDF export attempt with <code class="inline">TypeInitializationException</code> deep inside PdfSharp internals, referencing WPF imaging APIs.</div>
+    <div class="bug-section-label">Root Cause</div>
+    <div class="bug-text">The standard <code class="inline">PDFsharp-MigraDoc</code> NuGet package targets WPF imaging. In a WinForms-only project targeting .NET Framework 4.8, the WPF <code class="inline">PresentationCore</code> assembly is not loaded and the imaging type initializer fails.</div>
+    <div class="bug-section-label">Fix</div>
+    <div class="bug-text">Switched to the GDI variant: <code class="inline">PDFsharp-MigraDoc-gdi</code>. This package uses GDI+ throughout and has no dependency on WPF assemblies. The package reference in <code class="inline">packages.config</code> must explicitly reference the GDI variant by its full package ID.</div>
+  </div>
+
+  <div class="bug-card resolved">
+    <div class="bug-card-header">
+      <div class="bug-id">BUG-007</div>
+      <div class="bug-title">Draft index out of sync — records appeared as "in progress" after finalization</div>
+      <span class="bug-badge badge-resolved">Resolved · v1.5.3.0</span>
+    </div>
+    <div class="bug-section-label">Symptom</div>
+    <div class="bug-text">After finalizing a record, it still appeared in the DraftListView. Deleting from the draft list caused an unhandled exception because the file no longer existed.</div>
+    <div class="bug-section-label">Root Cause</div>
+    <div class="bug-text">The ExportManager was removing the draft file from disk but not updating the in-memory draft index object before triggering a UI refresh. The DraftListView refreshed from the stale in-memory list.</div>
+    <div class="bug-section-label">Fix</div>
+    <div class="bug-text">ExportManager now calls <code class="inline">DraftManager.RemoveDraftFromIndex(recordId)</code> immediately before triggering any UI refresh. The index file on disk and the in-memory list are kept in sync atomically.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="changelog">
+  <h1>Version Changelog</h1>
+
+  <div class="version-row"><span class="ver-num">v1.7.0.7</span><span class="ver-date">2026-02-28</span><span class="ver-desc">Bugfix: restored orphaned ShowAboutDialog method signature after str_replace insertion error (BUG-003)</span></div>
+  <div class="version-row"><span class="ver-num">v1.7.0.6</span><span class="ver-date">2026-02-28</span><span class="ver-desc">Bugfix: eliminated nav panel flicker by switching to state-change-only Invalidate pattern with _aboutBtnHovered field (BUG-004). Added navPanel_MouseLeave handler.</span></div>
+  <div class="version-row"><span class="ver-num">v1.7.0.5</span><span class="ver-date">2026-02-28</span><span class="ver-desc">Bugfix: CS0136 textX scope conflict in navPanel_Paint (renamed to bannerTextX). CS0219 removed unused y variable from AboutDialog.BuildLayout (BUG-001, BUG-002)</span></div>
+  <div class="version-row"><span class="ver-num">v1.7.0.4</span><span class="ver-date">2026-02-28</span><span class="ver-desc">AboutDialog implemented with full changelog. CHANGELOG.md added. Databranch logo integrated: nav header image, title bar icon, EXE icon. About button (?) in nav footer. F1 shortcut for About.</span></div>
+  <div class="version-row"><span class="ver-num">v1.7.0.0</span><span class="ver-date">2026-02-28</span><span class="ver-desc">LockManager implemented. Lock negotiation dialogs (locked, stale). Nav warning banner for active locks. Lock release on finalize and graceful shutdown. Lock file path derivation fixed (BUG-005).</span></div>
+  <div class="version-row"><span class="ver-num">v1.6.1.0</span><span class="ver-date">2026-02-27</span><span class="ver-desc">RecordLibraryView edit flow: opens finalized record into WizardView.Edit() with lock check. Read-only preview mode for locked records.</span></div>
+  <div class="version-row"><span class="ver-num">v1.6.0.0</span><span class="ver-date">2026-02-27</span><span class="ver-desc">RecordLibraryView implemented. RefreshFromNetwork / RequeryNetworkShare. Open PDF, open folder, resend email actions. Record index pruning.</span></div>
+  <div class="version-row"><span class="ver-num">v1.5.3.0</span><span class="ver-date">2026-02-27</span><span class="ver-desc">Draft/record index sync fixed (BUG-007). ExportManager step ordering hardened. Network path accessibility check added before export attempt.</span></div>
+  <div class="version-row"><span class="ver-num">v1.5.0.0</span><span class="ver-date">2026-02-27</span><span class="ver-desc">SettingsView implemented with two-segment path editor, live path preview, accessibility indicator. Email recipient configuration. Debounce interval control.</span></div>
+  <div class="version-row"><span class="ver-num">v1.4.0.0</span><span class="ver-date">2026-02-26</span><span class="ver-desc">Switched to PDFsharp-MigraDoc-gdi; resolved TypeInitializationException (BUG-006). ExportManager PDF renderer complete. Outlook multi-version detection implemented.</span></div>
+  <div class="version-row"><span class="ver-num">v1.3.0.0</span><span class="ver-date">2026-02-25</span><span class="ver-desc">WizardView complete with 10 pages. Auto-save on all fields wired. Progress bar step indicator. Back/Next navigation with immediate flush on page change.</span></div>
+  <div class="version-row"><span class="ver-num">v1.2.0.0</span><span class="ver-date">2026-02-24</span><span class="ver-desc">DraftManager implemented. DraftListView with resume/delete. AutoSaveTimer debounce utility. Startup draft recovery check.</span></div>
+  <div class="version-row"><span class="ver-num">v1.1.0.0</span><span class="ver-date">2026-02-23</span><span class="ver-desc">MainShell custom-painted nav rail. All five views stubbed and wired. AppColors, AppFonts, ThemeHelper complete. RequestorView implemented.</span></div>
+  <div class="version-row"><span class="ver-num">v1.0.0.0</span><span class="ver-date">2026-02-22</span><span class="ver-desc">Project created. Solution structure, all model classes, AppSettingsManager, NuGet packages configured.</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="future">
+  <h1>Future Work & Multi-Customer Architecture</h1>
+
+  <h2>CustomerProfile Config (Already Implemented — Expand for New Clients)</h2>
+  <p>The <code class="inline">CustomerProfile</code> JSON externalizes all client-specific values. To onboard a new client, author a new <code class="inline">customer-profile.json</code> and distribute it with the app — no recompile required.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Field</th><th>Arnot Value</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">customerName</code></td><td>Arnot Realty</td><td>App title bar and PDF header</td></tr>
+        <tr><td><code class="inline">emailDomain</code></td><td>arnotrealty.com</td><td>Auto-generates email on user info page</td></tr>
+        <tr><td><code class="inline">emailFormat</code></td><td>firstInitialLastName</td><td>Enum: firstInitialLastName, firstDotLast, firstLast</td></tr>
+        <tr><td><code class="inline">networkBasePath</code></td><td>\\server\share\</td><td>Default base path (overridable per-machine in Settings)</td></tr>
+        <tr><td><code class="inline">networkSubPath</code></td><td>Onboarding\HR</td><td>Sub-path appended to base</td></tr>
+        <tr><td><code class="inline">applicationsList</code></td><td>[…]</td><td>Array of app name strings for Page 06b checkboxes</td></tr>
+        <tr><td><code class="inline">hiddenFields</code></td><td>[]</td><td>Field IDs to hide; allows form trimming per client</td></tr>
+        <tr><td><code class="inline">requiredFields</code></td><td>["firstName","lastName","startDate"]</td><td>Field IDs that must be populated before export</td></tr>
+        <tr><td><code class="inline">mdmNote</code></td><td>"Christina usually handles this…"</td><td>Contextual note on phone/mobile page</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Engineer Automation Tool (Future)</h2>
+  <p>The exported JSON schema is designed for machine consumption. A future engineer-facing PowerShell or WinForms tool will read the JSON and automate AD account creation, email mailbox provisioning, and application license assignment. The <code class="inline">schemaVersion</code> field supports forward-compatible migration as the schema evolves.</p>
+
+  <h2>Application Design Spec Template</h2>
+  <p>This document serves as the foundational template for a general-purpose "Application Project Spec" format — analogous to the Databranch Script Library specification but for C# WinForms applications. When creating a new application spec for a different project, this document's structure, section organization, and engineering detail level should be used as the baseline. Sections to retain: Overview, Technology Stack, Architecture, Data Model, App Structure, UI Design System, Theme Implementation, Bug Log, Version Changelog, Conventions. Sections to replace: all Arnot-specific content in wizard pages, data model fields, and file paths.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section" id="conventions">
+  <h1>Conventions & Standards</h1>
+
+  <h2>Version Numbering</h2>
+  <p>Application version follows <code class="inline">Major.Minor.Revision.Build</code>. Assembly version in <code class="inline">AssemblyInfo.cs</code> must match. Displayed in the About dialog (read live from assembly) and in the PDF footer. Increment rules: Major for breaking changes; Minor for new features; Revision for bug fixes; Build for internal iterations within a session.</p>
+
+  <h2>C# Naming & Code Style</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Element</th><th>Convention</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>Classes</td><td>PascalCase</td><td><code class="inline">DraftManager</code>, <code class="inline">OnboardingRecord</code></td></tr>
+        <tr><td>Methods</td><td>PascalCase</td><td><code class="inline">LoadDraft()</code>, <code class="inline">ExportToPdf()</code></td></tr>
+        <tr><td>Private fields</td><td>_camelCase</td><td><code class="inline">_draftManager</code>, <code class="inline">_currentRecord</code>, <code class="inline">_aboutBtnHovered</code></td></tr>
+        <tr><td>Constants</td><td>ALL_CAPS</td><td><code class="inline">NAV_LOGO_HEIGHT</code>, <code class="inline">COL_FIELD_X</code></td></tr>
+        <tr><td>Events</td><td>On + PascalCase</td><td><code class="inline">OnDraftSaved</code>, <code class="inline">OnExportComplete</code></td></tr>
+        <tr><td>Form/View files</td><td>PascalCase + View/Form/Dialog</td><td><code class="inline">MainShell.cs</code>, <code class="inline">WizardView.cs</code>, <code class="inline">AboutDialog.cs</code></td></tr>
+        <tr><td>Wizard page files</td><td>Page##_Description.cs</td><td><code class="inline">Page01_Request.cs</code>, <code class="inline">Page06b_MonitorsApps.cs</code></td></tr>
+        <tr><td>JSON keys</td><td>camelCase</td><td><code class="inline">"firstName"</code>, <code class="inline">"recordId"</code>, <code class="inline">"lockedByMachine"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>File Header Block</h2>
+  <p>Every <code class="inline">.cs</code> file includes:</p>
+<div class="path-block">// =============================================================
+// ArnotOnboarding — {ClassName}.cs
+// Version    : {Major}.{Minor}.{Revision}.{Build}
+// Author     : Sam Kirsch
+// Company    : Databranch
+// Created    : YYYY-MM-DD
+// Modified   : YYYY-MM-DD
+// Description: {One-line description}
+// =============================================================</div>
+
+  <h2>Custom Paint Rules</h2>
+  <p>When writing custom-painted panels: (1) never call <code class="inline">Invalidate()</code> unconditionally on every <code class="inline">MouseMove</code> — always gate on a state change; (2) never load images inside paint handlers — cache them as fields; (3) always use context-qualified variable names to avoid CS0136 in large paint methods; (4) store hit rectangles as fields updated during paint for use by mouse event handlers; (5) set panel <code class="inline">BackColor</code> to prevent white flash during resize even when painting everything manually.</p>
+
+  <h2>Changelog</h2>
+  <p>A <code class="inline">CHANGELOG.md</code> at the solution root tracks all version increments with date, version number, and change summary in newest-first order. The About dialog changelog section must be kept in sync manually with each build increment.</p>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="doc-footer">
+  <div>Databranch — Internal Project Reference — Confidential</div>
+  <div>ArnotOnboarding_ProjectSpec.html &nbsp;|&nbsp; v2.0.0 &nbsp;|&nbsp; 2026-02-28</div>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

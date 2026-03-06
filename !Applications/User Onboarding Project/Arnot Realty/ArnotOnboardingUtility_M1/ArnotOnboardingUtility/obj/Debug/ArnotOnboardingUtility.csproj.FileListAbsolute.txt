@@ -1,0 +1,11 @@
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\obj\Debug\ArnotOnboardingUtility.csproj.AssemblyReference.cache
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\obj\Debug\ArnotOnboardingUtility.csproj.CoreCompileInputs.cache
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\bin\Debug\databranch.ico
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\bin\Debug\databranch_nav.png
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\bin\Debug\ArnotOnboardingUtility.exe
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\bin\Debug\ArnotOnboardingUtility.pdb
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\bin\Debug\Newtonsoft.Json.dll
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\bin\Debug\Newtonsoft.Json.xml
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\obj\Debug\ArnotOnb.2124CD5D.Up2Date
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\obj\Debug\ArnotOnboardingUtility.exe
+C:\PowerShellLocal\ArnotOnboardingUtility_M1\ArnotOnboardingUtility\obj\Debug\ArnotOnboardingUtility.pdb
