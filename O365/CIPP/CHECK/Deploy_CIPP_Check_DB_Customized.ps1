@@ -13,9 +13,12 @@ https://github.com/CyberDrain/Check
 Forked for Datbranch use by Josh Britton
 
 Original Load Date: 9-22-25
-Version: 1.0
+Last Updated: 3-12-26
+Version: 1.1
 
 Version History
+===========================================================================================================
+1.1 - 
 ===========================================================================================================
 1.0 - Initial version - 9-22-25 - Josh Britton
 
@@ -56,6 +59,11 @@ $customRulesUrl = "" # This will set the "Config URL" option in the Detection Co
 $updateInterval = 24 # This will set the "Update Interval" option in the Detection Configuration settings; default is 24 (hours). Range: 1-168 hours (1 hour to 1 week).
 $urlWhitelist = @() # This will set the "URL Whitelist" option in the Detection Configuration settings; default is blank; if you want to add multiple URLs, add them as a comma-separated list within the brackets (e.g., @("https://example1.com", "https://example2.com")). Supports simple URLs with * wildcard (e.g., https://*.example.com) or advanced regex patterns (e.g., ^https:\/\/(www\.)?example\.com\/.*$).
 $enableDebugLogging = 0 # 0 = Unchecked, 1 = Checked (Enabled); default is 0; This will set the "Enable Debug Logging" option in the Activity Log settings.
+
+# Generic Webhook Settings
+$enableGenericWebhook = 0 # 0 = Disabled, 1 = Enabled; default is 0; This will enable the generic webhook for sending detection events to a custom endpoint.
+$webhookUrl = "" # This will set the "Webhook URL" option; default is blank; if you set $enableGenericWebhook to 1, you must set this to a valid URL including the protocol (e.g., https://webhook.example.com/endpoint).
+$webhookEvents = @() # This will set the "Event Types" to send to the webhook; default is blank; if you set $enableGenericWebhook to 1, you can specify which events to send. Available events: "detection_alert", "false_positive_report", "page_blocked", "rogue_app_detected", "threat_detected", "validation_event". Example: @("detection_alert", "page_blocked", "threat_detected").
 
 # Custom Branding Settings
 $companyName = "Databranch" # This will set the "Company Name" option in the Custom Branding settings; default is "CyberDrain".

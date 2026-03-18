@@ -71,21 +71,27 @@ Else
 foreach ($Client in $CustomInfoClients) {
     if ($ClientName -eq $Client) {
         try {
-            Copy-Item -Path "\\path\to\source\Desktop Info $Client`_$FileVersionDate.zip" -Destination "C:\Databranch\DesktopInfo\" -Force
+            Copy-Item -Path .\"Desktop Info Databranch - $Client_$FileVersionDate.zip" -Destination "C:\Databranch\DesktopInfo\" -Force
+
+            $ZipFile = "C:\Databranch\DesktopInfo\Desktop Info Databranch - $Client_$FileVersionDate.zip"    
         }
         catch {
-            Write-Error "Failed to copy ZIP file for $Client`: $_"
+            Write-Error "Failed to copy ZIP file for $Client"
         }
         break
     }
 }
 
+if ($null -eq $ZipFile) {
+    Copy-Item -Path "Desktop Info Databranch - $FileVersionDate.zip" -Destination "C:\Databranch\DesktopInfo\" -Force
+    $ZipFile = "C:\Databranch\DesktopInfo\Desktop Info Databranch - $FileVersionDate.zip"
+}
+
 #Check for Zip File
-$ZipFile = "C:\Databranch\DesktopInfo\Desktop Info Databranch_$FileversionDate.Zip"
 
 If (Test-Path $ZipFile){
 
-    $ZipFileTest = "C:\Databranch\DesktopInfo\Desktop Info Databranch_$FileversionDate.Zip exists"
+    $ZipFileTest = "Zip file copied to the agent. Starting extraction."
 
     #Extract Files
     Expand-Archive -LiteralPath $ZipFile -DestinationPath "C:\Program Files\Databranch\Desktop Info Databranch" -Force
@@ -96,7 +102,7 @@ If (Test-Path $ZipFile){
 }
 Else{
 
-    $ZipFileTest = "C:\Databranch\DesktopInfo\Desktop Info Databranch.Zip does not exist. Exiting PS Script and noting Autoamte"
+    $ZipFileTest = "$Zipfile does not exist on agepnt. Exiting PS Script and noting RMM"
   
 }
 
