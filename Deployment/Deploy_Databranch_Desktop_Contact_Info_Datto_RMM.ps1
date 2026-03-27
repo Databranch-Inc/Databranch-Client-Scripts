@@ -3,10 +3,9 @@ Deploy Desktop Contact Info - Datto RMM
 
 This new script is designed to be used with the Datto RMM platform to deploy the Desktop Info application to machines. The script will pull the site inforamtion from the Datto RMM platform and use that to determine which ZIP file to deploy.
 
-
 Josh Britton
 
-Orininal Write - 8-27-24
+Orininal Write - 8-27-24s
 Datto RMM Fork - 2-26-26
 Last Update
 
@@ -68,23 +67,21 @@ Else
     
 #Copy Zip file for deployment based on $ClientName Check
 
+$ZipFile = $null
+
 foreach ($Client in $CustomInfoClients) {
     if ($ClientName -eq $Client) {
-        try {
-            Copy-Item -Path .\"Desktop Info Databranch - $Client_$FileVersionDate.zip" -Destination "C:\Databranch\DesktopInfo\" -Force
-
-            $ZipFile = "C:\Databranch\DesktopInfo\Desktop Info Databranch - $Client_$FileVersionDate.zip"    
-        }
-        catch {
-            Write-Error "Failed to copy ZIP file for $Client"
-        }
+        $SourceFile = "Desktop Info Databranch - $Client_$FileVersionDate.zip"
+        Copy-Item -Path $SourceFile -Destination 'C:\Databranch\DesktopInfo\' -Force -ErrorAction Stop
+        $ZipFile = "C:\Databranch\DesktopInfo\$SourceFile"
         break
     }
 }
 
 if ($null -eq $ZipFile) {
-    Copy-Item -Path "Desktop Info Databranch - $FileVersionDate.zip" -Destination "C:\Databranch\DesktopInfo\" -Force
-    $ZipFile = "C:\Databranch\DesktopInfo\Desktop Info Databranch - $FileVersionDate.zip"
+    $SourceFile = "Desktop Info Databranch - $FileVersionDate.zip"
+    Copy-Item -Path $SourceFile -Destination "C:\Databranch\DesktopInfo\" -Force -ErrorAction Stop
+    $ZipFile = "C:\Databranch\DesktopInfo\$SourceFile"
 }
 
 #Check for Zip File
@@ -102,7 +99,7 @@ If (Test-Path $ZipFile){
 }
 Else{
 
-    $ZipFileTest = "$Zipfile does not exist on agepnt. Exiting PS Script and noting RMM"
+    $ZipFileTest = "$Zipfile does not exist on agent. Exiting PS Script and noting RMM"
   
 }
 
