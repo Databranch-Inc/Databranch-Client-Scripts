@@ -2,17 +2,18 @@
 # Used as a component for Datto RMM monitoring
 
 param(
-    [string[]]$ExpectedServiceIDs = @(1a5d6cc5d5f07e3e)
+    [string[]]$ExpectedServiceIDs = @("1a5d6cc5d5f07e3e", "595fd337e1c95b7c")
 )
 
 # Exit codes for Datto RMM
 $EXIT_SUCCESS = 0
-$EXIT_WARNING = 1
-$EXIT_ERROR = 2
+$EXIT_ERROR = 1
 
 # Validate that expected IDs were provided
 if ($ExpectedServiceIDs.Count -eq 0) {
-    Write-Error "No expected ScreenConnect IDs provided."
+    write-host '<-Start Result->'
+    "RESULT=No expected ScreenConnect IDs provided."
+    write-host '<-End Result->'
     exit $EXIT_ERROR
 }
 
@@ -21,7 +22,9 @@ $ScreenConnectServices = Get-Service -Name "ScreenConnect*" -ErrorAction Silentl
 
 # Check if any ScreenConnect services exist
 if ($ScreenConnectServices.Count -eq 0) {
-    Write-Error "No ScreenConnect services found."
+    write-host '<-Start Result->'
+    "RESULT=No ScreenConnect services found."
+    write-host '<-End Result->'
     exit $EXIT_ERROR
 }
 
@@ -29,7 +32,7 @@ if ($ScreenConnectServices.Count -eq 0) {
 $FoundServiceIDs = @()
 foreach ($Service in $ScreenConnectServices) {
     # Extract ID from service name format "ScreenConnect (ID)"
-    if ($Service.Name -match "ScreenConnect\s*\(([^)]+)\)") {
+    if ($Service.Name -match "ScreenConnect Client\s*\(([^)]+)\)") {
         $FoundServiceIDs += $matches[1]
     }
 }
@@ -39,9 +42,13 @@ $ValidatedIDs = $FoundServiceIDs | Where-Object { $_ -in $ExpectedServiceIDs }
 
 if ($ValidatedIDs.Count -ne $FoundServiceIDs.Count) {
     $UnexpectedIDs = $FoundServiceIDs | Where-Object { $_ -notin $ExpectedServiceIDs }
-    Write-Error "Unexpected ScreenConnect service IDs found: $($UnexpectedIDs -join ', ')"
+    write-host '<-Start Result->'
+    "RESULT=Unexpected ScreenConnect service IDs found: $($UnexpectedIDs -join ', ')"
+    write-host '<-End Result->'
     exit $EXIT_ERROR
 }
 
-Write-Output "All ScreenConnect services validated successfully. Found IDs: $($ValidatedIDs -join ', ')"
+write-host '<-Start Result->'
+"RESULT=All ScreenConnect services validated successfully. Found IDs: $($ValidatedIDs -join ', ')"
+write-host '<-End Result->'
 exit $EXIT_SUCCESS
