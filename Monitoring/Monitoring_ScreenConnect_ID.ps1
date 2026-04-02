@@ -1,3 +1,18 @@
+<#
+Moniitoring_ScreenConnect_ID.ps1
+
+This script is designed to verify that the ScreenConnect services running on a machine match a predefined list of expected configuration IDs. It is intended to be used as part of a monitoring solution within Datto RMM to ensure that only authorized ScreenConnect instances are active on the system. The script checks for the presence of ScreenConnect services, extracts their IDs, and compares them against the expected list, returning appropriate results for monitoring purposes.
+
+Author: Josh Britton
+Original Creation Date: 3-27-26
+Version 1.0
+===========================================================================================================
+1.0 - Initial script creation and testing
+
+============================================================================================================
+
+#>
+
 # Script to verify ScreenConnect services match expected configuration IDs
 # Used as a component for Datto RMM monitoring
 
