@@ -13,9 +13,12 @@ https://github.com/CyberDrain/Check
 Forked for Datbranch use by Josh Britton
 
 Original Load Date: 9-22-25
-Version: 1.0
+Last Updated: 3-12-26
+Version: 1.1
 
 Version History
+===========================================================================================================
+1.1 - 
 ===========================================================================================================
 1.0 - Initial version - 9-22-25 - Josh Britton
 
@@ -57,12 +60,17 @@ $updateInterval = 24 # This will set the "Update Interval" option in the Detecti
 $urlWhitelist = @() # This will set the "URL Whitelist" option in the Detection Configuration settings; default is blank; if you want to add multiple URLs, add them as a comma-separated list within the brackets (e.g., @("https://example1.com", "https://example2.com")). Supports simple URLs with * wildcard (e.g., https://*.example.com) or advanced regex patterns (e.g., ^https:\/\/(www\.)?example\.com\/.*$).
 $enableDebugLogging = 0 # 0 = Unchecked, 1 = Checked (Enabled); default is 0; This will set the "Enable Debug Logging" option in the Activity Log settings.
 
+# Generic Webhook Settings
+$enableGenericWebhook = 0 # 0 = Disabled, 1 = Enabled; default is 0; This will enable the generic webhook for sending detection events to a custom endpoint.
+$webhookUrl = "" # This will set the "Webhook URL" option; default is blank; if you set $enableGenericWebhook to 1, you must set this to a valid URL including the protocol (e.g., https://webhook.example.com/endpoint).
+$webhookEvents = @() # This will set the "Event Types" to send to the webhook; default is blank; if you set $enableGenericWebhook to 1, you can specify which events to send. Available events: "detection_alert", "false_positive_report", "page_blocked", "rogue_app_detected", "threat_detected", "validation_event". Example: @("detection_alert", "page_blocked", "threat_detected").
+
 # Custom Branding Settings
 $companyName = "Databranch" # This will set the "Company Name" option in the Custom Branding settings; default is "CyberDrain".
 $companyURL = "https://www.databranch.com." # This will set the Company URL option in the Custom Branding settings; default is "https://cyberdrain.com"; Must include the protocol (e.g., https://).
 $productName = "Check - Phishing Protection Powered by Databranch" # This will set the "Product Name" option in the Custom Branding settings; default is "Check - Phishing Protection".
 $supportEmail = "support@databranch.com" # This will set the "Support Email" option in the Custom Branding settings; default is blank.
-$primaryColor = "#54c3e5" # This will set the "Primary Color" option in the Custom Branding settings; default is "#F77F00"; must be a valid hex color code (e.g., #FFFFFF).
+$primaryColor = "#77C8E4" # This will set the "Primary Color" option in the Custom Branding settings; default is "#F77F00"; must be a valid hex color code (e.g., #FFFFFF).
 $logoUrl = "https://static.wixstatic.com/media/85fd0c_64287e1d1b5a4b639b60785525618ed9~mv2.png/v1/fill/w_77,h_73,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Databranch-Logo-Art-Circuitry.png" # This will set the "Logo URL" option in the Custom Branding settings; default is blank. Must be a valid URL including the protocol (e.g., https://example.com/logo.png); protocol must be https; recommended size is 48x48 pixels with a maximum of 128x128.
 
 # Extension Settings
