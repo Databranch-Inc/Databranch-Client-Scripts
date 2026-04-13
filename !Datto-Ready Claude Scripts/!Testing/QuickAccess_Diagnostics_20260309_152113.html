@@ -1,0 +1,900 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quick Access Diagnostics - AAA2-23</title>
+<style>
+  body { font-family: Segoe UI, Arial, sans-serif; font-size: 13px; background: #f4f6f9; color: #222; margin: 0; padding: 0; }
+  .header { background: #1a3a5c; color: white; padding: 18px 28px; }
+  .header h1 { margin: 0; font-size: 20px; }
+  .header p  { margin: 4px 0 0; font-size: 12px; opacity: 0.8; }
+  .container { padding: 20px 28px; }
+  .section   { background: white; border-radius: 6px; padding: 16px 20px; margin-bottom: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  h2 { font-size: 15px; color: #1a3a5c; border-bottom: 2px solid #1a3a5c; padding-bottom: 6px; margin-top: 0; }
+  h3 { font-size: 13px; color: #444; margin: 12px 0 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; margin-bottom: 10px; }
+  th { background: #1a3a5c; color: white; padding: 6px 10px; text-align: left; }
+  td { padding: 5px 10px; border-bottom: 1px solid #e8e8e8; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8f9fb; }
+  .warn { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 10px 14px; margin-bottom: 14px; }
+  .ok   { color: #2e7d32; font-weight: bold; }
+  .bad  { color: #c62828; font-weight: bold; }
+  .note { color: #888; font-style: italic; }
+  pre   { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 11px; }
+  .highlight-sunday td { background: #fff3e0 !important; }
+  .highlight-monday  td { background: #fce4ec !important; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Quick Access Pin Loss â€” Diagnostics Report</h1>
+  <p>Computer: <strong>AAA2-23</strong> &nbsp;|&nbsp; User: <strong>AAA2-23$</strong> &nbsp;|&nbsp; Generated: 2026-03-09 15:21:20</p>
+</div>
+<div class="container">
+
+
+<div class="section">
+  <h2>&#128196; System Information</h2>
+  <h3></h3><table>
+<colgroup><col/><col/><col/><col/><col/><col/><col/><col/></colgroup>
+<tr><th>ComputerName</th><th>CurrentUser</th><th>OS</th><th>Build</th><th>UBR</th><th>LastBoot</th><th>RunningAsAdmin</th><th>ReportGenerated</th></tr>
+<tr><td>AAA2-23</td><td>AAA2-23$</td><td>Microsoft Windows 11 Pro</td><td>26200</td><td>7840</td><td>3/8/2026 9:51:39 AM</td><td>True</td><td>3/9/2026 3:21:14 PM</td></tr>
+</table>
+
+</div>
+
+<div class="section">
+  <h2>&#128204; Quick Access Database (AutomaticDestinations)</h2>
+  <h3>File Status</h3><table>
+<colgroup><col/><col/><col/><col/><col/><col/><col/></colgroup>
+<tr><th>FolderPath</th><th>FolderExists</th><th>QAFileExists</th><th>QAFileLastWrite</th><th>QAFileLastWriteDayOfWeek</th><th>QAFileSizeBytes</th><th>AllFiles</th></tr>
+<tr><td>C:\WINDOWS\system32\config\systemprofile\AppData\Roaming\Microsoft\Windows\Recent\AutomaticDestinations</td><td>False</td><td>False</td><td>NOT FOUND</td><td>N/A</td><td>0</td><td></td></tr>
+</table>
+
+  <h3>All Files in AutomaticDestinations</h3>
+  <table>
+</table>
+
+  <p class="note">â­ Key file: <strong>f01b4d95cf55d32a.automaticDestinations-ms</strong> â€” if its LastWriteTime matches a Sunday night or Monday morning after an incident, this confirms when the reset occurred.</p>
+</div>
+
+<div class="section">
+  <h2>&#128193; Folder Redirection (Effective Paths)</h2>
+  <table>
+<colgroup><col/><col/><col/><col/><col/></colgroup>
+<tr><th>FolderName</th><th>ActualPath</th><th>PolicyPath</th><th>IsRedirected</th><th>PathReachable</th></tr>
+<tr><td>Desktop</td><td></td><td>C:\WINDOWS\system32\config\systemprofile\Desktop</td><td>False</td><td>False</td></tr>
+<tr><td>Personal</td><td></td><td>C:\WINDOWS\system32\config\systemprofile\Documents</td><td>False</td><td>False</td></tr>
+<tr><td>My Pictures</td><td></td><td>C:\WINDOWS\system32\config\systemprofile\Pictures</td><td>False</td><td>False</td></tr>
+<tr><td>My Music</td><td></td><td>C:\WINDOWS\system32\config\systemprofile\Music</td><td>False</td><td>False</td></tr>
+<tr><td>My Video</td><td></td><td>C:\WINDOWS\system32\config\systemprofile\Videos</td><td>False</td><td>False</td></tr>
+<tr><td>{374DE290-123F-4565-9164-39C4925E467B}</td><td></td><td>C:\WINDOWS\system32\config\systemprofile\Downloads</td><td>False</td><td>False</td></tr>
+</table>
+
+</div>
+
+<div class="section">
+  <h2>&#127760; K: Drive Mapping</h2>
+  <h3></h3><table>
+<colgroup><col/><col/><col/><col/><col/><col/><col/></colgroup>
+<tr><th>Mapped</th><th>Root</th><th>RemoteName</th><th>Status</th><th>Persistent</th><th>UserName</th><th>Reachable</th></tr>
+<tr><td>False</td><td></td><td></td><td></td><td></td><td></td><td>False</td></tr>
+</table>
+
+</div>
+
+<div class="section">
+  <h2>&#128274; Offline Files / CSC Configuration</h2>
+  <h3></h3><table>
+<colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup>
+<tr><th>ServiceStatus</th><th>ServiceStartType</th><th>PolicyEnabled</th><th>PolicyNoCache</th><th>PolicySyncAtLogon</th><th>PolicySyncAtLogoff</th><th>PolicyBackgroundSync</th><th>UserCacheEnabled</th><th>OfflineFilesAPIEnabled</th><th>RawPolicyKeys</th></tr>
+<tr><td>Running</td><td>Automatic</td><td></td><td></td><td></td><td></td><td></td><td></td><td>True</td><td></td></tr>
+</table>
+
+  <p class="note">If CSC/Offline Files is enabled and syncing redirected folders, a sync conflict on Monday can overwrite shell data.</p>
+</div>
+
+<div class="section">
+  <h2>&#128260; Reboot / Power Events (Last 14 Days)</h2>
+  <table>
+<colgroup><col/><col/><col/><col/><col/></colgroup>
+<tr><th>TimeCreated</th><th>DayOfWeek</th><th>Id</th><th>EventType</th><th>Message</th></tr>
+<tr><td>2/23/2026 5:55:38 PM</td><td>Monday</td><td>1074</td><td>Shutdown/Restart Initiated</td><td>The process C:\WINDOWS\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe (AAA2-23) has initiated the restart of computer AAA2-23 on behalf of user JOHNMILLSELECT\jclonch for the following reason: Other (Unplanned)
+ Reason Code: 0x0
+ Shutdown Type: restart
+ Comment: </td></tr>
+<tr><td>2/23/2026 5:56:01 PM</td><td>Monday</td><td>6006</td><td>Event Log Stopped (Shutdown)</td><td>The Event log service was stopped.</td></tr>
+<tr><td>2/23/2026 5:56:06 PM</td><td>Monday</td><td>109</td><td>Kernel Power - Reboot</td><td>The kernel power manager has initiated a shutdown transition.
+
+Action: Power Action Reboot 
+Event Code: 0x0 
+Reason: Kernel API</td></tr>
+<tr><td>2/23/2026 5:56:36 PM</td><td>Monday</td><td>6005</td><td>Event Log Started (Boot)</td><td>The Event log service was started.</td></tr>
+<tr><td>2/24/2026 4:34:55 PM</td><td>Tuesday</td><td>1074</td><td>Shutdown/Restart Initiated</td><td>The process C:\WINDOWS\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe (AAA2-23) has initiated the restart of computer AAA2-23 on behalf of user JOHNMILLSELECT\jclonch for the following reason: Other (Unplanned)
+ Reason Code: 0x0
+ Shutdown Type: restart
+ Comment: </td></tr>
+<tr><td>2/24/2026 4:35:04 PM</td><td>Tuesday</td><td>6006</td><td>Event Log Stopped (Shutdown)</td><td>The Event log service was stopped.</td></tr>
+<tr><td>2/24/2026 4:35:08 PM</td><td>Tuesday</td><td>109</td><td>Kernel Power - Reboot</td><td>The kernel power manager has initiated a shutdown transition.
+
+Action: Power Action Reboot 
+Event Code: 0x0 
+Reason: Kernel API</td></tr>
+<tr><td>2/24/2026 4:35:45 PM</td><td>Tuesday</td><td>6005</td><td>Event Log Started (Boot)</td><td>The Event log service was started.</td></tr>
+<tr><td>2/25/2026 4:32:51 PM</td><td>Wednesday</td><td>1074</td><td>Shutdown/Restart Initiated</td><td>The process C:\WINDOWS\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe (AAA2-23) has initiated the restart of computer AAA2-23 on behalf of user JOHNMILLSELECT\jclonch for the following reason: Other (Unplanned)
+ Reason Code: 0x0
+ Shutdown Type: restart
+ Comment: </td></tr>
+<tr><td>2/25/2026 4:34:29 PM</td><td>Wednesday</td><td>6006</td><td>Event Log Stopped (Shutdown)</td><td>The Event log service was stopped.</td></tr>
+<tr><td>2/25/2026 4:34:34 PM</td><td>Wednesday</td><td>109</td><td>Kernel Power - Reboot</td><td>The kernel power manager has initiated a shutdown transition.
+
+Action: Power Action Reboot 
+Event Code: 0x0 
+Reason: Kernel API</td></tr>
+<tr><td>2/25/2026 4:35:04 PM</td><td>Wednesday</td><td>6005</td><td>Event Log Started (Boot)</td><td>The Event log service was started.</td></tr>
+<tr><td>2/25/2026 4:36:15 PM</td><td>Wednesday</td><td>1074</td><td>Shutdown/Restart Initiated</td><td>The process C:\WINDOWS\servicing\TrustedInstaller.exe (AAA2-23) has initiated the restart of computer AAA2-23 on behalf of user NT AUTHORITY\SYSTEM for the following reason: Operating System: Upgrade (Planned)
+ Reason Code: 0x80020003
+ Shutdown Type: restart
+ Comment: </td></tr>
+<tr><td>2/25/2026 4:36:19 PM</td><td>Wednesday</td><td>6006</td><td>Event Log Stopped (Shutdown)</td><td>The Event log service was stopped.</td></tr>
+<tr><td>2/25/2026 4:36:23 PM</td><td>Wednesday</td><td>109</td><td>Kernel Power - Reboot</td><td>The kernel power manager has initiated a shutdown transition.
+
+Action: Power Action Reboot 
+Event Code: 0x0 
+Reason: Kernel API</td></tr>
+<tr><td>2/25/2026 4:36:53 PM</td><td>Wednesday</td><td>6005</td><td>Event Log Started (Boot)</td><td>The Event log service was started.</td></tr>
+<tr><td>2/26/2026 4:40:27 PM</td><td>Thursday</td><td>1074</td><td>Shutdown/Restart Initiated</td><td>The process C:\WINDOWS\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe (AAA2-23) has initiated the restart of computer AAA2-23 on behalf of user JOHNMILLSELECT\jclonch for the following reason: Other (Unplanned)
+ Reason Code: 0x0
+ Shutdown Type: restart
+ Comment: </td></tr>
+<tr><td>2/26/2026 4:41:19 PM</td><td>Thursday</td><td>6006</td><td>Event Log Stopped (Shutdown)</td><td>The Event log service was stopped.</td></tr>
+<tr><td>2/26/2026 4:41:23 PM</td><td>Thursday</td><td>109</td><td>Kernel Power - Reboot</td><td>The kernel power manager has initiated a shutdown transition.
+
+Action: Power Action Reboot 
+Event Code: 0x0 
+Reason: Kernel API</td></tr>
+<tr><td>2/26/2026 4:41:53 PM</td><td>Thursday</td><td>6005</td><td>Event Log Started (Boot)</td><td>The Event log service was started.</td></tr>
+<tr><td>2/27/2026 4:29:00 PM</td><td>Friday</td><td>1074</td><td>Shutdown/Restart Initiated</td><td>The process C:\WINDOWS\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe (AAA2-23) has initiated the restart of computer AAA2-23 on behalf of user JOHNMILLSELECT\jclonch for the following reason: Other (Unplanned)
+ Reason Code: 0x0
+ Shutdown Type: restart
+ Comment: </td></tr>
+<tr><td>2/27/2026 4:29:09 PM</td><td>Friday</td><td>6006</td><td>Event Log Stopped (Shutdown)</td><td>The Event log service was stopped.</td></tr>
+<tr><td>2/27/2026 4:29:14 PM</td><td>Friday</td><td>109</td><td>Kernel Power - Reboot</td><td>The kernel power manager has initiated a shutdown transition.
+
+Action: Power Action Reboot 
+Event Code: 0x0 
+Reason: Kernel API</td></tr>
+<tr><td>2/27/2026 4:29:44 PM</td><td>Friday</td><td>6005</td><td>Event Log Started (Boot)</td><td>The Event log service was started.</td></tr>
+<tr><td>3/2/2026 7:23:14 AM</td><td>Monday</td><td>1074</td><td>Shutdown/Restart Initiated</td><td>The process C:\WINDOWS\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe (AAA2-23) has initiated the restart of computer AAA2-23 on behalf of user JOHNMILLSELECT\jclonch for the following reason: Other (Unplanned)
+ Reason Code: 0x0
+ Shutdown Type: restart
+ Comment: </td></tr>
+<tr><td>3/2/2026 7:23:23 AM</td><td>Monday</td><td>6006</td><td>Event Log Stopped (Shutdown)</td><td>The Event log service was stopped.</td></tr>
+<tr><td>3/2/2026 7:23:27 AM</td><td>Monday</td><td>109</td><td>Kernel Power - Reboot</td><td>The kernel power manager has initiated a shutdown transition.
+
+Action: Power Action Reboot 
+Event Code: 0x0 
+Reason: Kernel API</td></tr>
+<tr><td>3/2/2026 7:24:04 AM</td><td>Monday</td><td>6005</td><td>Event Log Started (Boot)</td><td>The Event log service was started.</td></tr>
+<tr><td>3/3/2026 4:35:00 PM</td><td>Tuesday</td><td>1074</td><td>Shutdown/Restart Initiated</td><td>The process C:\WINDOWS\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe (AAA2-23) has initiated the restart of computer AAA2-23 on behalf of user JOHNMILLSELECT\jclonch for the following reason: Other (Unplanned)
+ Reason Code: 0x0
+ Shutdown Type: restart
+ Comment: </td></tr>
+<tr><td>3/3/2026 4:35:24 PM</td><td>Tuesday</td><td>6006</td><td>Event Log Stopped (Shutdown)</td><td>The Event log service was stopped.</td></tr>
+<tr><td>3/3/2026 4:35:28 PM</td><td>Tuesday</td><td>109</td><td>Kernel Power - Reboot</td><td>The kernel power manager has initiated a shutdown transition.
+
+Action: Power Action Reboot 
+Event Code: 0x0 
+Reason: Kernel API</td></tr>
+<tr><td>3/3/2026 4:35:59 PM</td><td>Tuesday</td><td>6005</td><td>Event Log Started (Boot)</td><td>The Event log service was started.</td></tr>
+<tr><td>3/6/2026 4:35:22 PM</td><td>Friday</td><td>1074</td><td>Shutdown/Restart Initiated</td><td>The process C:\WINDOWS\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe (AAA2-23) has initiated the restart of computer AAA2-23 on behalf of user JOHNMILLSELECT\jclonch for the following reason: Other (Unplanned)
+ Reason Code: 0x0
+ Shutdown Type: restart
+ Comment: </td></tr>
+<tr><td>3/6/2026 4:35:37 PM</td><td>Friday</td><td>6006</td><td>Event Log Stopped (Shutdown)</td><td>The Event log service was stopped.</td></tr>
+<tr><td>3/6/2026 4:35:42 PM</td><td>Friday</td><td>109</td><td>Kernel Power - Reboot</td><td>The kernel power manager has initiated a shutdown transition.
+
+Action: Power Action Reboot 
+Event Code: 0x0 
+Reason: Kernel API</td></tr>
+<tr><td>3/6/2026 4:36:12 PM</td><td>Friday</td><td>6005</td><td>Event Log Started (Boot)</td><td>The Event log service was started.</td></tr>
+<tr><td>3/8/2026 9:51:07 AM</td><td>Sunday</td><td>1074</td><td>Shutdown/Restart Initiated</td><td>The process C:\WINDOWS\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe (AAA2-23) has initiated the restart of computer AAA2-23 on behalf of user JOHNMILLSELECT\jclonch for the following reason: Other (Unplanned)
+ Reason Code: 0x0
+ Shutdown Type: restart
+ Comment: </td></tr>
+<tr><td>3/8/2026 9:51:15 AM</td><td>Sunday</td><td>6006</td><td>Event Log Stopped (Shutdown)</td><td>The Event log service was stopped.</td></tr>
+<tr><td>3/8/2026 9:51:20 AM</td><td>Sunday</td><td>109</td><td>Kernel Power - Reboot</td><td>The kernel power manager has initiated a shutdown transition.
+
+Action: Power Action Reboot 
+Event Code: 0x0 
+Reason: Kernel API</td></tr>
+<tr><td>3/8/2026 9:51:50 AM</td><td>Sunday</td><td>6005</td><td>Event Log Started (Boot)</td><td>The Event log service was started.</td></tr>
+</table>
+
+  <p class="note">Look for events on Sunday night or Monday morning. Event 6008 = unexpected shutdown. Event 1074 = managed reboot (check Message for initiator).</p>
+</div>
+
+<div class="section">
+  <h2>&#128274; Logon / Logoff Events (Last 14 Days)</h2>
+  <table>
+</table>
+
+</div>
+
+<div class="section">
+  <h2>&#128680; Application Log â€” Explorer / Shell Errors</h2>
+  <table>
+<colgroup><col/><col/><col/><col/><col/><col/></colgroup>
+<tr><th>TimeCreated</th><th>DayOfWeek</th><th>Id</th><th>ProviderName</th><th>LevelDisplayName</th><th>Message</th></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;WSearch&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/24/2026 7:22:00 AM</td><td>Tuesday</td><td>6003</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a critical notification event.</td></tr>
+<tr><td>2/24/2026 7:22:02 AM</td><td>Tuesday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;WSearch&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/25/2026 6:51:19 AM</td><td>Wednesday</td><td>6003</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a critical notification event.</td></tr>
+<tr><td>2/25/2026 6:51:21 AM</td><td>Wednesday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;WSearch&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/25/2026 4:36:15 PM</td><td>Wednesday</td><td>6004</td><td>Microsoft-Windows-Winlogon</td><td>Warning</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; failed a critical notification event.</td></tr>
+<tr><td>2/26/2026 7:03:49 AM</td><td>Thursday</td><td>6003</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a critical notification event.</td></tr>
+<tr><td>2/26/2026 7:03:51 AM</td><td>Thursday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/26/2026 4:40:36 PM</td><td>Thursday</td><td>4004</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The Windows logon process has failed to terminate the currently logged on user&#39;s processes.</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;WSearch&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/27/2026 8:08:52 AM</td><td>Friday</td><td>6003</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a critical notification event.</td></tr>
+<tr><td>2/27/2026 8:08:53 AM</td><td>Friday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;WSearch&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/2/2026 7:21:54 AM</td><td>Monday</td><td>6003</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a critical notification event.</td></tr>
+<tr><td>3/2/2026 7:21:56 AM</td><td>Monday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;WSearch&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/2/2026 7:24:28 AM</td><td>Monday</td><td>6003</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a critical notification event.</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;WSearch&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/6/2026 6:57:47 AM</td><td>Friday</td><td>6003</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a critical notification event.</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;WSearch&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/8/2026 7:47:56 AM</td><td>Sunday</td><td>6003</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a critical notification event.</td></tr>
+<tr><td>3/8/2026 7:47:58 AM</td><td>Sunday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;WSearch&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+<tr><td>3/9/2026 6:53:50 AM</td><td>Monday</td><td>6003</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a critical notification event.</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>6000</td><td>Microsoft-Windows-Winlogon</td><td>Information</td><td>The winlogon notification subscriber &lt;SessionEnv&gt; was unavailable to handle a notification event.</td></tr>
+</table>
+
+</div>
+
+<div class="section">
+  <h2>&#128336; Scheduled Tasks (Weekend + Management Agents)</h2>
+  <table>
+<colgroup><col/><col/><col/><col/><col/><col/><col/><col/></colgroup>
+<tr><th>TaskName</th><th>TaskPath</th><th>State</th><th>LastRunTime</th><th>NextRunTime</th><th>LastResult</th><th>Triggers</th><th>Actions</th></tr>
+<tr><td>Adobe Acrobat Update Task</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskDailyTrigger</td><td>C:\Program Files (x86)\Common Files\Adobe\ARM\1.0\AdobeARM.exe </td></tr>
+<tr><td>CreateExplorerShellUnelevatedTask</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskRegistrationTrigger</td><td>C:\Windows\explorer.exe /NoUACCheck</td></tr>
+<tr><td>MicrosoftEdgeUpdateTaskMachineCore</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskDailyTrigger</td><td>C:\Program Files (x86)\Microsoft\EdgeUpdate\MicrosoftEdgeUpdate.exe /c</td></tr>
+<tr><td>MicrosoftEdgeUpdateTaskMachineUA</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger</td><td>C:\Program Files (x86)\Microsoft\EdgeUpdate\MicrosoftEdgeUpdate.exe /ua /installsource scheduler</td></tr>
+<tr><td>OneDrive Per-Machine Standalone Update Task</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTimeTrigger</td><td>C:\Program Files\Microsoft OneDrive\OneDriveStandaloneUpdater.exe </td></tr>
+<tr><td>OneDrive Startup Task-S-1-5-21-3774361791-2439286775-2812341018-1001</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>C:\Program Files\Microsoft OneDrive\26.022.0203.0006\OneDriveLauncher.exe /startInstances</td></tr>
+<tr><td>OneDrive Startup Task-S-1-5-21-99211912-2678553836-479559093-1673</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>C:\Program Files\Microsoft OneDrive\26.022.0203.0006\OneDriveLauncher.exe /startInstances</td></tr>
+<tr><td>OneDrive Startup Task-S-1-5-21-99211912-2678553836-479559093-2705</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>C:\Program Files\Microsoft OneDrive\26.022.0203.0006\OneDriveLauncher.exe /startInstances</td></tr>
+<tr><td>OneDrive Startup Task-S-1-5-21-99211912-2678553836-479559093-2740</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>C:\Program Files\Microsoft OneDrive\26.022.0203.0006\OneDriveLauncher.exe /startInstances</td></tr>
+<tr><td>OneDrive Startup Task-S-1-5-21-99211912-2678553836-479559093-2763</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>C:\Program Files\Microsoft OneDrive\26.022.0203.0006\OneDriveLauncher.exe /startInstances</td></tr>
+<tr><td>OneDrive Startup Task-S-1-5-21-99211912-2678553836-479559093-2792</td><td>\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>C:\Program Files\Microsoft OneDrive\26.022.0203.0006\OneDriveLauncher.exe /startInstances</td></tr>
+<tr><td>GoogleUpdaterTaskSystem147.0.7703.0{CB9972B7-927F-467A-A63B-01F1DD0AE908}</td><td>\GoogleSystem\GoogleUpdater\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskDailyTrigger</td><td>&quot;C:\Program Files (x86)\Google\GoogleUpdater\147.0.7703.0\updater.exe&quot; --wake --system</td></tr>
+<tr><td>Office Actions Server</td><td>\Microsoft\Office\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskTimeTrigger</td><td>C:\Program Files\Microsoft Office\root\VFS\ProgramFilesCommonX64\Microsoft Shared\Office16\ActionsServer\ActionsServer.exe availabilitycheck</td></tr>
+<tr><td>Office Automatic Updates 2.0</td><td>\Microsoft\Office\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskWeeklyTrigger, MSFT_TaskLogonTrigger, MSFT_TaskIdleTrigger</td><td>C:\Program Files\Common Files\Microsoft Shared\ClickToRun\OfficeC2RClient.exe /frequentupdate SCHEDULEDTASK displaylevel=False</td></tr>
+<tr><td>Office Background Push Maintenance</td><td>\Microsoft\Office\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger, MSFT_TaskLogonTrigger</td><td>C:\Program Files\Microsoft Office\root\vfs\ProgramFilesCommonx64\Microsoft Shared\Office16\opushutil.exe /pushregistration</td></tr>
+<tr><td>Office ClickToRun Service Monitor</td><td>\Microsoft\Office\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger</td><td>C:\Program Files\Common Files\Microsoft Shared\ClickToRun\OfficeC2RClient.exe /WatchService</td></tr>
+<tr><td>Office Feature Updates</td><td>\Microsoft\Office\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger, MSFT_TaskDailyTrigger, MSFT_TaskDailyTrigger, MSFT_TaskDailyTrigger, MSFT_TaskDailyTrigger, MSFT_TaskDailyTrigger</td><td>C:\Program Files\Microsoft Office\root\Office16\sdxhelper.exe </td></tr>
+<tr><td>Office Feature Updates Logon</td><td>\Microsoft\Office\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskSessionStateChangeTrigger</td><td>C:\Program Files\Microsoft Office\root\Office16\sdxhelper.exe /onlogon</td></tr>
+<tr><td>Office Startup Maintenance</td><td>\Microsoft\Office\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskDailyTrigger</td><td>C:\Program Files\Microsoft Office\root\VFS\ProgramFilesCommonX64\Microsoft Shared\Office16\ActionsServer\ActionsServer.exe wacheck</td></tr>
+<tr><td>RecoverabilityToastTask</td><td>\Microsoft\Windows\AccountHealth\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskSessionStateChangeTrigger</td><td> </td></tr>
+<tr><td>AD RMS Rights Policy Template Management (Automated)</td><td>\Microsoft\Windows\Active Directory Rights Management Services Client\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger, MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>AD RMS Rights Policy Template Management (Manual)</td><td>\Microsoft\Windows\Active Directory Rights Management Services Client\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>VerifiedPublisherCertStoreCheck</td><td>\Microsoft\Windows\AppID\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger</td><td>%windir%\system32\appidcertstorecheck.exe </td></tr>
+<tr><td>PcaPatchDbTask</td><td>\Microsoft\Windows\Application Experience\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTimeTrigger</td><td>%windir%\system32\rundll32.exe %windir%\system32\PcaSvc.dll,PcaPatchSdbTask</td></tr>
+<tr><td>BackupNonMaintenance</td><td>\Microsoft\Windows\AppListBackup\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger</td><td> </td></tr>
+<tr><td>Pre-staged app cleanup</td><td>\Microsoft\Windows\AppxDeploymentClient\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>%windir%\system32\rundll32.exe %windir%\system32\AppxDeploymentClient.dll,AppxPreStageCleanupRunTask</td></tr>
+<tr><td>UCPD velocity</td><td>\Microsoft\Windows\AppxDeploymentClient\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>%windir%\system32\UCPDMgr.exe </td></tr>
+<tr><td>Proxy</td><td>\Microsoft\Windows\Autochk\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger</td><td>%windir%\system32\rundll32.exe /d acproxy.dll,PerformAutochkOperations</td></tr>
+<tr><td>BgTaskRegistrationMaintenanceTask</td><td>\Microsoft\Windows\BrokerInfrastructure\</td><td>Ready</td><td></td><td></td><td></td><td></td><td> </td></tr>
+<tr><td>maintenancetasks</td><td>\Microsoft\Windows\capabilityaccessmanager\</td><td>Ready</td><td></td><td></td><td></td><td></td><td>%windir%\system32\rundll32.exe %windir%\system32\CapabilityAccessManager.dll,CapabilityAccessManagerDoStoreMaintenance</td></tr>
+<tr><td>KeyPreGenTask</td><td>\Microsoft\Windows\CertificateServicesClient\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskLogonTrigger, MSFT_TaskSessionStateChangeTrigger</td><td> </td></tr>
+<tr><td>SystemTask</td><td>\Microsoft\Windows\CertificateServicesClient\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskRegistrationTrigger, MSFT_TaskBootTrigger</td><td> </td></tr>
+<tr><td>UserTask</td><td>\Microsoft\Windows\CertificateServicesClient\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskRegistrationTrigger, MSFT_TaskLogonTrigger, MSFT_TaskEventTrigger</td><td> </td></tr>
+<tr><td>License Validation</td><td>\Microsoft\Windows\Clip\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger</td><td>%SystemRoot%\system32\ClipUp.exe -p -s -o</td></tr>
+<tr><td>LicenseImdsIntegration</td><td>\Microsoft\Windows\Clip\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskDailyTrigger, MSFT_TaskTrigger</td><td>%SystemRoot%\system32\fclip.exe </td></tr>
+<tr><td>Backup</td><td>\Microsoft\Windows\CloudRestore\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskDailyTrigger</td><td> </td></tr>
+<tr><td>Data Integrity Check And Scan</td><td>\Microsoft\Windows\Data Integrity Scan\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger, MSFT_TaskBootTrigger</td><td> </td></tr>
+<tr><td>Device User</td><td>\Microsoft\Windows\Device Information\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>%windir%\system32\devicecensus.exe UserCxt</td></tr>
+<tr><td>Driver Recovery on Reboot</td><td>\Microsoft\Windows\Device Setup\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger</td><td> </td></tr>
+<tr><td>RegisterUserDevice</td><td>\Microsoft\Windows\DeviceDirectoryClient\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskTrigger, MSFT_TaskTrigger</td><td> </td></tr>
+<tr><td>RecommendedTroubleshootingScanner</td><td>\Microsoft\Windows\Diagnosis\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskBootTrigger</td><td> </td></tr>
+<tr><td>DirectXDatabaseUpdater</td><td>\Microsoft\Windows\DirectX\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskTrigger</td><td>%windir%\system32\directxdatabaseupdater.exe </td></tr>
+<tr><td>DXGIAdapterCache</td><td>\Microsoft\Windows\DirectX\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger, MSFT_TaskTrigger, MSFT_TaskTrigger</td><td>%windir%\system32\dxgiadaptercache.exe </td></tr>
+<tr><td>Microsoft-Windows-DiskDiagnosticResolver</td><td>\Microsoft\Windows\DiskDiagnostic\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>%windir%\system32\DFDWiz.exe </td></tr>
+<tr><td>MDMMaintenenceTask</td><td>\Microsoft\Windows\EnterpriseMgmt\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>%windir%\system32\MDMAgent.exe </td></tr>
+<tr><td>ExploitGuard MDM policy Refresh</td><td>\Microsoft\Windows\ExploitGuard\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskBootTrigger</td><td> </td></tr>
+<tr><td>Property Definition Sync</td><td>\Microsoft\Windows\File Classification Infrastructure\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger</td><td> </td></tr>
+<tr><td>File History (maintenance mode)</td><td>\Microsoft\Windows\FileHistory\</td><td>Ready</td><td></td><td></td><td></td><td></td><td> </td></tr>
+<tr><td>Monitoring</td><td>\Microsoft\Windows\Hotpatch\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger, MSFT_TaskLogonTrigger, MSFT_TaskTimeTrigger</td><td>%systemroot%\system32\cmd.exe /d /c %systemroot%\system32\hpatchmonTask.cmd</td></tr>
+<tr><td>ScanForUpdates</td><td>\Microsoft\Windows\InstallService\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTimeTrigger, MSFT_TaskTrigger, MSFT_TaskTimeTrigger</td><td> </td></tr>
+<tr><td>ScanForUpdatesAsUser</td><td>\Microsoft\Windows\InstallService\</td><td>Ready</td><td></td><td></td><td></td><td></td><td> </td></tr>
+<tr><td>SmartRetry</td><td>\Microsoft\Windows\InstallService\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger, MSFT_TaskTimeTrigger, MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskTimeTrigger</td><td> </td></tr>
+<tr><td>WakeUpAndContinueUpdates</td><td>\Microsoft\Windows\InstallService\</td><td>Disabled</td><td></td><td></td><td></td><td></td><td> </td></tr>
+<tr><td>WakeUpAndScanForUpdates</td><td>\Microsoft\Windows\InstallService\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskTimeTrigger</td><td> </td></tr>
+<tr><td>Synchronize Language Settings</td><td>\Microsoft\Windows\International\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>Installation</td><td>\Microsoft\Windows\LanguageComponentsInstaller\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>ReconcileLanguageResources</td><td>\Microsoft\Windows\LanguageComponentsInstaller\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>RemediateHardwareChange</td><td>\Microsoft\Windows\Management\Autopilot\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger</td><td> </td></tr>
+<tr><td>Logon</td><td>\Microsoft\Windows\Management\Provisioning\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>%windir%\system32\ProvTool.exe /turn 5 /source LogonIdleTask</td></tr>
+<tr><td>MdmDiagnosticsCleanup</td><td>\Microsoft\Windows\Management\Provisioning\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger</td><td>%windir%\system32\MdmDiagnosticsTool.exe /clean</td></tr>
+<tr><td>Retry</td><td>\Microsoft\Windows\Management\Provisioning\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger</td><td>%windir%\system32\ProvTool.exe /turn 5 /source ProvRetryTask</td></tr>
+<tr><td>RunOnReboot</td><td>\Microsoft\Windows\Management\Provisioning\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger</td><td>%windir%\system32\ProvTool.exe /turn 5 /source ContinueSessionTask</td></tr>
+<tr><td>MapsUpdateTask</td><td>\Microsoft\Windows\Maps\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskTimeTrigger</td><td> </td></tr>
+<tr><td>AutomaticOfflineMemoryDiagnostic</td><td>\Microsoft\Windows\MemoryDiagnostic\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>SystemSoundsService</td><td>\Microsoft\Windows\Multimedia\</td><td>Running</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>NcsiIdentifyUserProxies</td><td>\Microsoft\Windows\Network Connectivity Status Indicator\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskSessionStateChangeTrigger, MSFT_TaskSessionStateChangeTrigger</td><td> </td></tr>
+<tr><td>Logon Synchronization</td><td>\Microsoft\Windows\Offline Files\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>PCR Prediction Framework Firmware Update Task</td><td>\Microsoft\Windows\PCRPF\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger</td><td>%windir%\system32\rundll32.exe %windir%\system32\pcrpf.dll,NotifyFirmwareUpdateStaged</td></tr>
+<tr><td>Secure-Boot-Update</td><td>\Microsoft\Windows\PI\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger</td><td> </td></tr>
+<tr><td>Device Install Reboot Required</td><td>\Microsoft\Windows\Plug and Play\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>PrinterCleanupTask</td><td>\Microsoft\Windows\Printing\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger</td><td> </td></tr>
+<tr><td>PrintJobCleanupTask</td><td>\Microsoft\Windows\Printing\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger</td><td> </td></tr>
+<tr><td>LoginCheck</td><td>\Microsoft\Windows\PushToInstall\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td>%windir%\system32\sc.exe start pushtoinstall login</td></tr>
+<tr><td>PITRTask</td><td>\Microsoft\Windows\Setup\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger</td><td> </td></tr>
+<tr><td>IndexerAutomaticMaintenance</td><td>\Microsoft\Windows\Shell\</td><td>Ready</td><td></td><td></td><td></td><td></td><td> </td></tr>
+<tr><td>UpdateUserPictureTask</td><td>\Microsoft\Windows\Shell\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger</td><td> </td></tr>
+<tr><td>UpdateUserPictureTaskContained</td><td>\Microsoft\Windows\Shell\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger</td><td> </td></tr>
+<tr><td>SvcRestartTask</td><td>\Microsoft\Windows\SoftwareProtectionPlatform\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger</td><td> </td></tr>
+<tr><td>SvcRestartTaskLogon</td><td>\Microsoft\Windows\SoftwareProtectionPlatform\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>SpaceAgentTask</td><td>\Microsoft\Windows\SpacePort\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger, MSFT_TaskTrigger</td><td>%windir%\system32\SpaceAgent.exe </td></tr>
+<tr><td>SpaceManagerTask</td><td>\Microsoft\Windows\SpacePort\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger, MSFT_TaskTrigger</td><td>%windir%\system32\spaceman.exe /Work</td></tr>
+<tr><td>MaintenanceTasks</td><td>\Microsoft\Windows\StateRepository\</td><td>Ready</td><td></td><td></td><td></td><td></td><td>%windir%\system32\rundll32.exe %windir%\system32\Windows.StateRepositoryClient.dll,StateRepositoryDoMaintenanceTasks</td></tr>
+<tr><td>LicenseAcquisition</td><td>\Microsoft\Windows\Subscription\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger, MSFT_TaskRegistrationTrigger, MSFT_TaskTrigger</td><td>%SystemRoot%\system32\ClipRenew.exe </td></tr>
+<tr><td>PowerGridForecastTask</td><td>\Microsoft\Windows\Sustainability\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskDailyTrigger</td><td> </td></tr>
+<tr><td>MsCtfMonitor</td><td>\Microsoft\Windows\TextServicesFramework\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>Tpm-Maintenance</td><td>\Microsoft\Windows\TPM\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskTrigger</td><td> </td></tr>
+<tr><td>Schedule Maintenance Work</td><td>\Microsoft\Windows\UpdateOrchestrator\</td><td>Disabled</td><td></td><td></td><td></td><td></td><td>%systemroot%\system32\usoclient.exe StartMaintenanceWork</td></tr>
+<tr><td>StartOobeAppsScanAfterUpdate</td><td>\Microsoft\Windows\UpdateOrchestrator\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger</td><td>%systemroot%\system32\usoclient.exe StartOobeAppsScanAfterUpdate</td></tr>
+<tr><td>UIEOrchestrator</td><td>\Microsoft\Windows\UpdateOrchestrator\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger</td><td>%systemroot%\system32\UIEOrchestratorStub.exe /SendHeartbeat</td></tr>
+<tr><td>USO_UxBroker</td><td>\Microsoft\Windows\UpdateOrchestrator\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskDailyTrigger</td><td>%systemroot%\system32\MusNotification.exe </td></tr>
+<tr><td>UsageAndQualityInsights-MaintenanceTask</td><td>\Microsoft\Windows\UsageAndQualityInsights\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskDailyTrigger</td><td>C:\Windows\System32\Microsoft.Data.UsageAndQualityInsights.MaintenanceTask.exe </td></tr>
+<tr><td>MaintenanceWork</td><td>\Microsoft\Windows\WaaSMedic\</td><td>Disabled</td><td></td><td></td><td></td><td></td><td> </td></tr>
+<tr><td>QueueReporting</td><td>\Microsoft\Windows\Windows Error Reporting\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger, MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskTrigger, MSFT_TaskTimeTrigger</td><td>%windir%\system32\wermgr.exe -upload</td></tr>
+<tr><td>BfeOnServiceStartTypeChange</td><td>\Microsoft\Windows\Windows Filtering Platform\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskEventTrigger</td><td>%windir%\system32\rundll32.exe bfe.dll,BfeOnServiceStartTypeChange</td></tr>
+<tr><td>UpdateLibrary</td><td>\Microsoft\Windows\Windows Media Sharing\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskEventTrigger</td><td>&quot;%ProgramFiles%\Windows Media Player\wmpnscfg.exe&quot; </td></tr>
+<tr><td>InitialConfiguration</td><td>\Microsoft\Windows\WindowsAI\Recall\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskBootTrigger, MSFT_TaskRegistrationTrigger</td><td> </td></tr>
+<tr><td>InitialConfiguration</td><td>\Microsoft\Windows\WindowsAI\Settings\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskRegistrationTrigger, MSFT_TaskBootTrigger</td><td> </td></tr>
+<tr><td>Calibration Loader</td><td>\Microsoft\Windows\WindowsColorSystem\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskSessionStateChangeTrigger</td><td> </td></tr>
+<tr><td>CacheTask</td><td>\Microsoft\Windows\Wininet\</td><td>Running</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger</td><td> </td></tr>
+<tr><td>MoProfileManagement</td><td>\Microsoft\Windows\WlanSvc\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskTrigger, MSFT_TaskTrigger</td><td> </td></tr>
+<tr><td>Automatic-Device-Join</td><td>\Microsoft\Windows\Workplace Join\</td><td>Ready</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskEventTrigger</td><td>%SystemRoot%\System32\dsregcmd.exe $(Arg0) $(Arg1) $(Arg2)</td></tr>
+<tr><td>Recovery-Check</td><td>\Microsoft\Windows\Workplace Join\</td><td>Disabled</td><td></td><td></td><td></td><td>MSFT_TaskLogonTrigger, MSFT_TaskSessionStateChangeTrigger</td><td>%SystemRoot%\System32\dsregcmd.exe /checkrecovery</td></tr>
+</table>
+
+</div>
+
+<div class="section">
+  <h2>&#128295; Connectwise Automate Agent â€” Scheduled Tasks</h2>
+  <table>
+<colgroup><col/><col/><col/><col/><col/><col/></colgroup>
+<tr><th>TaskName</th><th>TaskPath</th><th>State</th><th>LastRunTime</th><th>NextRunTime</th><th>Actions</th></tr>
+<tr><td>RecoverabilityToastTask</td><td>\Microsoft\Windows\AccountHealth\</td><td>Ready</td><td></td><td></td><td> </td></tr>
+<tr><td>AD RMS Rights Policy Template Management (Automated)</td><td>\Microsoft\Windows\Active Directory Rights Management Services Client\</td><td>Disabled</td><td></td><td></td><td> </td></tr>
+<tr><td>AikCertEnrollTask</td><td>\Microsoft\Windows\CertificateServicesClient\</td><td>Ready</td><td></td><td></td><td> </td></tr>
+<tr><td>SystemSoundsService</td><td>\Microsoft\Windows\Multimedia\</td><td>Running</td><td></td><td></td><td> </td></tr>
+<tr><td>Tpm-PreAttestationHealthCheck</td><td>\Microsoft\Windows\TPM\</td><td>Ready</td><td></td><td></td><td> </td></tr>
+<tr><td>BfeOnServiceStartTypeChange</td><td>\Microsoft\Windows\Windows Filtering Platform\</td><td>Ready</td><td></td><td></td><td>%windir%\system32\rundll32.exe bfe.dll,BfeOnServiceStartTypeChange</td></tr>
+</table>
+
+</div>
+
+<div class="section">
+  <h2>&#128295; Connectwise Automate Agent â€” Registry</h2>
+  <h3>HKLM:\SOFTWARE\LabTech\Service</h3><table>
+<colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup>
+<tr><th>RegistryPath</th><th>ServerAddress</th><th>LocationID</th><th>ClientID</th><th>LastContact</th><th>MaintenanceMode</th><th>MaintenanceStart</th><th>MaintenanceEnd</th><th>PatchWindow</th><th>PatchEnabled</th><th>AllValues</th></tr>
+<tr><td>HKLM:\SOFTWARE\LabTech\Service</td><td></td><td>3</td><td>2</td><td>3/9/2026 3:19:42 PM</td><td></td><td></td><td></td><td></td><td></td><td>@{ProductCode={3f460d4c-d217-46b4-80b6-b5ed50bd7cf5}; LocationID=3; Server Address=https://databranch.hostedrmm.com; TrayPort=42000; VNCServiceName=LabVNC; DefaultTempPath=C:\Windows\Temp; BasePath=%WINDIR%\LTSvc; FullSystemFunction=False; ServerPassword==DYfZvI{]erxEJTcEOlhLdlbwHK[rReTTNi}cr\STgCcq[EqLt%NNd[Y!yOJBLBa!bNMQ2dYj0WQSS4JuT!c[np==; SensorsEnabled=False; Version=260.38; HeartbeatLastSent=3/9/2026 3:20:57 PM; HeartbeatLastReceived=3/9/2026 2:16:57 PM; HeartbeatCounter=963; InstallLogsCleaned=1; Key==uNA]qL\DdzhwyTFTQgJRPDbs0mojz-vH$cXcGrscKmzPZxvZwukKk}z$RSpRb{yGZiUbL$cGelOabjChbiElj}==; MasterPC=False; CommunityStrings==bgb0tYiasm-bh}jhpu-bCkYCCO{Txulao2R0jI{r0CYSPBbZN-nHQmXMOsWJrohn; SnmpCollectionTemplate=4294967295; SNMPCommunity==qf-4CMlRaF\}H0do\EPOdpoiYZnYGYqC\aB-FhxyZaYK0%K4wJKcS$goUbUMFBN-xrMzfnLiknU!f]!CjjFmn]\x2rJu}u$jsF]tbubGpc-=; SyslogFilter=; TFTPFilter=; Usernames=; StartupNew=0; Probe=0; TFTPUpload=1; LabtechPush=1; VirtualHost=False; VirtualMachine=False; ServerCore=False; MAC=E073E7CB40D9; TunnelsFailed=False; ClientID=2; InfectedCheck=; InfectedMatch=; InfectionState=False; ID=4112; Password==eOiQhnXYPo\{gWUfVVgDqMveH2Cs\wCTDinvjnBePvodoeN%xpvVDRTOJdKDtSVe%HJVjh{-%D-VClsxBcyFivPkJau2HPTh[xCpSe24oPA=; NoPerfEnabled=False; LastSuccessStatus=3/9/2026 3:19:42 PM; LastSuccessStatusFT=134175575827704644; IdleTime=3885; OSBuild=26200}</td></tr>
+</table>
+
+  
+</div>
+
+<div class="section">
+  <h2>&#128196; Winlogon / Network-at-Logon Events</h2>
+  <table>
+<colgroup><col/><col/><col/><col/></colgroup>
+<tr><th>TimeCreated</th><th>DayOfWeek</th><th>Id</th><th>Message</th></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (1).</td></tr>
+<tr><td>2/23/2026 5:55:46 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (1).</td></tr>
+<tr><td>2/23/2026 5:56:35 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/23/2026 5:56:48 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/23/2026 5:56:48 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/23/2026 5:56:48 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/24/2026 7:22:00 AM</td><td>Tuesday</td><td>1</td><td>Authentication started.</td></tr>
+<tr><td>2/24/2026 7:22:00 AM</td><td>Tuesday</td><td>2</td><td>Authentication stopped. Result 0</td></tr>
+<tr><td>2/24/2026 7:22:00 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/24/2026 7:22:00 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/24/2026 7:22:00 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/24/2026 7:22:00 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/24/2026 7:22:00 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/24/2026 7:22:01 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/24/2026 7:22:01 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/24/2026 7:22:01 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/24/2026 7:22:01 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/24/2026 7:22:01 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/24/2026 7:22:02 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/24/2026 7:22:02 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/24/2026 7:22:02 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/24/2026 7:22:02 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/24/2026 7:22:02 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/24/2026 7:22:02 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/24/2026 7:22:09 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (14).</td></tr>
+<tr><td>2/24/2026 7:22:09 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (14).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (1).</td></tr>
+<tr><td>2/24/2026 4:34:59 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (1).</td></tr>
+<tr><td>2/24/2026 4:35:44 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/24/2026 4:35:57 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/24/2026 4:35:57 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/24/2026 4:35:57 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 6:51:19 AM</td><td>Wednesday</td><td>1</td><td>Authentication started.</td></tr>
+<tr><td>2/25/2026 6:51:19 AM</td><td>Wednesday</td><td>2</td><td>Authentication stopped. Result 0</td></tr>
+<tr><td>2/25/2026 6:51:19 AM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/25/2026 6:51:19 AM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/25/2026 6:51:19 AM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/25/2026 6:51:19 AM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/25/2026 6:51:19 AM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/25/2026 6:51:20 AM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/25/2026 6:51:20 AM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/25/2026 6:51:20 AM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/25/2026 6:51:20 AM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/25/2026 6:51:20 AM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/25/2026 6:51:21 AM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/25/2026 6:51:21 AM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/25/2026 6:51:21 AM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/25/2026 6:51:21 AM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/25/2026 6:51:21 AM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/25/2026 6:51:21 AM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/25/2026 6:51:29 AM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (14).</td></tr>
+<tr><td>2/25/2026 6:51:29 AM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (14).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (1).</td></tr>
+<tr><td>2/25/2026 4:32:54 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (1).</td></tr>
+<tr><td>2/25/2026 4:35:04 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:05 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:05 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:06 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:06 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:07 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:07 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:08 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:08 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:09 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:09 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:10 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:10 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:11 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:11 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:12 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:12 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:13 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:13 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:16 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:16 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:18 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:18 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:19 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:19 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:20 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:20 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:21 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:21 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:43 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:35:43 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:08 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:08 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:15 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:15 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (1).</td></tr>
+<tr><td>2/25/2026 4:36:15 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (1).</td></tr>
+<tr><td>2/25/2026 4:36:53 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:54 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:55 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:56 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:56 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:57 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:57 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:58 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:58 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:59 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:36:59 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:00 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:00 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:01 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:01 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:02 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:02 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:03 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:03 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:11 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TrustedInstaller&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:11 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:12 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:12 PM</td><td>Wednesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/25/2026 4:37:12 PM</td><td>Wednesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/26/2026 7:03:49 AM</td><td>Thursday</td><td>1</td><td>Authentication started.</td></tr>
+<tr><td>2/26/2026 7:03:49 AM</td><td>Thursday</td><td>2</td><td>Authentication stopped. Result 0</td></tr>
+<tr><td>2/26/2026 7:03:49 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/26/2026 7:03:49 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/26/2026 7:03:49 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/26/2026 7:03:49 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/26/2026 7:03:49 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/26/2026 7:03:50 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/26/2026 7:03:50 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/26/2026 7:03:50 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/26/2026 7:03:50 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/26/2026 7:03:50 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/26/2026 7:03:51 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/26/2026 7:03:51 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/26/2026 7:03:51 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/26/2026 7:03:51 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/26/2026 7:03:51 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/26/2026 7:03:51 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/26/2026 7:04:03 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (14).</td></tr>
+<tr><td>2/26/2026 7:04:03 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (14).</td></tr>
+<tr><td>2/26/2026 9:59:38 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (4).</td></tr>
+<tr><td>2/26/2026 9:59:38 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (4).</td></tr>
+<tr><td>2/26/2026 9:59:38 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (4).</td></tr>
+<tr><td>2/26/2026 9:59:38 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (4).</td></tr>
+<tr><td>2/26/2026 11:08:25 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (5).</td></tr>
+<tr><td>2/26/2026 11:08:25 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (5).</td></tr>
+<tr><td>2/26/2026 11:08:25 AM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (5).</td></tr>
+<tr><td>2/26/2026 11:08:25 AM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (5).</td></tr>
+<tr><td>2/26/2026 2:20:47 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (4).</td></tr>
+<tr><td>2/26/2026 2:20:47 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (4).</td></tr>
+<tr><td>2/26/2026 2:20:47 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (4).</td></tr>
+<tr><td>2/26/2026 2:20:47 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (4).</td></tr>
+<tr><td>2/26/2026 2:35:02 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (5).</td></tr>
+<tr><td>2/26/2026 2:35:02 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (5).</td></tr>
+<tr><td>2/26/2026 2:35:02 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (5).</td></tr>
+<tr><td>2/26/2026 2:35:02 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (5).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (1).</td></tr>
+<tr><td>2/26/2026 4:41:09 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (1).</td></tr>
+<tr><td>2/26/2026 4:41:52 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/26/2026 4:42:05 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/26/2026 4:42:05 PM</td><td>Thursday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/26/2026 4:42:05 PM</td><td>Thursday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/27/2026 8:08:52 AM</td><td>Friday</td><td>1</td><td>Authentication started.</td></tr>
+<tr><td>2/27/2026 8:08:52 AM</td><td>Friday</td><td>2</td><td>Authentication stopped. Result 0</td></tr>
+<tr><td>2/27/2026 8:08:52 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/27/2026 8:08:52 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/27/2026 8:08:52 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/27/2026 8:08:52 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/27/2026 8:08:52 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/27/2026 8:08:52 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/27/2026 8:08:52 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/27/2026 8:08:53 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/27/2026 8:08:53 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (2).</td></tr>
+<tr><td>2/27/2026 8:08:53 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (2).</td></tr>
+<tr><td>2/27/2026 8:08:53 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/27/2026 8:08:53 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/27/2026 8:08:53 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/27/2026 8:08:53 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/27/2026 8:08:53 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (12).</td></tr>
+<tr><td>2/27/2026 8:08:53 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (12).</td></tr>
+<tr><td>2/27/2026 8:08:59 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (14).</td></tr>
+<tr><td>2/27/2026 8:08:59 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (14).</td></tr>
+<tr><td>2/27/2026 1:02:15 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (4).</td></tr>
+<tr><td>2/27/2026 1:02:15 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (4).</td></tr>
+<tr><td>2/27/2026 1:02:15 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (4).</td></tr>
+<tr><td>2/27/2026 1:02:15 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (4).</td></tr>
+<tr><td>2/27/2026 1:07:05 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (5).</td></tr>
+<tr><td>2/27/2026 1:07:05 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (5).</td></tr>
+<tr><td>2/27/2026 1:07:05 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (5).</td></tr>
+<tr><td>2/27/2026 1:07:05 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (5).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (13).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (13).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; began handling the notification event (3).</td></tr>
+<tr><td>2/27/2026 4:29:03 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; finished handling the notification event (3).</td></tr>
+<tr><td>2/27/2026 4:29:04 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (1).</td></tr>
+<tr><td>2/27/2026 4:29:04 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (1).</td></tr>
+<tr><td>2/27/2026 4:29:43 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/27/2026 4:29:57 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (0).</td></tr>
+<tr><td>2/27/2026 4:29:57 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (0).</td></tr>
+<tr><td>2/27/2026 4:29:57 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (0).</td></tr>
+<tr><td>3/2/2026 7:21:54 AM</td><td>Monday</td><td>1</td><td>Authentication started.</td></tr>
+<tr><td>3/2/2026 7:21:54 AM</td><td>Monday</td><td>2</td><td>Authentication stopped. Result 0</td></tr>
+<tr><td>3/2/2026 7:21:54 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:21:54 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:21:54 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:21:54 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:21:54 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:21:55 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:21:55 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:21:55 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:21:55 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:21:55 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:21:56 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:21:56 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:21:56 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:21:56 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:21:56 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:21:56 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:22:02 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (14).</td></tr>
+<tr><td>3/2/2026 7:22:02 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (14).</td></tr>
+<tr><td>3/2/2026 7:23:16 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/2/2026 7:23:16 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/2/2026 7:23:16 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/2/2026 7:23:16 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (1).</td></tr>
+<tr><td>3/2/2026 7:23:17 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (1).</td></tr>
+<tr><td>3/2/2026 7:24:03 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (0).</td></tr>
+<tr><td>3/2/2026 7:24:16 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (0).</td></tr>
+<tr><td>3/2/2026 7:24:16 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (0).</td></tr>
+<tr><td>3/2/2026 7:24:16 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (0).</td></tr>
+<tr><td>3/2/2026 7:24:28 AM</td><td>Monday</td><td>1</td><td>Authentication started.</td></tr>
+<tr><td>3/2/2026 7:24:28 AM</td><td>Monday</td><td>2</td><td>Authentication stopped. Result 0</td></tr>
+<tr><td>3/2/2026 7:24:28 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:24:28 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:24:28 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:24:29 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/2/2026 7:24:35 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (14).</td></tr>
+<tr><td>3/2/2026 7:24:35 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (14).</td></tr>
+<tr><td>3/2/2026 5:56:36 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (4).</td></tr>
+<tr><td>3/2/2026 5:56:36 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (4).</td></tr>
+<tr><td>3/2/2026 5:56:36 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (4).</td></tr>
+<tr><td>3/2/2026 5:56:36 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (4).</td></tr>
+<tr><td>3/3/2026 6:48:20 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (5).</td></tr>
+<tr><td>3/3/2026 6:48:20 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (5).</td></tr>
+<tr><td>3/3/2026 6:48:20 AM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (5).</td></tr>
+<tr><td>3/3/2026 6:48:20 AM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (5).</td></tr>
+<tr><td>3/3/2026 4:35:10 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/3/2026 4:35:10 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/3/2026 4:35:10 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/3/2026 4:35:10 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/3/2026 4:35:10 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/3/2026 4:35:10 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (1).</td></tr>
+<tr><td>3/3/2026 4:35:11 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (1).</td></tr>
+<tr><td>3/3/2026 4:35:58 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (0).</td></tr>
+<tr><td>3/3/2026 4:36:11 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (0).</td></tr>
+<tr><td>3/3/2026 4:36:11 PM</td><td>Tuesday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (0).</td></tr>
+<tr><td>3/3/2026 4:36:11 PM</td><td>Tuesday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (0).</td></tr>
+<tr><td>3/6/2026 6:57:47 AM</td><td>Friday</td><td>1</td><td>Authentication started.</td></tr>
+<tr><td>3/6/2026 6:57:47 AM</td><td>Friday</td><td>2</td><td>Authentication stopped. Result 0</td></tr>
+<tr><td>3/6/2026 6:57:47 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/6/2026 6:57:47 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/6/2026 6:57:47 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/6/2026 6:57:47 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/6/2026 6:57:47 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/6/2026 6:57:48 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/6/2026 6:57:57 AM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (14).</td></tr>
+<tr><td>3/6/2026 6:57:57 AM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (14).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (1).</td></tr>
+<tr><td>3/6/2026 4:35:30 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (1).</td></tr>
+<tr><td>3/6/2026 4:36:11 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (0).</td></tr>
+<tr><td>3/6/2026 4:36:25 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (0).</td></tr>
+<tr><td>3/6/2026 4:36:25 PM</td><td>Friday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (0).</td></tr>
+<tr><td>3/6/2026 4:36:25 PM</td><td>Friday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (0).</td></tr>
+<tr><td>3/8/2026 7:47:56 AM</td><td>Sunday</td><td>1</td><td>Authentication started.</td></tr>
+<tr><td>3/8/2026 7:47:56 AM</td><td>Sunday</td><td>2</td><td>Authentication stopped. Result 0</td></tr>
+<tr><td>3/8/2026 7:47:56 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/8/2026 7:47:56 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/8/2026 7:47:56 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/8/2026 7:47:56 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/8/2026 7:47:56 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/8/2026 7:47:57 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/8/2026 7:47:57 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/8/2026 7:47:57 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/8/2026 7:47:57 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/8/2026 7:47:57 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/8/2026 7:47:58 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/8/2026 7:47:58 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/8/2026 7:47:58 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/8/2026 7:47:58 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/8/2026 7:47:58 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/8/2026 7:47:58 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/8/2026 7:48:04 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (14).</td></tr>
+<tr><td>3/8/2026 7:48:04 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (14).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (13).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (13).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; began handling the notification event (3).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;Wlansvc&gt; finished handling the notification event (3).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (1).</td></tr>
+<tr><td>3/8/2026 9:51:09 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (1).</td></tr>
+<tr><td>3/8/2026 9:51:49 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (0).</td></tr>
+<tr><td>3/8/2026 9:52:02 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (0).</td></tr>
+<tr><td>3/8/2026 9:52:02 AM</td><td>Sunday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (0).</td></tr>
+<tr><td>3/8/2026 9:52:02 AM</td><td>Sunday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (0).</td></tr>
+<tr><td>3/9/2026 6:53:50 AM</td><td>Monday</td><td>1</td><td>Authentication started.</td></tr>
+<tr><td>3/9/2026 6:53:50 AM</td><td>Monday</td><td>2</td><td>Authentication stopped. Result 0</td></tr>
+<tr><td>3/9/2026 6:53:50 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Profiles&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/9/2026 6:53:50 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Profiles&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/9/2026 6:53:50 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/9/2026 6:53:50 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/9/2026 6:53:50 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (2).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (2).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;GPClient&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;GPClient&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (12).</td></tr>
+<tr><td>3/9/2026 6:53:51 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (12).</td></tr>
+<tr><td>3/9/2026 6:53:57 AM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (14).</td></tr>
+<tr><td>3/9/2026 6:53:57 AM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (14).</td></tr>
+<tr><td>3/9/2026 3:16:09 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;Sens&gt; began handling the notification event (4).</td></tr>
+<tr><td>3/9/2026 3:16:09 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;Sens&gt; finished handling the notification event (4).</td></tr>
+<tr><td>3/9/2026 3:16:09 PM</td><td>Monday</td><td>811</td><td>The winlogon notification subscriber &lt;TermSrv&gt; began handling the notification event (4).</td></tr>
+<tr><td>3/9/2026 3:16:09 PM</td><td>Monday</td><td>812</td><td>The winlogon notification subscriber &lt;TermSrv&gt; finished handling the notification event (4).</td></tr>
+</table>
+
+</div>
+
+<div class="section">
+  <h2>&#128196; Group Policy / Shell Policy Registry</h2>
+  <h3>FolderRedirectionGPO</h3><table>
+<colgroup><col/><col/></colgroup>
+<tr><th>DisableFROnInternetOpen</th><th>RestoreShellFolders</th></tr>
+<tr><td></td><td></td></tr>
+</table>
+ <h3>WinlogonPolicy</h3><table>
+<colgroup><col/><col/><col/></colgroup>
+<tr><th>SyncForegroundPolicy</th><th>AlwaysWaitForNetwork</th><th>GpNetworkStartTimeoutPolicyValue</th></tr>
+<tr><td>1</td><td></td><td></td></tr>
+</table>
+ <p><em>No data collected.</em></p> <p><em>No data collected.</em></p>
+</div>
+
+</div>
+</body>
+</html>
