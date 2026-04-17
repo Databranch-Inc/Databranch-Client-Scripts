@@ -25,7 +25,7 @@
 
 .NOTES
     File Name      : Invoke-ScriptTemplate.ps1
-    Version        : 1.3.0.0
+    Version        : 1.4.0.0
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -52,6 +52,11 @@
                         DattoRMM agent context automatically.
 
 .CHANGELOG
+    v1.4.0.0 - 2026-04-16 - Sam Kirsch
+        - Added TLS 1.2 enforcement block between help block and parameters.
+          PowerShell 5.1 defaults to TLS 1.0/1.1 on older Windows builds;
+          IT Glue and Microsoft Graph/Azure AD both require TLS 1.2 minimum.
+
     v1.3.0.0 - 2026-04-16 - Sam Kirsch
         - Expanded DattoRMM built-in variable comments (full CS_ variable list)
         - Added Boolean input variable gotcha to parameter comments and script
@@ -84,6 +89,16 @@
     v1.0.0.0 - 2026-02-20 - Sam Kirsch
         - Initial release
 #>
+
+# ==============================================================================
+# TLS 1.2 ENFORCEMENT
+# PowerShell 5.1 on older Windows (Server 2012 R2, early Win10 builds) defaults
+# to TLS 1.0/1.1 for web requests. Both the IT Glue API and Microsoft Graph/
+# Azure AD token endpoints require TLS 1.2 and will reject older connections
+# with errors that look like generic network failures. Force TLS 1.2 explicitly
+# at the top of any script that makes HTTPS REST calls.
+# ==============================================================================
+[Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject([Net.SecurityProtocolType], 3072)
 
 # ==============================================================================
 # PARAMETERS
@@ -161,7 +176,7 @@ function Invoke-ScriptTemplate {
     # CONFIGURATION
     # ==========================================================================
     $ScriptName    = "Invoke-ScriptTemplate"
-    $ScriptVersion = "1.3.0.0"
+    $ScriptVersion = "1.4.0.0"
     $LogRoot       = "C:\Databranch\ScriptLogs"
     $LogFolder     = Join-Path $LogRoot $ScriptName
     $LogDate       = Get-Date -Format "yyyy-MM-dd"

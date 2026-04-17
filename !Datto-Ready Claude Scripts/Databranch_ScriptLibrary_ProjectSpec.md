@@ -45,6 +45,21 @@ Reference project conversations are available in the **Databranch Script Library
 | Master Function        | All code wrapped in a master function named to match the file |
 | Entry Point            | Master function called at bottom using splatting (`@Params`) |
 | File Naming            | Same name as the master function (e.g. `Invoke-ScriptName.ps1`) |
+| TLS                    | Force TLS 1.2 in any script making HTTPS REST calls (see below) |
+
+### TLS 1.2 Enforcement
+
+PowerShell 5.1 on older Windows builds (Server 2012 R2, early Windows 10) defaults to TLS 1.0/1.1 for web requests. Both the IT Glue API and Microsoft Graph/Azure AD token endpoints require TLS 1.2 minimum and will reject older connections — typically with errors that look like generic network failures, making the root cause hard to diagnose.
+
+Any script that makes HTTPS REST calls must include the following line immediately after the comment-based help block and before the parameter declarations:
+
+```powershell
+[Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject([Net.SecurityProtocolType], 3072)
+```
+
+The value `3072` is the numeric equivalent of `[Net.SecurityProtocolType]::Tls12`. The `ToObject` cast is used instead of the enum name directly because on some older .NET/PS 5.1 environments the `Tls12` enum member is not guaranteed to be defined by name at parse time, whereas the integer value always works.
+
+This line is included in the standard script template and must be preserved in all scripts derived from it that make any web requests.
 
 ---
 
