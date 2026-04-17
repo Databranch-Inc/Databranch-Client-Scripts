@@ -25,12 +25,12 @@
 
 .NOTES
     File Name      : Invoke-ScriptTemplate.ps1
-    Version        : 1.2.0.0
+    Version        : 1.3.0.0
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
     Created        : 2026-02-20
-    Last Modified  : 2026-02-21
+    Last Modified  : 2026-04-16
     Modified By    : Sam Kirsch
 
     Requires       : PowerShell 5.1+
@@ -52,6 +52,15 @@
                         DattoRMM agent context automatically.
 
 .CHANGELOG
+    v1.3.0.0 - 2026-04-16 - Sam Kirsch
+        - Expanded DattoRMM built-in variable comments (full CS_ variable list)
+        - Added Boolean input variable gotcha to parameter comments and script
+          logic reference block (DattoRMM booleans arrive as strings "true"/"false";
+          never cast to [bool] or evaluate as truthy — always use -eq 'true')
+        - Added Set-UdfValue helper function for writing data back to DattoRMM UDFs
+          via HKLM:\SOFTWARE\CentraStage registry path
+        - Added UDF write pattern and post-condition guidance to script logic comments
+
     v1.2.0.0 - 2026-04-16 - Sam Kirsch
         - Updated exit codes to standard: 0=success, 1=runtime failure,
           2=fatal pre-flight failure
@@ -81,6 +90,34 @@
 # Supports both DattoRMM environment variable input (automated) and standard
 # PowerShell parameter input (manual/interactive). DattoRMM env vars take
 # precedence if present; otherwise falls back to passed parameters or defaults.
+#
+# DATTORMM BUILT-IN AGENT VARIABLES
+# The following are available in every component automatically.
+# CS_PROFILE_NAME and CS_HOSTNAME are always wired up (used in the log header).
+# Add the others only if this specific script actually needs them.
+#
+#   Always include:
+#     $env:CS_PROFILE_NAME       - Site/customer name
+#     $env:CS_HOSTNAME           - Target machine hostname
+#
+#   Add only when needed:
+#     $env:CS_PROFILE_UID        - Unique ID for the site
+#     $env:CS_PROFILE_DESC       - Description of the site
+#     $env:CS_ACCOUNT_UID        - Unique ID for the Datto RMM account
+#     $env:CS_DOMAIN             - Device domain (if domain-joined)
+#     $env:CS_CC_HOST            - Agent control channel URI
+#     $env:CS_CSM_ADDRESS        - Web Portal address for this device
+#     $env:CS_PROFILE_PROXY_TYPE - 0 or 1 (proxy configured for site)
+#     $env:UDF_1 .. $env:UDF_30  - Device UDF values at job run time (read-only)
+#
+# BOOLEAN INPUT VARIABLES — CRITICAL GOTCHA:
+#   DattoRMM Boolean component variables arrive as the STRING "true" or "false".
+#   NEVER evaluate them as [bool] or test truthiness directly — any non-empty
+#   string (including "false") evaluates to $true in PowerShell.
+#
+#   WRONG:  if ($env:EnableFeature) { ... }           # always true when set
+#   WRONG:  if ([bool]$env:EnableFeature) { ... }     # always true even for "false"
+#   CORRECT: if ($env:EnableFeature -eq 'true') { ... }
 # ==============================================================================
 [CmdletBinding()]
 param (
@@ -89,6 +126,11 @@ param (
 
     [Parameter(Mandatory = $false)]
     [string]$AnotherParam = $(if ($env:AnotherParam) { $env:AnotherParam } else { "" }),
+
+    # Example Boolean input variable — always compare as string, never cast to [bool]
+    # [Parameter(Mandatory = $false)]
+    # [string]$EnableFeature = $(if ($env:EnableFeature) { $env:EnableFeature } else { 'false' }),
+    # Usage: if ($EnableFeature -eq 'true') { ... }
 
     # DattoRMM built-in variables (auto-populated by Datto, no need to define in component)
     [Parameter(Mandatory = $false)]
@@ -119,7 +161,7 @@ function Invoke-ScriptTemplate {
     # CONFIGURATION
     # ==========================================================================
     $ScriptName    = "Invoke-ScriptTemplate"
-    $ScriptVersion = "1.2.0.0"
+    $ScriptVersion = "1.3.0.0"
     $LogRoot       = "C:\Databranch\ScriptLogs"
     $LogFolder     = Join-Path $LogRoot $ScriptName
     $LogDate       = Get-Date -Format "yyyy-MM-dd"
@@ -284,6 +326,46 @@ function Invoke-ScriptTemplate {
     }
 
     # ==========================================================================
+    # SET-UDFVALUE  (DattoRMM User-Defined Field Write)
+    # Writes a value to a DattoRMM UDF slot by setting the corresponding
+    # registry key. The Datto agent syncs the value to the platform and then
+    # deletes the registry entry automatically.
+    #
+    # Parameters:
+    #   -Slot  : UDF number 1-30 (maps to Custom1-Custom30 in registry)
+    #   -Value : String value to write (max 255 characters)
+    #
+    # Notes:
+    #   - Do NOT write credentials or sensitive data to UDFs — they are
+    #     visible in plain text in the Datto RMM portal.
+    #   - UDF 1 is reserved by Ransomware Detection if that feature is
+    #     enabled on the account. Avoid Slot 1 on endpoints where it applies.
+    #   - Runs silently; logs a warning if the write fails but does not throw.
+    # ==========================================================================
+    function Set-UdfValue {
+        param (
+            [Parameter(Mandatory = $true)]
+            [ValidateRange(1, 30)]
+            [int]$Slot,
+
+            [Parameter(Mandatory = $true)]
+            [ValidateLength(0, 255)]
+            [string]$Value
+        )
+
+        $RegPath  = 'HKLM:\SOFTWARE\CentraStage'
+        $RegName  = "Custom$Slot"
+
+        try {
+            New-ItemProperty -Path $RegPath -Name $RegName -Value $Value -PropertyType String -Force | Out-Null
+            Write-Log "UDF $Slot set: $Value" -Severity DEBUG
+        }
+        catch {
+            Write-Log "Failed to write UDF $Slot : $_" -Severity WARN
+        }
+    }
+
+    # ==========================================================================
     # LOG SETUP
     # Creates log folder if needed and rotates old log files.
     # ==========================================================================
@@ -381,6 +463,29 @@ function Invoke-ScriptTemplate {
         #
         # Write-Log  -> goes to log file + DattoRMM stdout (always)
         # Write-Console -> goes to terminal display only (interactive runs)
+        #
+        # DATTORMM BOOLEAN INPUT VARIABLES:
+        #   Booleans from DattoRMM component vars arrive as strings "true"/"false".
+        #   Any non-empty string is truthy in PowerShell — including the string "false".
+        #   WRONG:   if ($EnableFeature) { ... }           # always true when set
+        #   WRONG:   if ([bool]$EnableFeature) { ... }     # always true even for "false"
+        #   CORRECT: if ($EnableFeature -eq 'true') { ... }
+        #
+        # WRITING TO DATTORMM UDFs:
+        #   Use Set-UdfValue to push data back to the platform (e.g. audit results).
+        #   The agent syncs the registry value automatically after the script exits.
+        #   Values are limited to 255 characters. Do not store secrets in UDFs.
+        #   Example:
+        #       Set-UdfValue -Slot 5 -Value "Audit completed: 42 users found"
+        #
+        # POST-CONDITIONS (Warning Text):
+        #   DattoRMM can scan stdout for a configured string and flag the job as
+        #   orange "Warning" status — independent of exit code. This is useful for
+        #   partial-success states. Configure the match string in the component's
+        #   Post-Condition field (case-sensitive). To trigger it from a script,
+        #   include the exact string in a Write-Log call:
+        #       Write-Log "WARNING: Some mailboxes could not be reached." -Severity WARN
+        #   Then configure "WARNING:" as the Post-Condition match string.
         #
         # PS 5.1 COMPATIBILITY REMINDERS:
         #   - Use New-Object instead of ::new()

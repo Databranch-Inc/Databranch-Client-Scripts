@@ -52,20 +52,103 @@ Reference project conversations are available in the **Databranch Script Library
 
 - Scripts must support **both** DattoRMM automated runs (environment variable input) and manual runs (standard PowerShell parameters) without modification.
 - Parameter fallback chain: **DattoRMM env var → PowerShell parameter → default value**
-- DattoRMM built-in environment variables available automatically (no component config needed):
 
-| Variable              | Description                        |
-|-----------------------|------------------------------------|
-| `$env:CS_PROFILE_NAME` | Site/customer name                |
-| `$env:CS_HOSTNAME`     | Target machine hostname           |
+### Built-in Agent Environment Variables
 
-- Exit codes must be explicit:
-  - `0` = Success
-  - `1` = Runtime failure — script started but encountered errors during execution
-  - `2` = Fatal pre-flight failure — missing required parameters, auth failure, or any condition that prevents execution from starting at all
-  - Additional codes documented per script as needed
-- stdout is the DattoRMM job output — `Write-Output` and `Write-Warning` both surface there.
-- **Never use `Format-Table`, `Format-List`, or `Format-Wide` for DattoRMM output.** PowerShell format cmdlets produce fixed-width column output that renders as garbled text in the DattoRMM job log viewer. Any data that needs to appear in the job log must be written as individual `Write-Log` lines.
+All of the following are available automatically in every component — no configuration needed. **Do not add them all to every script.** Only wire up a variable as a script parameter if the script actually uses it. The full list is here for reference so you know what exists.
+
+**Always include in every script** (used in the standard log header):
+
+| Variable               | Description             |
+|------------------------|-------------------------|
+| `$env:CS_PROFILE_NAME` | Site/customer name      |
+| `$env:CS_HOSTNAME`     | Target machine hostname |
+
+**Add only when the script needs them:**
+
+| Variable                     | Description                                                        |
+|------------------------------|--------------------------------------------------------------------|
+| `$env:CS_ACCOUNT_UID`        | Unique identifier for the Datto RMM account managing this device   |
+| `$env:CS_PROFILE_UID`        | Unique identifier for the site where this device is located        |
+| `$env:CS_PROFILE_DESC`       | Description of the site where this device is located               |
+| `$env:CS_DOMAIN`             | Local device domain (if domain-joined)                             |
+| `$env:CS_CC_HOST`            | Control channel URI used by the Agent                              |
+| `$env:CS_CSM_ADDRESS`        | Web Portal address this device connects to                         |
+| `$env:CS_PROFILE_PROXY_TYPE` | `0` or `1` — whether a proxy is configured for the site            |
+| `$env:UDF_1` … `$env:UDF_30` | Current values of the device's User-Defined Fields at job run time |
+
+> UDF variables reflect the value at the time the job runs. If UDF data changes after the job starts, the in-process variable will not update. For monitoring components, UDF data is only valid at the time the policy is pushed.
+
+### Exit Codes
+
+Exit codes must always be explicit. Standard conventions:
+
+| Code | Meaning |
+|------|---------|
+| `0`  | Success |
+| `1`  | Runtime failure — script started but encountered errors during execution |
+| `2`  | Fatal pre-flight failure — missing parameters, auth failure, or any condition preventing execution from starting |
+
+Additional script-specific codes must be documented in `.NOTES`.
+
+### stdout and Job Output
+
+- `Write-Output` and `Write-Warning` both surface in the DattoRMM job log (stdout/stderr).
+- **Never use `Format-Table`, `Format-List`, or `Format-Wide` for DattoRMM output.** These cmdlets produce fixed-width column output that renders as garbled text in the job log viewer. Write all job log data as individual `Write-Log` lines.
+
+### Post-Conditions (Warning Text)
+
+DattoRMM components support a **Post-Condition** field that scans stdout/stderr for a configured string. If the string is found, the job result is flagged as orange "Warning" status — independent of exit code. This is useful for surfacing partial-success states. The match is **case-sensitive**. Example: configure `WARNING:` in the post-condition field and include that literal prefix in relevant `Write-Log` output lines.
+
+### SYSTEM Context Limitations
+
+All DattoRMM scripts run as `NT AUTHORITY\SYSTEM` by default. Key limitations to design around:
+
+| Limitation | Impact | Workaround |
+|---|---|---|
+| No desktop / no window | GUI installers with Next buttons hang silently | Always use silent/unattended install flags (`/qn`, `/S`, etc.) |
+| No network authentication | Cannot authenticate to remote resources using the machine account | Use explicit credentials or machine-based certs |
+| No mapped drives | User-mapped drives are not visible | Use UNC paths (`\\server\share`) directly |
+| No user profile | User-specific paths (`%APPDATA%`, `%USERPROFILE%`) resolve to system paths | Use machine-scoped paths (`$env:ProgramData`, `$env:SystemRoot`) |
+
+> Scheduled jobs can optionally run in the context of the logged-on user via advanced execution settings. Quick jobs always run as SYSTEM.
+
+### Script Delivery
+
+DattoRMM wraps `.ps1` scripts in a `.bat` file for delivery. The script runs from the component package directory. **Attached files** (images, installers, supplemental scripts) are extracted to the same directory and can be referenced with `.\filename` — no hardcoded paths needed.
+
+### Writing to User-Defined Fields (UDFs) from Scripts
+
+Scripts can write data back to DattoRMM by setting registry values. The agent syncs them to the platform automatically:
+
+```powershell
+# Write a value to UDF slot 5 (CustomX where X = UDF number)
+New-ItemProperty -Path 'HKLM:\SOFTWARE\CentraStage' `
+                 -Name 'Custom5' `
+                 -Value 'YourValueHere' `
+                 -PropertyType String `
+                 -Force | Out-Null
+```
+
+- UDF values are limited to **255 characters**
+- Once synced, the registry value is deleted by the agent — it won't persist on the device
+- **Do not store credentials or sensitive data in UDFs** — they are visible in plain text in the portal
+- UDF 1 is reserved by Ransomware Detection if that feature is enabled — avoid writing to Custom1 on endpoints with ransomware detection active
+
+### Boolean Input Variables
+
+DattoRMM Boolean-type component variables arrive as the **string** `"true"` or `"false"` — not PowerShell `$true`/`$false`. This is a critical gotcha:
+
+```powershell
+# WRONG - [bool]"false" evaluates to $true because any non-empty string is truthy
+if ($env:EnableFeature) { ... }           # always true if var is set
+if ([bool]$env:EnableFeature) { ... }     # always true even when value is "false"
+
+# CORRECT - always compare DattoRMM boolean vars as strings
+if ($env:EnableFeature -eq 'true') { ... }
+```
+
+Always use `-eq 'true'` string comparison for DattoRMM Boolean input variables. Never cast them to `[bool]` or evaluate them directly as truthiness.
 
 ---
 
@@ -239,6 +322,7 @@ The target runtime is PowerShell 5.1. Several modern PS patterns that work in PS
 | Ternary operator | `$x = $a ? $b : $c` | `$x = if ($a) { $b } else { $c }` |
 | Null coalescing | `$x = $a ?? $b` | `$x = if ($a) { $a } else { $b }` |
 | `ForEach-Object -Parallel` | `ForEach-Object -Parallel { }` | Runspaces (see parallel pattern in template) |
+| DattoRMM Boolean env var | `if ($env:Flag)` or `if ([bool]$env:Flag)` | `if ($env:Flag -eq 'true')` — env vars are always strings |
 
 > When in doubt about 5.1 compatibility, test explicitly. Do not assume PS 7+ syntax works in 5.1 just because it is cleaner.
 
