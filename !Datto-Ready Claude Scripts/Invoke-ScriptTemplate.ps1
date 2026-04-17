@@ -26,12 +26,12 @@
 .NOTES
     File Name      : Invoke-ScriptTemplate.ps1
     Version        : 1.4.0.0
-    Author         : Sam Kirsch
+    Author         : <Author Name>
     Contributors   :
     Company        : Databranch
     Created        : 2026-02-20
     Last Modified  : 2026-04-16
-    Modified By    : Sam Kirsch
+    Modified By    : <Name>
 
     Requires       : PowerShell 5.1+
     Run Context    : SYSTEM or Domain Admin (note which applies)

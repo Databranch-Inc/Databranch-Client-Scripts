@@ -17,13 +17,36 @@ Reference project conversations are available in the **Databranch Script Library
 |-------------------|-----------------------------------------------------------------------|
 | Company           | Databranch                                                            |
 | Industry          | IT MSP (Managed Service Provider)                                     |
-| Author            | Sam Kirsch                                                            |
-| Contributor Field | Original author credited if not Sam; Sam Kirsch listed as Contributor |
+| Authors           | (see Author Standards below)                         |
+| Author Format     | Use full name if known (First Last), otherwise first name or handle   |
 | RMM Platform      | Datto RMM (migrating from ConnectWise Automate)                       |
 | Remote Access     | ConnectWise ScreenConnect (including Backstage = SYSTEM context)      |
 | Ticketing/PSA     | ConnectWise Manage                                                     |
 | Documentation     | ITGlue                                                                |
 | Site Names        | Customer company names, synced from ConnectWise Manage into DattoRMM and ITGlue |
+
+### Author Standards
+
+These rules govern how Claude fills in the `Author`, `Contributors`, and `Modified By` fields when writing or updating scripts. Claude must follow these automatically — do not leave these as blank placeholders.
+
+**When creating a new script from the template:**
+- Set `Author` to the name of the person Claude is currently talking to in this conversation.
+- Use the fullest name available: full `First Last` if known, first name only if that's all that's been established, or their handle/display name if that's all Claude has.
+- If a different author is explicitly specified in the conversation, use that.
+
+**When modifying an existing script:**
+- Leave `Author` as-is — it reflects who originally wrote it.
+- Add the current user to `Contributors` if they are not already listed.
+- Update `Modified By` to the current user's name.
+- Add a new `.CHANGELOG` entry crediting the current user.
+
+**Name resolution priority (for Claude to apply):**
+1. Full name explicitly stated in the current conversation (`"I'm John Doe"`) → use `John Doe`
+2. Full name known from prior project context or memory → use it
+3. First name known from conversation or account → use first name only
+4. Nothing known → use `<Author Name>` as a placeholder and ask
+
+Claude should never leave `Author` as the literal string `<Author Name>` when it has enough context to fill it in.
 
 ### Environment Scope
 - Windows Domains (on-prem Active Directory)
@@ -278,8 +301,8 @@ Every script must include a full comment-based help block containing:
 .NOTES
     File Name      : <FileName.ps1>
     Version        : <Major.Minor.Revision.Build>  e.g. 1.0.0.0
-    Author         : <Original Author>
-    Contributors   : <Sam Kirsch, others>
+    Author         : <Author Name — full name if known, first name or handle otherwise>
+    Contributors   : <Names of anyone who modified the script after initial authorship>
     Company        : Databranch
     Created        : <yyyy-MM-dd>
     Last Modified  : <yyyy-MM-dd>
