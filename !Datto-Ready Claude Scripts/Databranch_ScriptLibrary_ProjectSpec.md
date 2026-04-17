@@ -61,9 +61,11 @@ Reference project conversations are available in the **Databranch Script Library
 
 - Exit codes must be explicit:
   - `0` = Success
-  - `1` = General failure
+  - `1` = Runtime failure — script started but encountered errors during execution
+  - `2` = Fatal pre-flight failure — missing required parameters, auth failure, or any condition that prevents execution from starting at all
   - Additional codes documented per script as needed
 - stdout is the DattoRMM job output — `Write-Output` and `Write-Warning` both surface there.
+- **Never use `Format-Table`, `Format-List`, or `Format-Wide` for DattoRMM output.** PowerShell format cmdlets produce fixed-width column output that renders as garbled text in the DattoRMM job log viewer. Any data that needs to appear in the job log must be written as individual `Write-Log` lines.
 
 ---
 
@@ -226,6 +228,31 @@ Format: `Major.Minor.Revision.Build` — e.g. `1.0.0.0`, `1.2.3.456`
 
 ---
 
+## PowerShell 5.1 Compatibility Notes
+
+The target runtime is PowerShell 5.1. Several modern PS patterns that work in PS 7+ silently fail or behave differently in 5.1. Always use the 5.1-safe equivalents listed below.
+
+| Pattern | PS 7+ (avoid) | PS 5.1-safe (use this) |
+|---|---|---|
+| Generic list construction | `[System.Collections.Generic.List[PSObject]]::new()` | `New-Object -TypeName 'System.Collections.Generic.List[PSObject]'` |
+| Negative array index | `$list[-1]` | `$list[$list.Count - 1]` |
+| Ternary operator | `$x = $a ? $b : $c` | `$x = if ($a) { $b } else { $c }` |
+| Null coalescing | `$x = $a ?? $b` | `$x = if ($a) { $a } else { $b }` |
+| `ForEach-Object -Parallel` | `ForEach-Object -Parallel { }` | Runspaces (see parallel pattern in template) |
+
+> When in doubt about 5.1 compatibility, test explicitly. Do not assume PS 7+ syntax works in 5.1 just because it is cleaner.
+
+---
+
+## Security Standards
+
+- Secrets (API keys, client secrets, passwords) must never be written to disk, log files, or stdout.
+- DattoRMM environment variables are the correct delivery mechanism for secrets — they are passed via the process environment, not the command line, and are not visible in process listings.
+- Once a secret has been used to acquire a token or session, **null it out immediately**: `$ClientSecret = $null`
+- Secrets must never appear in `Write-Log` output, log headers, or parameter dumps.
+
+---
+
 ## Documentation Standards
 
 Each script may have up to two companion HTML documentation files. Full design and content specifications are defined in `Databranch_DocumentationSpec.md`, which is included alongside this spec and the script template.
@@ -269,7 +296,9 @@ Key template elements:
 - `$ErrorActionPreference = 'Stop'` with `try/catch`
 - Standard log header written at startup
 - Master function wrapper with splatted entry point call at bottom
-- Explicit `exit 0` / `exit 1` (or other documented codes)
+- Explicit `exit 0` (success), `exit 1` (runtime errors), `exit 2` (fatal pre-flight failure)
+- Pre-flight parameter validation block with `exit 2` on failure
+- Secret/credential variables nulled out immediately after use
 
 ---
 

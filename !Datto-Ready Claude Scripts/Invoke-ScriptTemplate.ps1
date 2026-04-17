@@ -25,7 +25,7 @@
 
 .NOTES
     File Name      : Invoke-ScriptTemplate.ps1
-    Version        : 1.1.0.0
+    Version        : 1.2.0.0
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -40,8 +40,9 @@
 
     Exit Codes:
         0  - Success
-        1  - General failure
-        2  - (Add additional exit codes and meanings as needed)
+        1  - Runtime failure (script started, errors encountered during execution)
+        2  - Fatal pre-flight failure (missing parameters, auth failure, cannot start)
+        (Add additional script-specific codes as needed)
 
     Output Design:
         Write-Log     - Structured [timestamp][SEVERITY] output to log file AND
@@ -51,6 +52,13 @@
                         DattoRMM agent context automatically.
 
 .CHANGELOG
+    v1.2.0.0 - 2026-04-16 - Sam Kirsch
+        - Updated exit codes to standard: 0=success, 1=runtime failure,
+          2=fatal pre-flight failure
+        - Added pre-flight parameter validation block with exit 2 pattern
+        - Added PS 5.1 compatibility notes to template comments
+        - Secret/credential nulling pattern added to template comments
+
     v1.1.0.0 - 2026-02-21 - Sam Kirsch
         - Added Write-Console function for human-friendly colored terminal output
         - Added Write-Banner, Write-Section, Write-Separator console helpers
@@ -111,7 +119,7 @@ function Invoke-ScriptTemplate {
     # CONFIGURATION
     # ==========================================================================
     $ScriptName    = "Invoke-ScriptTemplate"
-    $ScriptVersion = "1.1.0.0"
+    $ScriptVersion = "1.2.0.0"
     $LogRoot       = "C:\Databranch\ScriptLogs"
     $LogFolder     = Join-Path $LogRoot $ScriptName
     $LogDate       = Get-Date -Format "yyyy-MM-dd"
@@ -335,6 +343,25 @@ function Invoke-ScriptTemplate {
     try {
 
         # ------------------------------------------------------------------
+        # PRE-FLIGHT VALIDATION
+        # Check all required parameters before doing any real work.
+        # Use exit 2 for fatal startup failures so DattoRMM can distinguish
+        # "script never ran" from "script ran but hit errors".
+        #
+        # Pattern:
+        #   $MissingParams = @()
+        #   if (-not $RequiredParam) { $MissingParams += 'RequiredParam' }
+        #   if ($MissingParams.Count -gt 0) {
+        #       foreach ($P in $MissingParams) {
+        #           Write-Log "Missing required parameter: $P" -Severity ERROR
+        #           Write-Console "Missing required parameter: $P" -Severity ERROR
+        #       }
+        #       Write-Banner 'FATAL - MISSING PARAMETERS' -Color 'Red'
+        #       exit 2
+        #   }
+        # ------------------------------------------------------------------
+
+        # ------------------------------------------------------------------
         # YOUR SCRIPT LOGIC GOES HERE
         #
         # Dual-output pattern — pair Write-Log with Write-Console:
@@ -354,6 +381,27 @@ function Invoke-ScriptTemplate {
         #
         # Write-Log  -> goes to log file + DattoRMM stdout (always)
         # Write-Console -> goes to terminal display only (interactive runs)
+        #
+        # PS 5.1 COMPATIBILITY REMINDERS:
+        #   - Use New-Object instead of ::new()
+        #       CORRECT:  New-Object -TypeName 'System.Collections.Generic.List[PSObject]'
+        #       AVOID:    [System.Collections.Generic.List[PSObject]]::new()
+        #   - Use explicit index instead of negative index
+        #       CORRECT:  $list[$list.Count - 1]
+        #       AVOID:    $list[-1]
+        #   - No ternary operator — use if/else
+        #       CORRECT:  $x = if ($a) { $b } else { $c }
+        #       AVOID:    $x = $a ? $b : $c
+        #
+        # SECRETS / CREDENTIALS:
+        #   - Never log secrets, API keys, or passwords via Write-Log
+        #   - Null out credential variables immediately after use:
+        #       $ClientSecret = $null
+        #
+        # SUMMARY OUTPUT:
+        #   - Never use Format-Table / Format-List for DattoRMM output
+        #   - Column-formatted output garbles in the DattoRMM job log viewer
+        #   - Write summary data as individual Write-Log lines instead
         # ------------------------------------------------------------------
 
         # ------------------------------------------------------------------
