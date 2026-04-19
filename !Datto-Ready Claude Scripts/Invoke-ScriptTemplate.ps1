@@ -25,13 +25,13 @@
 
 .NOTES
     File Name      : Invoke-ScriptTemplate.ps1
-    Version        : 1.4.0.0
+    Version        : 1.4.1.0
     Author         : <Author Name>
     Contributors   :
     Company        : Databranch
     Created        : 2026-02-20
-    Last Modified  : 2026-04-16
-    Modified By    : <Name>
+    Last Modified  : 2026-04-18
+    Modified By    : Sam Kirsch
 
     Requires       : PowerShell 5.1+
     Run Context    : SYSTEM or Domain Admin (note which applies)
@@ -52,6 +52,14 @@
                         DattoRMM agent context automatically.
 
 .CHANGELOG
+    v1.4.1.0 - 2026-04-18 - Sam Kirsch
+        - CRITICAL FIX: Moved TLS 1.2 enforcement block from ABOVE param() to BELOW.
+          PowerShell requires [CmdletBinding()] / param() to be the first executable
+          statement in the script. Any code (including the TLS line) before param()
+          causes a parse-time crash: "The CmdletBinding attribute can only be used
+          inside a param block." The prior v1.4.0.0 placement was broken on any
+          script that used it - this template version repairs every new script.
+
     v1.4.0.0 - 2026-04-16 - Sam Kirsch
         - Added TLS 1.2 enforcement block between help block and parameters.
           PowerShell 5.1 defaults to TLS 1.0/1.1 on older Windows builds;
@@ -61,7 +69,7 @@
         - Expanded DattoRMM built-in variable comments (full CS_ variable list)
         - Added Boolean input variable gotcha to parameter comments and script
           logic reference block (DattoRMM booleans arrive as strings "true"/"false";
-          never cast to [bool] or evaluate as truthy — always use -eq 'true')
+          never cast to [bool] or evaluate as truthy - always use -eq 'true')
         - Added Set-UdfValue helper function for writing data back to DattoRMM UDFs
           via HKLM:\SOFTWARE\CentraStage registry path
         - Added UDF write pattern and post-condition guidance to script logic comments
@@ -91,16 +99,6 @@
 #>
 
 # ==============================================================================
-# TLS 1.2 ENFORCEMENT
-# PowerShell 5.1 on older Windows (Server 2012 R2, early Win10 builds) defaults
-# to TLS 1.0/1.1 for web requests. Both the IT Glue API and Microsoft Graph/
-# Azure AD token endpoints require TLS 1.2 and will reject older connections
-# with errors that look like generic network failures. Force TLS 1.2 explicitly
-# at the top of any script that makes HTTPS REST calls.
-# ==============================================================================
-[Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject([Net.SecurityProtocolType], 3072)
-
-# ==============================================================================
 # PARAMETERS
 # Supports both DattoRMM environment variable input (automated) and standard
 # PowerShell parameter input (manual/interactive). DattoRMM env vars take
@@ -125,9 +123,9 @@
 #     $env:CS_PROFILE_PROXY_TYPE - 0 or 1 (proxy configured for site)
 #     $env:UDF_1 .. $env:UDF_30  - Device UDF values at job run time (read-only)
 #
-# BOOLEAN INPUT VARIABLES — CRITICAL GOTCHA:
+# BOOLEAN INPUT VARIABLES - CRITICAL GOTCHA:
 #   DattoRMM Boolean component variables arrive as the STRING "true" or "false".
-#   NEVER evaluate them as [bool] or test truthiness directly — any non-empty
+#   NEVER evaluate them as [bool] or test truthiness directly - any non-empty
 #   string (including "false") evaluates to $true in PowerShell.
 #
 #   WRONG:  if ($env:EnableFeature) { ... }           # always true when set
@@ -142,7 +140,7 @@ param (
     [Parameter(Mandatory = $false)]
     [string]$AnotherParam = $(if ($env:AnotherParam) { $env:AnotherParam } else { "" }),
 
-    # Example Boolean input variable — always compare as string, never cast to [bool]
+    # Example Boolean input variable - always compare as string, never cast to [bool]
     # [Parameter(Mandatory = $false)]
     # [string]$EnableFeature = $(if ($env:EnableFeature) { $env:EnableFeature } else { 'false' }),
     # Usage: if ($EnableFeature -eq 'true') { ... }
@@ -154,6 +152,20 @@ param (
     [Parameter(Mandatory = $false)]
     [string]$Hostname = $(if ($env:CS_HOSTNAME) { $env:CS_HOSTNAME } else { $env:COMPUTERNAME })
 )
+
+# ==============================================================================
+# TLS 1.2 ENFORCEMENT
+# PowerShell 5.1 on older Windows (Server 2012 R2, early Win10 builds) defaults
+# to TLS 1.0/1.1 for web requests. Both the IT Glue API and Microsoft Graph/
+# Azure AD token endpoints require TLS 1.2 and will reject older connections
+# with errors that look like generic network failures. Force TLS 1.2 explicitly.
+#
+# MUST BE AFTER param(). PowerShell requires [CmdletBinding()] / param() to be
+# the FIRST executable statement in the script. Placing the TLS line (or any
+# other statement) before param() causes a parse-time failure with
+# "[CmdletBinding()] can only be used inside a param block."
+# ==============================================================================
+[Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject([Net.SecurityProtocolType], 3072)
 
 # ==============================================================================
 # MASTER FUNCTION
@@ -186,11 +198,11 @@ function Invoke-ScriptTemplate {
     # ==========================================================================
     # WRITE-LOG  (Structured Output Layer)
     # Writes timestamped, severity-tagged entries to BOTH the log file and
-    # DattoRMM stdout. Always verbose — all levels always written.
+    # DattoRMM stdout. Always verbose - all levels always written.
     #
     # Uses Write-Output / Write-Warning / Write-Error (NOT Write-Host) so
     # output is captured by DattoRMM job stdout, pipeline, and transcripts.
-    # Do NOT use Write-Host here — it would bypass DattoRMM capture.
+    # Do NOT use Write-Host here - it would bypass DattoRMM capture.
     # ==========================================================================
     function Write-Log {
         param (
@@ -206,7 +218,7 @@ function Invoke-ScriptTemplate {
         $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         $LogEntry  = "[$Timestamp] [$Severity] $Message"
 
-        # Write to stdout — captured by DattoRMM, pipeline, and transcript
+        # Write to stdout - captured by DattoRMM, pipeline, and transcript
         switch ($Severity) {
             "INFO"    { Write-Output  $LogEntry }
             "WARN"    { Write-Warning $LogEntry }
@@ -215,7 +227,7 @@ function Invoke-ScriptTemplate {
             "DEBUG"   { Write-Output  $LogEntry }
         }
 
-        # Write to log file — always
+        # Write to log file - always
         try {
             Add-Content -Path $LogFile -Value $LogEntry -Encoding UTF8
         }
@@ -227,9 +239,9 @@ function Invoke-ScriptTemplate {
     # ==========================================================================
     # WRITE-CONSOLE  (Presentation Layer)
     # Human-friendly colored output for interactive/manual terminal runs.
-    # Uses Write-Host — writes to the PowerShell display stream ONLY.
+    # Uses Write-Host - writes to the PowerShell display stream ONLY.
     # NOT captured by DattoRMM stdout, pipeline redirection, or transcripts.
-    # Safe to call alongside Write-Log — the two output streams are independent.
+    # Safe to call alongside Write-Log - the two output streams are independent.
     #
     # Severity color scheme:
     #   INFO    = Cyan       WARN    = Yellow
@@ -277,12 +289,12 @@ function Invoke-ScriptTemplate {
 
     # ==========================================================================
     # CONSOLE PRESENTATION HELPERS
-    # Write-Banner, Write-Section, Write-Separator — for structured, readable
+    # Write-Banner, Write-Section, Write-Separator - for structured, readable
     # console output during interactive runs. All use Write-Host (display stream
     # only). Not captured by DattoRMM, pipeline, or transcripts.
     # ==========================================================================
 
-    # Write-Banner — full-width start/end banner. Use at script open/close
+    # Write-Banner - full-width start/end banner. Use at script open/close
     # and for major milestone announcements.
     #
     # Output:
@@ -306,7 +318,7 @@ function Invoke-ScriptTemplate {
         Write-Host ""
     }
 
-    # Write-Section — lightweight section header within a script run.
+    # Write-Section - lightweight section header within a script run.
     # Use to introduce each logical phase of execution.
     #
     # Output:
@@ -326,7 +338,7 @@ function Invoke-ScriptTemplate {
         Write-Host "$TitleStr$Padding" -ForegroundColor $Color
     }
 
-    # Write-Separator — thin divider line between logical groups.
+    # Write-Separator - thin divider line between logical groups.
     # Use within sections to separate clusters of related output.
     #
     # Output:
@@ -351,7 +363,7 @@ function Invoke-ScriptTemplate {
     #   -Value : String value to write (max 255 characters)
     #
     # Notes:
-    #   - Do NOT write credentials or sensitive data to UDFs — they are
+    #   - Do NOT write credentials or sensitive data to UDFs - they are
     #     visible in plain text in the Datto RMM portal.
     #   - UDF 1 is reserved by Ransomware Detection if that feature is
     #     enabled on the account. Avoid Slot 1 on endpoints where it applies.
@@ -394,7 +406,7 @@ function Invoke-ScriptTemplate {
             }
         }
 
-        # Rotate — keep only the $MaxLogFiles most recent log files
+        # Rotate - keep only the $MaxLogFiles most recent log files
         try {
             $ExistingLogs = Get-ChildItem -Path $LogFolder -Filter "$($ScriptName)_*.log" |
                             Sort-Object LastWriteTime -Descending
@@ -418,7 +430,7 @@ function Invoke-ScriptTemplate {
     Initialize-Logging
 
     # ------------------------------------------------------------------
-    # Script startup — structured log header + console banner
+    # Script startup - structured log header + console banner
     # Write-Log handles DattoRMM/file. Write-Banner/Console handles display.
     # ------------------------------------------------------------------
     $RunAs = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
@@ -461,7 +473,7 @@ function Invoke-ScriptTemplate {
         # ------------------------------------------------------------------
         # YOUR SCRIPT LOGIC GOES HERE
         #
-        # Dual-output pattern — pair Write-Log with Write-Console:
+        # Dual-output pattern - pair Write-Log with Write-Console:
         #
         #   Write-Section "Phase Name"
         #   Write-Log     "Starting phase..."   -Severity INFO
@@ -481,7 +493,7 @@ function Invoke-ScriptTemplate {
         #
         # DATTORMM BOOLEAN INPUT VARIABLES:
         #   Booleans from DattoRMM component vars arrive as strings "true"/"false".
-        #   Any non-empty string is truthy in PowerShell — including the string "false".
+        #   Any non-empty string is truthy in PowerShell - including the string "false".
         #   WRONG:   if ($EnableFeature) { ... }           # always true when set
         #   WRONG:   if ([bool]$EnableFeature) { ... }     # always true even for "false"
         #   CORRECT: if ($EnableFeature -eq 'true') { ... }
@@ -495,7 +507,7 @@ function Invoke-ScriptTemplate {
         #
         # POST-CONDITIONS (Warning Text):
         #   DattoRMM can scan stdout for a configured string and flag the job as
-        #   orange "Warning" status — independent of exit code. This is useful for
+        #   orange "Warning" status - independent of exit code. This is useful for
         #   partial-success states. Configure the match string in the component's
         #   Post-Condition field (case-sensitive). To trigger it from a script,
         #   include the exact string in a Write-Log call:
@@ -509,7 +521,7 @@ function Invoke-ScriptTemplate {
         #   - Use explicit index instead of negative index
         #       CORRECT:  $list[$list.Count - 1]
         #       AVOID:    $list[-1]
-        #   - No ternary operator — use if/else
+        #   - No ternary operator - use if/else
         #       CORRECT:  $x = if ($a) { $b } else { $c }
         #       AVOID:    $x = $a ? $b : $c
         #

@@ -1,262 +1,498 @@
-╔══════════════════════════════════════════════════════════════════════════════════╗
-║         BEC INVESTIGATION QUICK REFERENCE v3.0.0.0                              ║
-║                  Databranch — Incident Response Workflow                         ║
-╚══════════════════════════════════════════════════════════════════════════════════╝
+==============================================================================
+         BEC INVESTIGATION QUICK REFERENCE v4.0.2.0
+                Databranch - Incident Response Workflow
+==============================================================================
 
-═══════════════════════════════════════════════════════════════════════════════════
+This quick reference matches Start-BECInvestigation.ps1 v4.0.2.0 (April 2026).
+
+WHAT CHANGED FROM v3.0.0.0:
+  * Remediation is now handled through CIPP (Compromise Remediation button),
+    not by manual Azure portal clicks or PowerShell commands
+  * Investigation now uses FOUR scripts instead of three - Microsoft Graph
+    collection was split out to Invoke-BECGraphCollection.ps1 because the
+    Graph SDK and ExchangeOnlineManagement modules conflict in the same
+    PowerShell session (MSAL/WAM issue, GitHub msgraph-sdk-powershell#3576)
+  * Graph collection step runs in PowerShell 7 (pwsh), all other steps in
+    Windows PowerShell 5.1. Microsoft officially recommends PS7 for the
+    Graph SDK
+  * New detections: impossible travel, session reuse (AiTM), new MFA device,
+    OAuth consent phishing, role escalation, CA policy tampering,
+    MailItemsAccessed Sync/throttling, bulk file downloads
+  * New outputs: Analysis\Timeline.csv and Analysis\Evidence-Manifest.csv
+    (SHA-256 hashes of every artifact)
+  * All CSV files with time fields now include sibling _ET columns showing
+    US Eastern time alongside UTC
+
+==============================================================================
   SETUP (ONE-TIME)
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
 
 Download ONLY this file:
-□ Start-BECInvestigation.ps1
+  [ ] Start-BECInvestigation.ps1
 
-Install PowerShell module (if not already installed):
-PS> Install-Module ExchangeOnlineManagement -Scope CurrentUser
+Install required PowerShell modules (if not already present):
+
+  Windows PowerShell 5.1 - for Exchange Online collection and analysis:
+    PS> Install-Module ExchangeOnlineManagement -Scope CurrentUser -Force
+
+  PowerShell 7 - for Microsoft Graph collection:
+    If you do not have PowerShell 7, install it first:
+      PS> winget install --id Microsoft.PowerShell --source winget
+    Then open PowerShell 7 (search 'pwsh' in Start Menu) and run:
+      pwsh> Install-Module Microsoft.Graph.Authentication -Scope CurrentUser -Force
+
+  NOTE: The scripts will auto-install / auto-update these modules if missing,
+  but pre-installing them avoids mid-investigation interruptions.
 
 Permissions required:
-□ Exchange Administrator role (or Global Administrator)
+  [ ] Global Administrator (or equivalent combination):
+        - Exchange Administrator (for EXO cmdlets and audit log search)
+        - Security Reader (for Graph sign-in logs and risk detections)
+        - Application Administrator (for OAuth grants and service principals)
+  [ ] Access to CIPP portal for Step 0 remediation
 
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
   IMMEDIATE RESPONSE (0-5 MINUTES)
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
 
-1. LOCK THE ACCOUNT (Manual - do this FIRST)
-   portal.azure.com → Azure AD → Users → [User] → Block sign-in
+STEP 0 - CIPP COMPROMISE REMEDIATION (DO THIS FIRST)
 
-2. INITIALIZE INVESTIGATION (< 5 seconds)
-   PS> .\Start-BECInvestigation.ps1 -VictimEmail "victim@company.com"
+  CIPP > Identity > Administration > Users > [select victim]
+       > Execute Compromise Remediation
 
-   What happens:
-   • Creates timestamped investigation workspace folder
-   • Generates all three investigation scripts
-   • Creates Investigation.xml config file
-   • Opens investigation folder in Explorer
+  This single click performs all of the following:
+    * Blocks user sign-in
+    * Resets user password
+    * Disconnects all active sessions
+    * Removes all MFA methods (forces re-registration)
+    * Disables all inbox rules
 
-   Optional parameters:
-   -WorkingDirectory "D:\Investigations"   (default: C:\Databranch_BEC)
-   -IncidentTicket "INC-12345"
-   -Technician "Your Name"
+  DO NOT use manual PowerShell or the Entra admin portal for containment.
+  The centralized CIPP workflow is now the standard.
 
-3. NAVIGATE TO SCRIPTS FOLDER
-   PS> cd BEC-Investigation_victim_TIMESTAMP\Scripts
+  Items NOT covered by CIPP (review manually during/after analysis):
+    * Tenant-level Transport Rules (EAC > Mail Flow > Rules)
+    * OAuth consents granted to malicious apps (Entra > Enterprise Apps)
+    * Conditional Access policy modifications
+    * New service principals / app registrations
+    * Directory role memberships
 
-═══════════════════════════════════════════════════════════════════════════════════
-  DATA COLLECTION (5-10 MINUTES)
-═══════════════════════════════════════════════════════════════════════════════════
+STEP 1 - INITIALIZE INVESTIGATION (< 5 seconds)   [Windows PowerShell 5.1]
+
+  PS> .\Start-BECInvestigation.ps1 -VictimEmail "victim@company.com"
+
+  What happens:
+    * Creates timestamped investigation workspace folder
+    * Generates all FOUR investigation scripts in the Scripts subfolder
+    * Creates Investigation.xml config file
+    * Creates Investigation-README.txt with per-investigation workflow
+    * Opens investigation folder in Explorer
+
+  Optional parameters:
+    -WorkingDirectory "D:\Investigations"   (default: C:\Databranch_BEC)
+    -IncidentTicket "INC-12345"
+    -Technician "Your Name"
+    -Scope Recent                           (default - 72 hours / 3 days)
+    -Scope Standard                         (168 hours / 7 days)
+    -Scope Extended                         (720 hours / 30 days)
+    -Scope Maximum                          (2160 hours / 90 days)
+    -LookbackHours 48                       (custom, overrides -Scope)
+
+STEP 2 - NAVIGATE TO SCRIPTS FOLDER
+
+  PS> cd BEC-Investigation_victim_TIMESTAMP\Scripts
+
+==============================================================================
+  DATA COLLECTION - EXCHANGE ONLINE (5-15 MINUTES)   [Windows PowerShell 5.1]
+==============================================================================
 
 PS> .\Invoke-BECDataCollection.ps1
 
 What it does:
-• Reads victim email and paths from Investigation.xml (no parameters needed)
-• Connects to Exchange Online (interactive auth)
-• Collects inbox rules, forwarding, permissions, audit logs, mobile devices
-• Runs quick 10-day message traces (immediate results)
-• Initiates 30-day historical message traces (takes 15-30 min to complete)
-• Updates Investigation.xml with trace job IDs
-• Expected time: 2-5 minutes
+  * Reads victim email, paths, and lookback from Investigation.xml
+  * Auto-updates ExchangeOnlineManagement to 3.7.0+ if older
+  * Connects to Exchange Online (interactive browser auth)
+  * Collects Exchange Online artifacts:
+      - Inbox rules (with suspicious rule flagging)
+      - Mailbox-level mail forwarding
+      - Tenant-level transport rules (forwarding only)
+      - Mailbox permissions
+      - Mobile devices
+      - Unified Audit Log queries (10 scoped collections):
+          ExchangeItem, rule manipulation, Send ops, MailItemsAccessed,
+          SharePoint/OneDrive downloads, login events, MFA changes,
+          role membership changes, CA policy changes, OAuth events
+      - Quick message traces (Get-MessageTraceV2, last 10 days)
+      - Historical message traces (async job, full window up to 90 days)
+  * Writes SHA-256 hash of every collected file to Evidence-Manifest.csv
+  * Force-disconnects Exchange Online at end for clean handoff to Graph step
+
+Lookback window overrides (use either, not both):
+  PS> .\Invoke-BECDataCollection.ps1 -Scope Extended       # 30 days
+  PS> .\Invoke-BECDataCollection.ps1 -Scope Maximum        # 90 days
+  PS> .\Invoke-BECDataCollection.ps1 -LookbackHours 48     # 48 hours custom
 
 Optional: Skip historical trace submission on re-runs:
-PS> .\Invoke-BECDataCollection.ps1 -SkipHistoricalTraces
+  PS> .\Invoke-BECDataCollection.ps1 -SkipHistoricalTraces
 
 If prompted about existing files (re-run scenario):
   [O] Overwrite   - replace existing file
   [D] Duplicate   - create versioned copy (_v2, _v3...)
   [S] Skip        - skip this collection type
 
-═══════════════════════════════════════════════════════════════════════════════════
-  IMMEDIATE ANALYSIS (10-15 MINUTES)
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
+  DATA COLLECTION - MICROSOFT GRAPH (3-5 MINUTES)   [PowerShell 7 / pwsh]
+==============================================================================
 
-Run immediate analysis (don't wait for 30-day traces):
+LEAVE YOUR PowerShell 5.1 WINDOW OPEN. Open a NEW PowerShell 7 window
+(search 'pwsh' in Start Menu). Then:
+
+pwsh> cd BEC-Investigation_victim_TIMESTAMP\Scripts
+pwsh> .\Invoke-BECGraphCollection.ps1
+
+What it does:
+  * Detects PS edition at startup - warns loudly if you are in 5.1
+  * Defensively disconnects any lingering Exchange Online session
+  * Auto-installs Microsoft.Graph submodules if missing
+  * Connects to Microsoft Graph (interactive browser auth, 8 read-only scopes)
+  * Collects Entra ID / Graph artifacts:
+      - Sign-in logs (IP, location, session, risk levels)
+      - Risky users (Entra ID Protection)
+      - Risk detections (AiTM, anomalous token, leaked creds, malicious IP)
+      - Current MFA / authentication methods
+      - Directory role memberships
+      - Enterprise apps / service principals (flags CreatedInWindow=TRUE)
+      - OAuth permission grants
+      - Conditional Access policies (point-in-time snapshot)
+  * Appends SHA-256 hash of every Graph CSV to Evidence-Manifest.csv
+
+WHY POWERSHELL 7 FOR THIS STEP?
+  Microsoft officially recommends PowerShell 7 for the Graph SDK. The
+  Graph modules have known assembly-loading issues in Windows PowerShell
+  5.1 (MSAL/WAM conflict, msgraph-sdk-powershell GitHub issue #3576).
+  PS7 runs on .NET 8.0 with better assembly isolation and avoids these
+  problems.
+
+IF GRAPH AUTHENTICATION FAILS:
+  Error like "GetTokenAsync does not have an implementation" or
+  "Object reference not set to an instance of an object"?
+  Close the PS7 window completely, open a fresh PS7 window, cd to the
+  Scripts folder, and re-run. Lingering EXO assemblies in the process
+  space are the most common cause.
+
+WHEN FINISHED:
+  Close the PowerShell 7 window. Return to your Windows PowerShell 5.1
+  window for all remaining steps.
+
+==============================================================================
+  IMMEDIATE ANALYSIS (1-2 MINUTES)   [back to Windows PowerShell 5.1]
+==============================================================================
+
+Run immediate analysis without waiting for historical traces:
+
 PS> .\Invoke-BECLogAnalysis.ps1 -SkipMessageTraces
 
 What it does:
-• Analyzes rules, forwarding, permissions, audit data
-• Identifies CRITICAL and HIGH threats
-• Generates Analysis\ANALYSIS-REPORT.txt
-• Updates Investigation.xml with findings counts
-• Opens Analysis folder in Explorer
-• Expected time: 1-2 minutes
+  * Reads all CSV files from RawData (both EXO and Graph collections)
+  * Runs 25+ detection rules across EXO, UAL, and Graph data
+  * Generates Analysis\ANALYSIS-REPORT.txt (severity-ranked findings)
+  * Generates Analysis\All-Findings.csv (machine-readable findings)
+  * Generates Analysis\Timeline.csv (chronological event timeline across
+    all data sources, with severity tags)
+  * Updates Investigation.xml with findings counts
+  * Opens Analysis folder in Explorer
+  * Expected time: 1-2 minutes
 
 REVIEW IMMEDIATELY:
-1. ..\Analysis\ANALYSIS-REPORT.txt
-   → Focus on CRITICAL and HIGH findings
+  1. Analysis\ANALYSIS-REPORT.txt
+     -> Start here. Focus on CRITICAL and HIGH findings.
 
-2. ..\Reports\SUSPICIOUS-Rules_username.csv
-   → Forwarding and deletion rules
+  2. Analysis\Timeline.csv
+     -> Chronological view of what happened when, across all sources.
 
-3. ..\RawData\MailForwarding_username.csv
-   → Verify ForwardingEnabled = False
+  3. Reports\SUSPICIOUS-Rules_username.csv (if present)
+     -> Every forwarding/redirect/deletion/move rule flagged.
 
-TAKE IMMEDIATE ACTION IF CRITICAL FINDINGS:
-□ Remove malicious inbox rules
-□ Disable SMTP mail forwarding if enabled
-□ Remove unrecognized mobile devices
-□ Revoke unauthorized mailbox permissions
-□ Reset password + force MFA re-registration
-□ Revoke all active sessions (Azure AD > Users > Revoke Sessions)
+  4. RawData\MailForwarding_username.csv
+     -> Verify ForwardingEnabled = False post-CIPP remediation.
 
-═══════════════════════════════════════════════════════════════════════════════════
-  WAITING PERIOD (15-45 MINUTES)
-═══════════════════════════════════════════════════════════════════════════════════
+CRITICAL FINDINGS - MOST HANDLED BY CIPP, BUT CONFIRM:
+  [ ] CIPP Compromise Remediation executed (Step 0)
+  [ ] SMTP forwarding confirmed disabled (spot-check RawData CSV)
+  [ ] Malicious inbox rules confirmed deleted (CIPP handles)
+  [ ] All MFA methods confirmed removed (CIPP handles)
+  [ ] All sessions confirmed revoked (CIPP handles)
+  [ ] Password confirmed reset (CIPP handles)
 
-While waiting for 30-day message traces to complete:
+ITEMS NOT HANDLED BY CIPP - REVIEW MANUALLY IF FLAGGED:
+  [ ] Tenant-level transport rules removed (EAC > Mail Flow > Rules)
+  [ ] Malicious OAuth app consents revoked (Entra > Enterprise Apps)
+  [ ] Malicious CA policy changes reverted (Entra > CA)
+  [ ] New service principals deleted if unauthorized (Entra > App Regs)
+  [ ] Directory role additions reverted if unauthorized
 
-MANUAL COLLECTION (if Business Premium):
-1. Collect sign-in logs from Azure Portal
-   → Azure AD → Users → [User] → Sign-in logs
-   → Download last 30 days
-   → Save to ..\RawData\ folder
+==============================================================================
+  WAITING PERIOD (15-30 MINUTES)
+==============================================================================
 
-COMPLETE REMEDIATION:
-□ Password reset completed
-□ MFA re-registered on verified device
-□ All active sessions revoked
-□ Suspicious emails deleted from mailbox
-□ User notified and educated
+While waiting for historical message traces to complete:
 
-CHECK TRACE STATUS:
-PS> Connect-ExchangeOnline
-PS> Get-HistoricalSearch | Where-Object {$_.ReportTitle -like "*victim*"} |
-    Format-Table ReportTitle, Status, SubmitDate
+  * Review Timeline.csv for attack chain reconstruction
+  * Brief incident commander / team lead with preliminary findings
+  * Update the incident ticket with the workspace path
+  * Identify external contacts who may need notification (see templates
+    near the end of this document)
 
-Status values:
-• Running = Still processing (wait longer)
-• Done    = Ready to download (proceed to next step)
+CHECK TRACE STATUS (from PowerShell 5.1):
+  PS> Connect-ExchangeOnline
+  PS> Get-HistoricalSearch | Where-Object {$_.ReportTitle -like "*victim*"} |
+      Format-Table ReportTitle, Status, SubmitDate
 
-═══════════════════════════════════════════════════════════════════════════════════
-  RETRIEVE MESSAGE TRACES (45-50 MINUTES)
-═══════════════════════════════════════════════════════════════════════════════════
+  Status values:
+    Running = Still processing (wait longer)
+    Done    = Ready to download (proceed to next step)
+
+==============================================================================
+  RETRIEVE MESSAGE TRACES (< 1 MINUTE)   [Windows PowerShell 5.1]
+==============================================================================
 
 PS> .\Invoke-BECMessageTraceRetrieval.ps1
 
 What it does:
-• Reads trace job IDs from Investigation.xml (no parameters needed)
-• Checks status of both traces (sent + received)
-• Downloads completed traces to RawData folder
-• Updates Investigation.xml (TracesCompleted=true when both done)
-• Expected time: < 1 minute
+  * Reads trace job IDs from Investigation.xml (no parameters needed)
+  * Checks status of both sent and received traces
+  * Downloads completed traces to RawData folder
+  * Adds _ET (Eastern) timestamp columns to downloaded CSVs
+  * Appends each downloaded file's SHA-256 hash to Evidence-Manifest.csv
+  * Updates Investigation.xml (TracesCompleted=true when both done)
 
-Safe to re-run if traces are not ready yet.
+Safe to re-run if traces are not ready yet - downloads what's ready and
+reports on the rest.
 
-═══════════════════════════════════════════════════════════════════════════════════
-  COMPLETE ANALYSIS (50-55 MINUTES)
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
+  COMPLETE ANALYSIS (2-3 MINUTES)   [Windows PowerShell 5.1]
+==============================================================================
 
 PS> .\Invoke-BECLogAnalysis.ps1
 
 What it does:
-• Analyzes full 30-day message trace data
-• Identifies breach origin (likely phishing emails)
-• Detects email volume spikes and external send ratio anomalies
-• Updates ANALYSIS-REPORT.txt with complete findings
-• Updates finding counts in Investigation.xml
-• Expected time: 2-3 minutes
+  * Re-runs all analysis including historical message trace data
+  * Detects message volume spikes and external send ratio anomalies
+  * Updates ANALYSIS-REPORT.txt, All-Findings.csv, Timeline.csv with
+    message trace findings merged in
+  * Updates Investigation.xml CompleteAnalysisCompleted=true
 
-═══════════════════════════════════════════════════════════════════════════════════
-  FINDINGS SEVERITY REFERENCE
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
+  FINDINGS SEVERITY REFERENCE (v4.0.2.0)
+==============================================================================
 
-🔴 CRITICAL - IMMEDIATE ACTION:
-   • SMTP mail forwarding enabled to external address
-   • Inbox rule forwarding/redirecting to external address
+*** CRITICAL - IMMEDIATE ACTION ***
+  * SMTP mail forwarding enabled to external address
+  * Inbox rule forwarding/redirecting to external address
+  * Entra ID Protection risky user flag (confirmed compromise signal)
+  * High-confidence Entra risk detections (AiTM / adversary in the middle,
+    anomalous token, leaked credentials, malicious IP)
+  * Impossible travel (cross-country sign-ins within impossibly short window)
+  * Session ID reuse across IPs (AiTM / token theft indicator)
+  * New MFA device registered during investigation window
+  * Victim granted OAuth consent during window (likely OAuth phishing)
+  * Admin role assignments involving victim during window
+  * MailItemsAccessed Sync events (full mailbox download)
+  * MailItemsAccessed logging throttled (assume worst-case full access)
 
-🟠 HIGH - URGENT INVESTIGATION:
-   • Inbox rules automatically deleting messages
-   • Outbound email volume spike (>50 emails in a single day)
+*** HIGH - URGENT INVESTIGATION ***
+  * Inbox rule creation or deletion during window
+  * Inbox rules automatically deleting messages
+  * Suspicious rule name patterns (single chars, financial keywords like
+    invoice/wire/payment/bank/ach/payroll/swift/iban/routing/vendor)
+  * Tenant-level transport rules with forwarding actions
+  * New service principals created during window (OAuth phishing)
+  * Conditional Access policy modifications during window
+  * Directory/admin role memberships on victim account
+  * Outbound email send burst (>30 in single hour)
+  * Outbound email volume spike (>50 in single day, trace analysis)
+  * SharePoint/OneDrive bulk downloads (>50 events - exfiltration)
+  * Failed sign-in volume (brute force / password spray)
 
-🟡 MEDIUM - INVESTIGATE FURTHER:
-   • Rules moving emails to non-standard folders
-   • Delegated mailbox permissions
-   • High external send ratio (>70% of sent mail external)
+*** MEDIUM - INVESTIGATE FURTHER ***
+  * Rules moving emails to non-standard folders
+  * Delegated mailbox permissions
+  * Mobile devices registered
+  * High external send ratio (>70% of sent mail external)
+  * OAuth consent events in tenant (non-victim)
+  * MailItemsAccessed hourly summary events
 
-🟢 LOW - DOCUMENT AND MONITOR:
-   • Rules automatically marking emails as read
+*** LOW - DOCUMENT AND MONITOR ***
+  * Rules automatically marking emails as read
+  * UAL failed login events
 
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
   FOLDER STRUCTURE
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
 
 BEC-Investigation_username_TIMESTAMP/
-├── Investigation.xml                         ← Config file (auto-managed)
-├── Investigation-README.txt                  ← Per-investigation quick reference
-├── Scripts/
-│   ├── Invoke-BECDataCollection.ps1         ← Step 1: Collect data
-│   ├── Invoke-BECLogAnalysis.ps1            ← Step 2 & 4: Analyze
-│   └── Invoke-BECMessageTraceRetrieval.ps1  ← Step 3: Retrieve traces
-├── RawData/                                  ← Collected CSV files
-├── Reports/                                  ← Flagged suspicious items
-├── Analysis/                                 ← Reports and findings
-└── Logs/                                     ← Script execution transcripts
+  Investigation.xml                         <- Config file (auto-managed)
+  Investigation-README.txt                  <- Per-investigation workflow
+  Scripts/
+    Invoke-BECDataCollection.ps1            <- Step 1a: EXO collection (PS5)
+    Invoke-BECGraphCollection.ps1           <- Step 1b: Graph collection (PS7)
+    Invoke-BECLogAnalysis.ps1               <- Step 2 and 4: Analyze (PS5)
+    Invoke-BECMessageTraceRetrieval.ps1     <- Step 3: Retrieve traces (PS5)
+  RawData/                                  <- Collected CSV files
+  Reports/                                  <- Flagged suspicious items
+  Analysis/
+    ANALYSIS-REPORT.txt                     <- Primary human-readable output
+    All-Findings.csv                        <- Machine-readable findings
+    Timeline.csv                            <- Chronological event merge
+    Evidence-Manifest.csv                   <- SHA-256 hash of every artifact
+    Evidence-Manifest-README.txt            <- How to verify the hashes
+  Logs/                                     <- Per-run transcripts
 
-Script logs (this workstation): C:\Databranch\ScriptLogs\Start-BECInvestigation\
+Script logs (this workstation):
+  C:\Databranch\ScriptLogs\Start-BECInvestigation\
 
-═══════════════════════════════════════════════════════════════════════════════════
-  INVESTIGATION.XML — STATUS CHECKS
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
+  EVIDENCE MANIFEST AND CHAIN OF CUSTODY
+==============================================================================
 
-Check status at any time:
-PS> [xml]$c = Get-Content ..\Investigation.xml
-PS> $c.BECInvestigation.DataCollection.Completed
-PS> $c.BECInvestigation.MessageTraces.TracesCompleted
-PS> $c.BECInvestigation.Analysis.CriticalFindingsCount
-PS> $c.BECInvestigation.Analysis.HighFindingsCount
+Analysis\Evidence-Manifest.csv records a SHA-256 cryptographic hash of
+every file collected during the investigation. This supports:
+  * Chain of custody for insurance submissions or law enforcement referrals
+  * Tamper detection - re-hash any file and compare to the manifest value
 
-DO NOT EDIT Investigation.xml MANUALLY — scripts update it automatically.
+To verify a file:
+  PS> Get-FileHash -Path <full file path> -Algorithm SHA256
 
-═══════════════════════════════════════════════════════════════════════════════════
+Compare the returned hash to the SHA256 column in Evidence-Manifest.csv.
+If they match, the file has not been altered since collection.
+
+==============================================================================
+  TIMESTAMP CONVENTIONS
+==============================================================================
+
+All CSV files with time fields have a sibling _ET column showing the same
+time in US Eastern (EST or EDT, auto-handled across DST). Reports in
+ANALYSIS-REPORT.txt show UTC first with Eastern in parentheses. This
+supports easy correlation between Microsoft's native UTC timestamps and
+the technician's local clock.
+
+Example CSV columns after enrichment:
+  CreationDate          CreationDate_ET
+  2026-04-18 14:23:05   2026-04-18 10:23:05 EDT
+
+==============================================================================
+  INVESTIGATION.XML - STATUS CHECKS
+==============================================================================
+
+Check status at any time (from PowerShell 5.1 or 7):
+  PS> [xml]$c = Get-Content ..\Investigation.xml
+  PS> $c.BECInvestigation.DataCollection.Completed         # Step 1a done?
+  PS> $c.BECInvestigation.GraphCollection.Completed        # Step 1b done?
+  PS> $c.BECInvestigation.MessageTraces.TracesCompleted    # Step 3 done?
+  PS> $c.BECInvestigation.Analysis.CriticalFindingsCount
+  PS> $c.BECInvestigation.Analysis.HighFindingsCount
+
+DO NOT EDIT Investigation.xml MANUALLY - scripts update it automatically.
+
+==============================================================================
   TROUBLESHOOTING
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
 
 ERROR: "Investigation.xml not found"
-FIX:   You are not in the Scripts folder
+FIX:   You are not in the Scripts folder.
        cd BEC-Investigation_victim_TIMESTAMP\Scripts
 
 ERROR: "Failed to connect to Exchange Online"
-FIX:   Verify Exchange Administrator or Global Admin role
-       Check MFA device is available
-       Try: Connect-ExchangeOnline manually first
+FIX:   * Verify Global Admin or Exchange Administrator role
+       * Check MFA device is available for interactive auth
+       * Try: Connect-ExchangeOnline manually first to isolate
+       * Confirm ExchangeOnlineManagement module version is 3.7.0+
+
+ERROR: "Failed to connect to Microsoft Graph"
+       "GetTokenAsync does not have an implementation"
+       "Object reference not set to an instance of an object"
+FIX:   * If in PowerShell 5.1: switch to PowerShell 7 (pwsh). The Graph
+         SDK is unreliable in 5.1 due to .NET Framework assembly loading.
+       * If in PowerShell 7 and it still fails: close the PS7 window
+         completely (EXO assemblies may be lingering from a previous step),
+         open a fresh PS7 window, cd to Scripts folder, re-run.
+       * Confirm Global Admin consent for the 8 Graph scopes was granted.
+       * Confirm tenant has Entra ID P2 if attempting to read risk data.
+         Without P2, riskyUsers/riskDetections collections will be empty
+         but not fatal - other Graph collections still work.
 
 "Traces not ready" message
-NORMAL: Historical searches take 15-30 minutes
-        Re-run Invoke-BECMessageTraceRetrieval.ps1 after waiting
+NORMAL: Historical searches take 15-30 minutes. Re-run
+        Invoke-BECMessageTraceRetrieval.ps1 after waiting.
 
 "No findings in analysis"
-CHECK:  Review Logs\DataCollection_*.log for errors
-        Confirm RawData\ folder contains CSV files
-        May be a false alarm — account may not be compromised
+CHECK:  * Review Logs\DataCollection_*.log and Logs\GraphCollection_*.log
+        * Confirm RawData folder contains CSV files from BOTH collection
+          steps (EXO files start with UAL-/QuickTrace-/InboxRules-/etc,
+          Graph files start with Graph-)
+        * May be a true negative - account may not have been compromised
 
 Module not installed:
-FIX:   Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser -Force
+FIX:   PS 5.1: Install-Module ExchangeOnlineManagement -Scope CurrentUser -Force
+       PS 7:   Install-Module Microsoft.Graph.Authentication -Scope CurrentUser -Force
 
-═══════════════════════════════════════════════════════════════════════════════════
+Module too old (EXO below 3.7.0):
+FIX:   PS> Update-Module ExchangeOnlineManagement -Force
+       If that fails:
+       PS> Install-Module ExchangeOnlineManagement -Force -AllowClobber
+
+Script will not start with "CmdletBinding can only be used inside a param
+block" error:
+FIX:   This is a v4.0.0.0 bug fixed in v4.0.1.0+. Upgrade the
+       Start-BECInvestigation.ps1 deployment file to the current version.
+
+==============================================================================
   COMMON ATTACK PATTERNS
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
 
-PATTERN 1: Phishing → Credential Harvest → Internal Spreading
+PATTERN 1: Phishing -> Credential Harvest -> Internal Spreading
   Day 0:   User clicks phishing link, credentials captured
   Day 0-1: Attacker reads email, creates forwarding/deletion rules
   Day 1-3: Sends phishing to contacts from victim account
-  Indicators: Forwarding rules, high outbound volume spike
+  Indicators: Forwarding rules, high outbound volume spike, send burst
 
 PATTERN 2: Invoice Fraud Setup
   Day 0:   Compromise
   Day 1-3: Attacker studies payment patterns and contacts
   Day 3-7: Creates keyword-based forwarding for invoice-related emails
-  Indicators: Forwarding rules with keyword filters
+  Indicators: Forwarding rules with financial keywords (invoice, wire,
+              payment, ach, routing, etc.), suspicious rule name patterns
 
 PATTERN 3: Executive Impersonation
   Day 0:   Compromise of lower-level account
-  Day 1-2: Searches for executive email patterns
-  Day 2-3: Impersonates executive to target finance/HR
-  Indicators: Unusual external recipients, abnormal send patterns
+  Day 1-2: Searches for executive email patterns, reads mailbox
+  Day 2-3: Impersonates executive to target finance / HR
+  Indicators: Unusual external recipients, abnormal send patterns,
+              MailItemsAccessed Sync events
 
-═══════════════════════════════════════════════════════════════════════════════════
+PATTERN 4: AiTM (Adversary-in-the-Middle) Token Theft
+  Day 0:   User clicks MFA phishing link (evilginx, Caffeine, etc.)
+  Day 0:   Attacker captures session cookie, replays from their IP
+  Day 0+:  Attacker continues to use stolen session, optionally adds
+           their own MFA method as persistence
+  Indicators: Session ID reuse across IPs, impossible travel, risk
+              detections for "adversaryInTheMiddle" or "anomalousToken",
+              new MFA device registration during window
+
+PATTERN 5: OAuth Consent Phishing
+  Day 0:   Attacker sends OAuth consent request disguised as legitimate app
+  Day 0:   Victim clicks Accept, granting mailbox/data scopes to attacker app
+  Day 0+:  Attacker uses OAuth token (survives password reset!) to
+           exfiltrate mail via Graph API
+  Indicators: New service principal created in window, OAuth consent
+              granted by victim, Graph API sign-ins from attacker app
+
+==============================================================================
   COMMUNICATION TEMPLATES
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
 
 INTERNAL ALERT:
-Subject: SECURITY INCIDENT — [User] Email Account Compromised
+Subject: SECURITY INCIDENT - [User] Email Account Compromised
 
 Investigation ID : [from Investigation.xml]
 Victim           : [user@domain.com]
@@ -268,75 +504,109 @@ CRITICAL FINDINGS:
 [List from ANALYSIS-REPORT.txt]
 
 ACTIONS TAKEN:
-□ Account locked
-□ Password reset
-□ MFA re-enrolled
-□ Malicious rules removed
-□ [Other items from findings]
+[ ] CIPP Compromise Remediation executed (block, reset, revoke, MFA wipe,
+    rule disable)
+[ ] Evidence collected and hashed (Evidence-Manifest.csv available on
+    request)
+[ ] Tenant-level transport rules reviewed
+[ ] OAuth consents reviewed / revoked if malicious
+[ ] Conditional Access policies reviewed for tampering
+[ ] [Additional items from findings]
 
 
 EXTERNAL NOTIFICATION (if needed):
-Subject: SECURITY ALERT — Compromised Email Account
+Subject: SECURITY ALERT - Compromised Email Account
 
 [Company Name] identified compromise of [user@domain.com] between [dates].
 
-DO NOT open emails or links from this address during the compromise period.
-If you clicked links or provided credentials, change your password immediately.
+During this period, any emails received from this address may be
+fraudulent. DO NOT open attachments, click links, or wire funds in
+response to messages from this address during the compromise window.
 
-═══════════════════════════════════════════════════════════════════════════════════
+If you believe you clicked a link or replied to a fraudulent message,
+please change your password immediately and notify your IT team.
+
+==============================================================================
   POST-INCIDENT CHECKLIST
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
 
-□ All CRITICAL findings addressed
-□ All HIGH findings addressed
-□ ANALYSIS-REPORT.txt fully reviewed
-□ Investigation.xml shows DataCollection.Completed = true
-□ Investigation.xml shows MessageTraces.TracesCompleted = true
-□ Investigation.xml shows Analysis.CompleteAnalysisCompleted = true
-□ Internal users notified (if applicable)
-□ External contacts notified (if applicable)
-□ Management briefed with findings summary
-□ Incident ticket documented with investigation ID and findings
-□ Investigation folder archived (minimum 1 year retention)
-□ User educated on phishing indicators
-□ 2-week follow-up monitoring scheduled
-□ Lessons learned documented in runbook
+[ ] CIPP Compromise Remediation executed (Step 0)
+[ ] All CRITICAL findings addressed
+[ ] All HIGH findings addressed
+[ ] ANALYSIS-REPORT.txt fully reviewed
+[ ] Timeline.csv reviewed for attack chain reconstruction
+[ ] Evidence-Manifest.csv verified (random spot-check of hashes)
+[ ] Tenant-level transport rules reviewed (not covered by CIPP)
+[ ] OAuth consents reviewed (not covered by CIPP)
+[ ] Conditional Access policies reviewed for tampering
+[ ] New service principals reviewed if flagged
+[ ] Investigation.xml shows DataCollection.Completed = true
+[ ] Investigation.xml shows GraphCollection.Completed = true
+[ ] Investigation.xml shows MessageTraces.TracesCompleted = true
+[ ] Investigation.xml shows Analysis.CompleteAnalysisCompleted = true
+[ ] Internal users notified (if applicable)
+[ ] External contacts notified (if applicable)
+[ ] Management briefed with findings summary
+[ ] Incident ticket documented with investigation ID and findings
+[ ] Investigation folder archived (minimum 1 year retention; check
+    cyber insurance policy - some require 3-7 years)
+[ ] User educated on phishing indicators (AiTM, OAuth consent phishing)
+[ ] 2-week follow-up monitoring scheduled
+[ ] Lessons learned documented in runbook
 
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
   QUICK COMMAND REFERENCE
-═══════════════════════════════════════════════════════════════════════════════════
+==============================================================================
 
-Initialize investigation:
-PS> .\Start-BECInvestigation.ps1 -VictimEmail "user@domain.com"
+IN WINDOWS POWERSHELL 5.1:
 
-Navigate to scripts:
-PS> cd BEC-Investigation_*\Scripts
+  Initialize investigation:
+    PS> .\Start-BECInvestigation.ps1 -VictimEmail "user@domain.com"
 
-Collect data:
-PS> .\Invoke-BECDataCollection.ps1
+  Initialize with wider scope:
+    PS> .\Start-BECInvestigation.ps1 -VictimEmail "user@domain.com" `
+        -Scope Extended
 
-Immediate analysis (no traces):
-PS> .\Invoke-BECLogAnalysis.ps1 -SkipMessageTraces
+  Navigate to scripts:
+    PS> cd BEC-Investigation_*\Scripts
 
-Check historical trace status:
-PS> Get-HistoricalSearch | Where-Object {$_.ReportTitle -like "*user*"} | Format-Table ReportTitle, Status
+  Collect Exchange Online data:
+    PS> .\Invoke-BECDataCollection.ps1
 
-Retrieve traces:
-PS> .\Invoke-BECMessageTraceRetrieval.ps1
+  Immediate analysis (no traces):
+    PS> .\Invoke-BECLogAnalysis.ps1 -SkipMessageTraces
 
-Complete analysis (with traces):
-PS> .\Invoke-BECLogAnalysis.ps1
+  Check historical trace status:
+    PS> Connect-ExchangeOnline
+    PS> Get-HistoricalSearch | Where-Object {$_.ReportTitle -like "*user*"} |
+        Format-Table ReportTitle, Status
 
-Check findings count:
-PS> [xml]$c = Get-Content ..\Investigation.xml
-PS> $c.BECInvestigation.Analysis.CriticalFindingsCount
+  Retrieve traces:
+    PS> .\Invoke-BECMessageTraceRetrieval.ps1
 
-═══════════════════════════════════════════════════════════════════════════════════
+  Complete analysis (with traces):
+    PS> .\Invoke-BECLogAnalysis.ps1
 
-For full documentation : README.md
-For Business Standard  : BUSINESS-STANDARD-NOTES.md
-For support            : Contact Databranch MSP Team Lead
+  Check findings count:
+    PS> [xml]$c = Get-Content ..\Investigation.xml
+    PS> $c.BECInvestigation.Analysis.CriticalFindingsCount
 
-v3.0.0.0 | February 2026 | Databranch
+IN POWERSHELL 7 (pwsh):
 
-═══════════════════════════════════════════════════════════════════════════════════
+  Collect Microsoft Graph data:
+    pwsh> cd BEC-Investigation_*\Scripts
+    pwsh> .\Invoke-BECGraphCollection.ps1
+
+  Verify a file's integrity:
+    pwsh> Get-FileHash -Path <path> -Algorithm SHA256
+          (works in PS 5.1 too)
+
+==============================================================================
+
+For full documentation      : Start-BECInvestigation-HowTo.html
+For technical details       : Start-BECInvestigation-TechSpec.html
+For support                 : Contact Databranch MSP Team Lead
+
+v4.0.2.0 | April 2026 | Databranch
+
+==============================================================================
