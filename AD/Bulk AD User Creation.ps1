@@ -24,6 +24,17 @@ $New_User_OU = "OU=User Accounts,"+"OU=$CompanyName"+","+"$domain"
 $New_Service_Acct_OU = "OU=Service Accounts,"+"OU=$CompanyName"+","+"$domain"
 #$Service_Account_List = Import-Csv $dir\New_AD_Service_Accounts.csv
 
+# Check and create User Accounts OU if it does not exist
+if (-not (Get-ADOrganizationalUnit -Filter "DistinguishedName -eq '$New_User_OU'" -ErrorAction SilentlyContinue)) {
+    New-ADOrganizationalUnit -Name "User Accounts" -Path ("OU=$CompanyName,$domain")
+    Write-Host "Created OU: User Accounts" -ForegroundColor Yellow
+}
+
+# Check and create Service Accounts OU if it does not exist
+if (-not (Get-ADOrganizationalUnit -Filter "DistinguishedName -eq '$New_Service_Acct_OU'" -ErrorAction SilentlyContinue)) {
+    New-ADOrganizationalUnit -Name "Service Accounts" -Path ("OU=$CompanyName,$domain")
+    Write-Host "Created OU: Service Accounts" -ForegroundColor Yellow
+}
 
 #Convert DC Domain from $domain to @domain.com address for UserPrincipalName
 $step1 = $domain -replace "DC=", "@"
