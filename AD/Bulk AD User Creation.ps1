@@ -41,7 +41,7 @@ $step1 = $domain -replace "DC=", "@"
 $UserPrincipalName = $step1 -replace ",@", "."
 
 #Create user accounts from AD List
-Import-Csv $dir\New_AD_Users.csv|foreach{
+Import-Csv $dir\New_AD_Users.csv | ForEach-Object {
     $Name = $_.firstname + " " + $_.lastname
     $GivenName = $_.firstname
     $SurName = $_.lastname
