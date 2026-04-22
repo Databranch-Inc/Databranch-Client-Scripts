@@ -1,15 +1,24 @@
 <#
-=======================================================================================================
 Bulk AD User Creation
-This script will take data from a .csv file and use it to create a number of new AD User accounts. This script will then take the created passwords and output them to a file for first logon.
+
+This script will take data from a .csv file and use it to create a number of new AD User accounts. 
 
 Josh Britton
-
-Last  update - 11-14-19
-
-Version 1.0
+Original development - 11-14-19
+Last  update - 4-21-26
+Current Version: 1.1
 
 Future Notes - Add user checks, description fields, service account information
+====================================================================================================
+Version 1.1 - 4-21-26
+
+Added checks to create OUs if they do not exist. 
+Added comments and cleaned up code. 
+Added future notes for next version.
+====================================================================================================
+Version 1.0 - 11-14-19
+
+Original script development
 ====================================================================================================#>
 
 #Import AD Module
