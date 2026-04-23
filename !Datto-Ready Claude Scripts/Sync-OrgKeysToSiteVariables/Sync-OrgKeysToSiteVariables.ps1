@@ -13,8 +13,10 @@
 
     REPORT-ONLY MODE IS ON BY DEFAULT. The script matches and logs what it
     would write but will not touch any site variables unless you explicitly
-    pass -ReportOnly $false (or set the DattoRMM ReportOnly component
-    variable to 'false').
+    pass -ReportOnly 'false' (or set the DattoRMM ReportOnly component
+    variable to 'false'). The resolution is default-safe: only the literal
+    string 'false' enables writes; any other value (typo, blank, garbage,
+    unexpected casing) falls back to report-only.
 
     Unmatched sites are logged but do not cause the script to fail. A
     summary is emitted at the end listing all unmatched sites for review.
@@ -34,10 +36,14 @@
         ITGlueUrl         - String    - (Optional) override base URL
         HuntressApiKey    - Password  - Huntress API public key
         HuntressApiSecret - Password  - Huntress API secret key
-        ReportOnly        - String    - 'true' (default) or 'false' to commit
+        ReportOnly        - String    - Defaults to report-only. Must be the
+                                        EXPLICIT literal string 'false' to
+                                        enable writes. Any other value
+                                        (including typos or blank) stays
+                                        safely in report-only mode.
         SkipITGlue        - String    - 'true' to skip ITGlue entirely
         SkipHuntress      - String    - 'true' to skip Huntress entirely
-        Verbose           - String    - 'true' (default) or 'false' for quiet
+        VerboseOutput     - String    - 'true' (default) or 'false' for quiet
 
 .PARAMETER DattoApiUrl
     Base API URL for your DattoRMM instance (e.g.
@@ -65,11 +71,15 @@
     Huntress API secret key. Reads $env:HuntressApiSecret if not supplied.
 
 .PARAMETER ReportOnly
-    When 'true' (the default), performs all matching and logging but does
-    NOT write any site variables to DattoRMM. Pass -ReportOnly $false to
-    commit changes. Note: DattoRMM Boolean component variables arrive as
-    strings 'true'/'false' — this parameter accepts string input for that
-    reason.
+    Controls whether the script actually writes to DattoRMM. DEFAULTS TO
+    REPORT-ONLY. The script writes only if this parameter is the EXPLICIT
+    literal string 'false' (case-insensitive, whitespace trimmed). Any
+    other value — including the default, a typo, a blank string, garbage,
+    or an unexpected casing of 'true' — falls safely into report-only
+    mode. This is an intentionally asymmetric guard: report-only is the
+    safe state, writes must be opted into explicitly and unambiguously.
+    DattoRMM Boolean component variables arrive as strings — this
+    parameter accepts string input for that reason.
 
 .PARAMETER SkipITGlue
     Set to 'true' to skip ITGlue entirely and only sync Huntress keys.
@@ -77,11 +87,13 @@
 .PARAMETER SkipHuntress
     Set to 'true' to skip Huntress entirely and only sync ITGlue IDs.
 
-.PARAMETER Verbose
+.PARAMETER VerboseOutput
     Set to 'false' to suppress per-site detail lines. Section headers,
     summary, unmatched lists, and all WARN/ERROR entries always emit.
     Defaults to 'true'. Useful for quiet scheduled runs once the initial
-    configuration is validated.
+    configuration is validated. Named VerboseOutput rather than Verbose
+    to avoid collision with PowerShell's built-in -Verbose common
+    parameter (exposed automatically by [CmdletBinding()]).
 
 .EXAMPLE
     .\Sync-OrgKeysToSiteVariables.ps1 `
@@ -103,13 +115,15 @@
         -ITGlueApiKey   'your-itg-key' `
         -HuntressApiKey    'your-huntress-public-key' `
         -HuntressApiSecret 'your-huntress-secret' `
-        -ReportOnly $false
+        -ReportOnly 'false'
 
-    Commits writes. Only run after review of a clean report-only pass.
+    Commits writes. The parameter is [string], not [bool] — pass the
+    literal string 'false' (quoted), not $false. Only run after review
+    of a clean report-only pass.
 
 .NOTES
     File Name      : Sync-OrgKeysToSiteVariables.ps1
-    Version        : 1.4.0.004
+    Version        : 1.4.1.005
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -132,17 +146,37 @@
              failure, or any condition preventing execution from starting)
 
     Output Design:
-        Write-Log     - Structured [timestamp][SEVERITY] output to log
-                        file AND DattoRMM stdout. Always verbose. No color.
-        Write-Console - Human-friendly colored console output for manual
-                        runs. Uses Write-Host (display stream only).
-                        Suppressed automatically in DattoRMM agent context.
-        Verbose flag  - Controls per-site detail lines (wrote / skipped /
-                        report-only / no-match). Section headers, summary,
-                        unmatched lists, and WARN/ERROR always print.
-                        Defaults to 'true'. Pass 'false' for quiet runs.
+        Write-Log       - Structured [timestamp][SEVERITY] output to log
+                          file AND DattoRMM stdout. Always verbose. No color.
+        Write-Console   - Human-friendly colored console output for manual
+                          runs. Uses Write-Host (display stream only).
+                          Suppressed automatically in DattoRMM agent context.
+        VerboseOutput   - Controls per-site detail lines (wrote / skipped /
+                          report-only / no-match). Section headers, summary,
+                          unmatched lists, and WARN/ERROR always print.
+                          Defaults to 'true'. Pass 'false' for quiet runs.
 
 .CHANGELOG
+    v1.4.1.005 - 2026-04-23 - Sam Kirsch
+        - SAFETY: Inverted ReportOnly resolution to default-safe semantics.
+          Previously resolved writes-enabled as "anything != 'true'", which
+          meant a typo, whitespace issue, empty string, or garbage value in
+          the DattoRMM component variable would enable writes. Now resolves
+          report-only as "anything != 'false'" — only the explicit literal
+          string 'false' enables writes. Any typo, blank, or unexpected
+          value falls safely into report-only mode.
+        - Renamed -Verbose parameter to -VerboseOutput to avoid collision
+          with PowerShell's built-in [CmdletBinding()] -Verbose common
+          parameter. Internal resolved variable renamed from $IsVerbose to
+          $IsVerboseOutput and all call sites updated. DattoRMM component
+          variable should be named 'VerboseOutput' to match.
+        - ITGlue org ID idempotency comparison now forces both sides to
+          trimmed strings via "$value".Trim() pattern. Guards against type
+          drift (ITGlue's JSON id field can surface as string or int
+          depending on deserializer) and incidental whitespace from the
+          DattoRMM variables GET response. Prevents unnecessary churn
+          writes on stable configurations.
+
     v1.4.0.004 - 2026-04-23 - Sam Kirsch
         - Hardened boolean string parsing: all three string-bool params
           (ReportOnly / SkipITGlue / SkipHuntress) now use
@@ -231,9 +265,17 @@
 #
 # BOOLEAN INPUT VARIABLES — CRITICAL GOTCHA:
 #   DattoRMM Boolean component variables arrive as the STRING "true" or "false".
-#   All boolean-ish params (ReportOnly / SkipITGlue / SkipHuntress / Verbose)
-#   are typed as [string] and resolved with .Trim().ToLower() -eq 'true'.
-#   Do NOT cast them to [bool] — any non-empty string including "false" is truthy.
+#   All boolean-ish params are typed as [string] and resolved with
+#   .Trim().ToLower() against an explicit literal. Do NOT cast them to [bool] —
+#   any non-empty string including "false" is truthy.
+#
+#   NOTE ON REPORTONLY — DEFAULT-SAFE ASYMMETRY:
+#   ReportOnly resolves via -ne 'false' (NOT -eq 'true'). This means writes
+#   are enabled ONLY when the value is the explicit literal 'false'. A typo,
+#   blank string, garbage value, or unexpected casing all fall safely into
+#   report-only. The other flags (SkipITGlue / SkipHuntress / VerboseOutput)
+#   use the ordinary -eq 'true' pattern because their ambiguous case is lower
+#   stakes. ReportOnly is the one flag that guards real blast radius.
 # ==============================================================================
 [CmdletBinding()]
 param (
@@ -270,7 +312,7 @@ param (
     [string]$SkipHuntress = $(if ($env:SkipHuntress) { $env:SkipHuntress } else { 'false' }),
 
     [Parameter(Mandatory = $false)]
-    [string]$Verbose = $(if ($env:Verbose) { $env:Verbose } else { 'true' }),
+    [string]$VerboseOutput = $(if ($env:VerboseOutput) { $env:VerboseOutput } else { 'true' }),
 
     # DattoRMM built-in variables — auto-populated by Datto, no component config needed
     [Parameter(Mandatory = $false)]
@@ -296,7 +338,7 @@ function Sync-OrgKeysToSiteVariables {
         [string]$ReportOnly,
         [string]$SkipITGlue,
         [string]$SkipHuntress,
-        [string]$Verbose,
+        [string]$VerboseOutput,
         [string]$SiteName,
         [string]$Hostname
     )
@@ -305,19 +347,25 @@ function Sync-OrgKeysToSiteVariables {
     # CONFIGURATION
     # ==========================================================================
     $ScriptName    = "Sync-OrgKeysToSiteVariables"
-    $ScriptVersion = "1.4.0.004"
+    $ScriptVersion = "1.4.1.005"
     $LogRoot       = "C:\Databranch\ScriptLogs"
     $LogFolder     = Join-Path $LogRoot $ScriptName
     $LogDate       = Get-Date -Format "yyyy-MM-dd"
     $LogFile       = Join-Path $LogFolder "$($ScriptName)_$($LogDate).log"
     $MaxLogFiles   = 10
 
-    # Resolve boolean-style string params once, up front.
+    # ---- Resolve boolean-style string params ----
     # .Trim().ToLower() guards against DattoRMM passing 'True', 'TRUE', ' true ', etc.
-    $IsReportOnly   = ($ReportOnly.Trim().ToLower()   -eq 'true')
-    $IsSkipITGlue   = ($SkipITGlue.Trim().ToLower()   -eq 'true')
-    $IsSkipHuntress = ($SkipHuntress.Trim().ToLower() -eq 'true')
-    $IsVerbose      = ($Verbose.Trim().ToLower()      -eq 'true')
+    #
+    # SAFETY-CRITICAL ASYMMETRY:
+    #   ReportOnly uses -ne 'false' (default-safe). Writes enable ONLY on the
+    #   explicit literal 'false'. Any typo, blank, or garbage stays in report-only.
+    #   The other three flags use the ordinary -eq 'true' pattern because their
+    #   ambiguous case is not write-destructive.
+    $IsReportOnly    = ($ReportOnly.Trim().ToLower()    -ne 'false')
+    $IsSkipITGlue    = ($SkipITGlue.Trim().ToLower()    -eq 'true')
+    $IsSkipHuntress  = ($SkipHuntress.Trim().ToLower()  -eq 'true')
+    $IsVerboseOutput = ($VerboseOutput.Trim().ToLower() -eq 'true')
 
     # DattoRMM API write rate limit: 100 writes per 60 seconds.
     # Invoke-ThrottledWrite tracks timestamps in a sliding window and pauses
@@ -405,7 +453,7 @@ function Sync-OrgKeysToSiteVariables {
 
     # ==========================================================================
     # WRITE-VERBOSELOG  (Verbose-gated Output)
-    # Calls both Write-Log and Write-Console only when $IsVerbose is true.
+    # Calls both Write-Log and Write-Console only when $IsVerboseOutput is true.
     # Use for per-site detail lines. All WARN/ERROR/structural output should
     # call Write-Log/Write-Console directly so it always emits.
     # ==========================================================================
@@ -423,7 +471,7 @@ function Sync-OrgKeysToSiteVariables {
             [int]$Indent = 0
         )
 
-        if (-not $IsVerbose) { return }
+        if (-not $IsVerboseOutput) { return }
 
         Write-Log     $Message -Severity $Severity
         Write-Console $Message -Severity $Severity -Indent $Indent
@@ -856,7 +904,7 @@ function Sync-OrgKeysToSiteVariables {
     Write-Log "Hostname : $Hostname"                    -Severity INFO
     Write-Log "Run As   : $RunAs"                       -Severity INFO
     Write-Log "Mode     : $ModeLabel"                   -Severity INFO
-    Write-Log "Verbose  : $IsVerbose"                   -Severity INFO
+    Write-Log "Verbose  : $IsVerboseOutput"             -Severity INFO
     Write-Log "DattoUrl : $DattoApiUrl"                 -Severity INFO
     Write-Log "ITGUrl   : $ITGlueUrl"                   -Severity INFO
     Write-Log "SkipITG  : $IsSkipITGlue"                -Severity INFO
@@ -864,12 +912,12 @@ function Sync-OrgKeysToSiteVariables {
     Write-Log "Log File : $LogFile"                     -Severity INFO
 
     Write-Banner "$($ScriptName.ToUpper()) v$ScriptVersion"
-    Write-Console "Site     : $SiteName"     -Severity PLAIN
-    Write-Console "Hostname : $Hostname"     -Severity PLAIN
-    Write-Console "Run As   : $RunAs"        -Severity PLAIN
-    Write-Console "Mode     : $ModeLabel"    -Severity PLAIN
-    Write-Console "Verbose  : $IsVerbose"    -Severity PLAIN
-    Write-Console "Log File : $LogFile"      -Severity PLAIN
+    Write-Console "Site     : $SiteName"         -Severity PLAIN
+    Write-Console "Hostname : $Hostname"         -Severity PLAIN
+    Write-Console "Run As   : $RunAs"            -Severity PLAIN
+    Write-Console "Mode     : $ModeLabel"        -Severity PLAIN
+    Write-Console "Verbose  : $IsVerboseOutput"  -Severity PLAIN
+    Write-Console "Log File : $LogFile"          -Severity PLAIN
     Write-Separator
 
     try {
@@ -1137,7 +1185,10 @@ function Sync-OrgKeysToSiteVariables {
                         Write-VerboseLog "[SKIPPED-REPORT]   ITGOrgKey = $itgOrgId  |  '$currentSiteName'" -Severity INFO -Indent 1
                         $result['ITGWritten'] = $true
                     }
-                    elseif ($existingVars['ITGOrgKey'] -eq $itgOrgId) {
+                    elseif (("$($existingVars['ITGOrgKey'])").Trim() -eq ("$itgOrgId").Trim()) {
+                        # Type-safe comparison: coerce both sides to trimmed strings.
+                        # Guards against ITGlue id surfacing as int vs string, and
+                        # incidental whitespace in DattoRMM variable GET responses.
                         Write-VerboseLog "[SKIPPED-CURRENT]  ITGOrgKey = $itgOrgId  |  '$currentSiteName'" -Severity INFO -Indent 1
                         $skippedCurrent++
                         $result['ITGWritten'] = $true
@@ -1169,7 +1220,8 @@ function Sync-OrgKeysToSiteVariables {
                         Write-VerboseLog "[SKIPPED-REPORT]   HUNTRESS_ORG_KEY = $huntressOrgKey  |  '$currentSiteName'" -Severity INFO -Indent 1
                         $result['HuntressWritten'] = $true
                     }
-                    elseif ($existingVars['HUNTRESS_ORG_KEY'] -eq $huntressOrgKey) {
+                    elseif (("$($existingVars['HUNTRESS_ORG_KEY'])").Trim() -eq ("$huntressOrgKey").Trim()) {
+                        # Type-safe comparison: same pattern as ITGOrgKey above.
                         Write-VerboseLog "[SKIPPED-CURRENT]  HUNTRESS_ORG_KEY = $huntressOrgKey  |  '$currentSiteName'" -Severity INFO -Indent 1
                         $skippedCurrent++
                         $result['HuntressWritten'] = $true
@@ -1286,7 +1338,7 @@ $ScriptParams = @{
     ReportOnly        = $ReportOnly
     SkipITGlue        = $SkipITGlue
     SkipHuntress      = $SkipHuntress
-    Verbose           = $Verbose
+    VerboseOutput     = $VerboseOutput
     SiteName          = $SiteName
     Hostname          = $Hostname
 }

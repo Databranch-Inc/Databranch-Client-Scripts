@@ -1,6 +1,6 @@
 # Sync-OrgKeysToSiteVariables
 
-**Version:** 1.4.0.004
+**Version:** 1.4.1.005
 **Script file:** `Sync-OrgKeysToSiteVariables.ps1`
 **Requires:** PowerShell 5.1 · Windows · outbound HTTPS to three APIs
 **Deployment:** DattoRMM scheduled Script component targeted at a single management host (manual invocation also supported)
@@ -31,7 +31,7 @@ Once these variables are present on a site, any DattoRMM component or monitor ca
 3. **Pull all Huntress organizations** via the Huntress REST API, paginating by page number (Huntress returns `current_page` / `total_pages`, no URL). Builds a second in-memory lookup table the same way, storing the `organization_key` string.
 4. **Pull all DattoRMM sites** via the DattoRMM REST API.
 5. **For each site**, parse the company name out of the `CompanyName - SiteName` format. Splits on literal ` - ` (space-dash-space) using `StringSplitOptions::None`. To handle company names that legitimately contain dashes (e.g. `Smith-Jones Electric - Main`), it tries progressively longer prefixes from left to right, checking each candidate against the combined ITGlue/Huntress lookup tables before falling back to the leftmost token.
-6. **For each site in write mode**, fetches all existing site variables in a single GET before touching anything. Compares each resolved value against what's already there. Four outcomes per variable, all logged (gated by `Verbose`):
+6. **For each site in write mode**, fetches all existing site variables in a single GET before touching anything. Compares each resolved value against what's already there using type-safe trimmed-string comparison. Four outcomes per variable, all logged (gated by `VerboseOutput`):
    - `[WROTE]` — value was missing or different, write succeeded
    - `[SKIPPED-CURRENT]` — value already correct, no write issued
    - `[SKIPPED-REPORT]` — would write, but report-only mode is on
@@ -47,7 +47,7 @@ Once these variables are present on a site, any DattoRMM component or monitor ca
 - It does not create or delete organizations in Huntress or ITGlue.
 - It does not modify existing Huntress agent registrations.
 - It does not touch any device-level variables, only site-level variables.
-- It does not write anything at all unless `ReportOnly` is explicitly set to `false` (via parameter or component variable).
+- It does not write anything unless `ReportOnly` is the **explicit literal string `'false'`**. This is an intentionally asymmetric default-safe guard: any other value — a typo, blank, garbage, or unexpected casing — falls safely back to report-only. Writes must be opted into unambiguously.
 - API secrets are never written to logs, stdout, or disk — they are nulled from memory immediately after use.
 
 ---
@@ -130,12 +130,14 @@ Under the component's **Variables** tab, add the following. Set secrets to **Pas
 | `ITGlueUrl` | String (Value) | No | Override base URL for EU/regional endpoints |
 | `HuntressApiKey` | Password | Conditional | Required unless `SkipHuntress=true` |
 | `HuntressApiSecret` | Password | Conditional | Required unless `SkipHuntress=true` |
-| `ReportOnly` | Selection | Yes | `true` (default) / `false` — must be `false` to commit writes |
+| `ReportOnly` | Selection | Yes | **Default-safe.** Writes are committed **only** when this is the literal string `'false'`. Any other value — default, typo, blank, garbage, or unexpected casing — keeps the run in report-only mode |
 | `SkipITGlue` | Selection | No | `true` / `false` — default `false` |
 | `SkipHuntress` | Selection | No | `true` / `false` — default `false` |
-| `Verbose` | Selection | No | `true` (default) / `false` — set `false` for quiet scheduled runs |
+| `VerboseOutput` | Selection | No | `true` (default) / `false` — set `false` for quiet scheduled runs. Named `VerboseOutput` (not `Verbose`) to avoid collision with PowerShell's built-in `-Verbose` common parameter |
 
-> DattoRMM Boolean-type variables arrive as string `"true"` / `"false"`. The script expects this and compares with `-eq 'true'`. You can use either a **Selection** variable with true/false options or a plain **String (Value)** variable — both produce a string in the environment.
+> DattoRMM Boolean-type variables arrive as strings `"true"` / `"false"`. The script resolves all bool-ish flags with `.Trim().ToLower()` against a literal. You can use either a **Selection** variable with true/false options or a plain **String (Value)** variable — both produce a string in the environment.
+>
+> **Resolution asymmetry.** `ReportOnly` resolves as `-ne 'false'` (writes only on explicit `'false'`) — this is the default-safe direction for the one flag that guards real blast radius. The other flags (`SkipITGlue` / `SkipHuntress` / `VerboseOutput`) resolve as `-eq 'true'` because their ambiguous case is not destructive.
 
 **3. Post-Condition (optional but recommended).**
 
@@ -178,13 +180,14 @@ The parameter-based invocation pattern still works unchanged. Useful for:
 | `-ITGlueApiKey` | `ITGlueApiKey` | _(empty)_ | ITGlue API key. Required unless `SkipITGlue=true` |
 | `-HuntressApiKey` | `HuntressApiKey` | _(empty)_ | Huntress API public key. Required unless `SkipHuntress=true` |
 | `-HuntressApiSecret` | `HuntressApiSecret` | _(empty)_ | Huntress API secret key. Required unless `SkipHuntress=true` |
-| `-ReportOnly` | `ReportOnly` | `'true'` | Safety gate. Must be `'false'` to commit writes |
+| `-ReportOnly` | `ReportOnly` | `'true'` | **Default-safe gate.** Must be the explicit literal `'false'` (string) to commit writes. Any other value stays in report-only |
 | `-SkipITGlue` | `SkipITGlue` | `'false'` | Skip ITGlue entirely, only sync Huntress |
 | `-SkipHuntress` | `SkipHuntress` | `'false'` | Skip Huntress entirely, only sync ITGlue |
+| `-VerboseOutput` | `VerboseOutput` | `'true'` | `'false'` to suppress per-site detail lines (summary and WARN/ERROR still emit) |
 
 All parameters accept either direct PowerShell invocation or DattoRMM component variables — the script checks the env var first and falls back to the passed parameter, then to the default.
 
-Boolean-style parameters (`ReportOnly`, `SkipITGlue`, `SkipHuntress`) are **strings** by design, per DattoRMM convention. The literal string `'true'` is the only truthy value; anything else is treated as false.
+Boolean-style parameters (`ReportOnly`, `SkipITGlue`, `SkipHuntress`, `VerboseOutput`) are **strings** by design, per DattoRMM convention. For `SkipITGlue` / `SkipHuntress` / `VerboseOutput`, the literal string `'true'` is the truthy value. For `ReportOnly`, the logic is inverted and default-safe: only the literal string `'false'` enables writes — anything else stays in report-only.
 
 ---
 
@@ -306,7 +309,7 @@ Key things to look for:
 - `[WARN]` lines with `Failed to write` indicate a specific write failed — script continued
 - The `SUMMARY` line confirms mode, totals, and skipped-current count
 - A trailing `WARNING:` line appears when there are unmatched sites or write errors — this is what the post-condition matches on to flag the job orange
-- All per-site detail lines are suppressed when `Verbose = false` — only the summary and warnings emit
+- All per-site detail lines are suppressed when `VerboseOutput = 'false'` — only the summary and warnings emit
 
 ---
 
@@ -334,6 +337,12 @@ For environments with hundreds of sites and both data sources matching, the writ
 ---
 
 ## Version History
+
+### v1.4.1.005 — 2026-04-23
+- **Inverted `ReportOnly` to default-safe semantics.** Prior resolution used `-eq 'true'`, which meant a typo, blank string, or unexpected casing in the DattoRMM component variable would flip the run to write mode. New resolution uses `-ne 'false'`: writes enable **only** when the value is the explicit literal string `'false'`. Every other possible input — including the default, typos, whitespace, empty strings, and odd casings — keeps the run safely in report-only. This asymmetry is intentional and applies only to `ReportOnly` (the one flag with real blast radius).
+- **Renamed `-Verbose` parameter to `-VerboseOutput`** to avoid collision with PowerShell's built-in `-Verbose` common parameter (exposed automatically by `[CmdletBinding()]`). Internal variable renamed from `$IsVerbose` to `$IsVerboseOutput`. DattoRMM component variable should now be named `VerboseOutput`.
+- **Type-safe idempotency comparison** on both `ITGOrgKey` and `HUNTRESS_ORG_KEY`: both sides now coerced to trimmed strings via `("$value").Trim()` before the `-eq`. Guards against ITGlue's `id` field surfacing as int vs string (depends on deserializer), and against incidental whitespace in DattoRMM variable GET responses. Prevents unnecessary churn writes.
+- Fixed stale `-ReportOnly $false` examples in the script help block to use the correct `-ReportOnly 'false'` (quoted string, since the param is typed `[string]`).
 
 ### v1.4.0.004 — 2026-04-23
 - **Boolean hardening:** all string-bool parameters (`ReportOnly`, `SkipITGlue`, `SkipHuntress`, `Verbose`) now resolved with `.Trim().ToLower() -eq 'true'`. Prevents accidental write-mode entry if DattoRMM passes `'True'`, `'TRUE'`, or `' true '`.
