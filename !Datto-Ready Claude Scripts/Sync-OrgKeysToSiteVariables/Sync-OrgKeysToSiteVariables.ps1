@@ -1064,7 +1064,7 @@ function Sync-OrgKeysToSiteVariables {
 
                 foreach ($org in $huntressOrgs) {
                     $name   = $org.name
-                    $orgKey = $org.organization_key
+                    $orgKey = $org.key
                     $norm   = Get-NormalizedName -Name $name
                     if (-not [string]::IsNullOrWhiteSpace($norm)) {
                         $huntressLookup[$norm] = $orgKey
