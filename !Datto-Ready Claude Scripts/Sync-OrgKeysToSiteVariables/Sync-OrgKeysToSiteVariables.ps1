@@ -123,7 +123,7 @@
 
 .NOTES
     File Name      : Sync-OrgKeysToSiteVariables.ps1
-    Version        : 1.4.1.005
+    Version        : 1.4.1.006
     Author         : Sam Kirsch
     Contributors   :
     Company        : Databranch
@@ -157,6 +157,9 @@
                           Defaults to 'true'. Pass 'false' for quiet runs.
 
 .CHANGELOG
+    v1.4.1.006 - 2026-04-23 - Sam Kirsch
+        - Fixed Huntress org key field name: API returns 'key' not 'organization_key'.
+          All 92 Huntress matches now resolve correctly.
     v1.4.1.005 - 2026-04-23 - Sam Kirsch
         - SAFETY: Inverted ReportOnly resolution to default-safe semantics.
           Previously resolved writes-enabled as "anything != 'true'", which
