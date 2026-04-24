@@ -32,7 +32,7 @@
         DattoApiUrl       - String    - DattoRMM base API URL
         DattoApiKey       - String    - DattoRMM OAuth2 API key
         DattoApiSecret    - Password  - DattoRMM OAuth2 API secret
-        ITGlueApiKey      - Password  - ITGlue account API key
+        ITGlueAPIKey      - Password  - ITGlue account API key
         ITGlueUrl         - String    - (Optional) override base URL
         HuntressApiKey    - Password  - Huntress API public key
         HuntressApiSecret - Password  - Huntress API secret key
@@ -61,8 +61,8 @@
     Base URL for the ITGlue API. Defaults to https://api.itglue.com. Reads
     $env:ITGlueUrl if not supplied. Override for EU/regional endpoints.
 
-.PARAMETER ITGlueApiKey
-    ITGlue account API key. Reads $env:ITGlueApiKey if not supplied.
+.PARAMETER ITGlueAPIKey
+    ITGlue account API key. Reads $env:ITGlueAPIKey if not supplied.
 
 .PARAMETER HuntressApiKey
     Huntress API public key. Reads $env:HuntressApiKey if not supplied.
@@ -100,7 +100,7 @@
         -DattoApiUrl    'https://merlot-api.centrastage.net' `
         -DattoApiKey    'your-datto-key' `
         -DattoApiSecret 'your-datto-secret' `
-        -ITGlueApiKey   'your-itg-key' `
+        -ITGlueAPIKey   'your-itg-key' `
         -HuntressApiKey    'your-huntress-public-key' `
         -HuntressApiSecret 'your-huntress-secret'
 
@@ -112,7 +112,7 @@
         -DattoApiUrl    'https://merlot-api.centrastage.net' `
         -DattoApiKey    'your-datto-key' `
         -DattoApiSecret 'your-datto-secret' `
-        -ITGlueApiKey   'your-itg-key' `
+        -ITGlueAPIKey   'your-itg-key' `
         -HuntressApiKey    'your-huntress-public-key' `
         -HuntressApiSecret 'your-huntress-secret' `
         -ReportOnly 'false'
@@ -248,14 +248,7 @@
         - Initial release
 #>
 
-# ==============================================================================
-# TLS 1.2 ENFORCEMENT
-# PowerShell 5.1 on older Windows (Server 2012 R2, early Win10 builds) defaults
-# to TLS 1.0/1.1 for web requests. All three APIs this script calls (DattoRMM,
-# ITGlue, Huntress) require TLS 1.2 minimum and will reject older connections
-# with errors that look like generic network failures.
-# ==============================================================================
-[Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject([Net.SecurityProtocolType], 3072)
+
 
 # ==============================================================================
 # PARAMETERS
@@ -292,7 +285,7 @@ param (
     [string]$ITGlueUrl = $(if ($env:ITGlueUrl) { $env:ITGlueUrl } else { 'https://api.itglue.com' }),
 
     [Parameter(Mandatory = $false)]
-    [string]$ITGlueApiKey = $(if ($env:ITGlueApiKey) { $env:ITGlueApiKey } else { "" }),
+    [string]$ITGlueAPIKey = $(if ($env:ITGlueAPIKey) { $env:ITGlueAPIKey } else { "" }),
 
     [Parameter(Mandatory = $false)]
     [string]$HuntressApiKey = $(if ($env:HuntressApiKey) { $env:HuntressApiKey } else { "" }),
@@ -323,6 +316,15 @@ param (
 )
 
 # ==============================================================================
+# TLS 1.2 ENFORCEMENT
+# PowerShell 5.1 on older Windows (Server 2012 R2, early Win10 builds) defaults
+# to TLS 1.0/1.1 for web requests. All three APIs this script calls (DattoRMM,
+# ITGlue, Huntress) require TLS 1.2 minimum and will reject older connections
+# with errors that look like generic network failures.
+# ==============================================================================
+[Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject([Net.SecurityProtocolType], 3072)
+
+# ==============================================================================
 # MASTER FUNCTION
 # ==============================================================================
 function Sync-OrgKeysToSiteVariables {
@@ -332,7 +334,7 @@ function Sync-OrgKeysToSiteVariables {
         [string]$DattoApiKey,
         [string]$DattoApiSecret,
         [string]$ITGlueUrl,
-        [string]$ITGlueApiKey,
+        [string]$ITGlueAPIKey,
         [string]$HuntressApiKey,
         [string]$HuntressApiSecret,
         [string]$ReportOnly,
@@ -931,8 +933,8 @@ function Sync-OrgKeysToSiteVariables {
         if ([string]::IsNullOrWhiteSpace($DattoApiKey))    { $MissingParams += 'DattoApiKey' }
         if ([string]::IsNullOrWhiteSpace($DattoApiSecret)) { $MissingParams += 'DattoApiSecret' }
 
-        if (-not $IsSkipITGlue -and [string]::IsNullOrWhiteSpace($ITGlueApiKey)) {
-            $MissingParams += 'ITGlueApiKey (required unless SkipITGlue=true)'
+        if (-not $IsSkipITGlue -and [string]::IsNullOrWhiteSpace($ITGlueAPIKey)) {
+            $MissingParams += 'ITGlueAPIKey (required unless SkipITGlue=true)'
         }
 
         if (-not $IsSkipHuntress) {
@@ -998,7 +1000,7 @@ function Sync-OrgKeysToSiteVariables {
             Write-Console 'Pulling organizations from ITGlue...' -Severity INFO
 
             $itgHeaders = @{
-                'x-api-key'    = $ITGlueApiKey
+                'x-api-key'    = $ITGlueAPIKey
                 'Content-Type' = 'application/vnd.api+json'
             }
 
@@ -1026,7 +1028,7 @@ function Sync-OrgKeysToSiteVariables {
                 $IsSkipITGlue = $true
             }
             finally {
-                $ITGlueApiKey = $null
+                $ITGlueAPIKey = $null
             }
         }
         else {
@@ -1332,7 +1334,7 @@ $ScriptParams = @{
     DattoApiKey       = $DattoApiKey
     DattoApiSecret    = $DattoApiSecret
     ITGlueUrl         = $ITGlueUrl
-    ITGlueApiKey      = $ITGlueApiKey
+    ITGlueAPIKey      = $ITGlueAPIKey
     HuntressApiKey    = $HuntressApiKey
     HuntressApiSecret = $HuntressApiSecret
     ReportOnly        = $ReportOnly
