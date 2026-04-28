@@ -77,16 +77,15 @@ Every script must follow this exact top-level structure. The order is non-negoti
 ```
 1.  #Requires -Version 5.1
 2.  Comment-based help block  (<# .SYNOPSIS ... #>)
-3.  TLS 1.2 enforcement block  (if script makes HTTPS calls)
-4.  Parameter block comment(s)  (BOOLEAN GOTCHA, DattoRMM notes, etc.)
-5.  [CmdletBinding()]
-6.  param ( ... )
-7.  [Net.ServicePointManager] line  ← NEVER here — belongs at step 3
+3.  [CmdletBinding()]
+4.  param ( ... )
+5.  TLS 1.2 enforcement block  (if script makes HTTPS calls)
+6.  Master function
 ```
 
-**The single most common ordering mistake:** placing `[Net.ServicePointManager]::SecurityProtocol` between `[CmdletBinding()]` and `param()`. This is wrong. The TLS line is an executable statement. `[CmdletBinding()]` must appear immediately above `param()` with zero executable statements between them. Violating this breaks the CmdletBinding contract and has caused real bugs.
+**The single most common ordering mistake:** placing `[Net.ServicePointManager]::SecurityProtocol` before `[CmdletBinding()]` and `param()`. This is wrong. The TLS line is an executable statement. `[CmdletBinding()]` and `param()` must appear at the top of the script with zero executable statements before them. Violating this breaks the CmdletBinding contract and has caused real bugs.
 
-> **Rule:** If you are writing or reviewing a script and see anything other than `param (` on the line immediately after `[CmdletBinding()]`, stop and fix it before continuing.
+> **Rule:** If you are writing or reviewing a script and see anything before `[CmdletBinding()]`, stop and fix it before continuing.
 
 The template enforces this order. Do not change the ordering of top-level blocks when deriving a script from the template.
 

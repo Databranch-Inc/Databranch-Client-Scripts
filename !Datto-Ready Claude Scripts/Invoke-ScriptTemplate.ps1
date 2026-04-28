@@ -85,7 +85,7 @@
     v1.5.0.0 - 2026-04-24 - Sam Kirsch
         - Hardened [CmdletBinding()] placement: now enforced immediately above
           param() with explicit ordering comments. TLS block correctly positioned
-          before [CmdletBinding()] — this ordering had caused a real production
+          after [CmdletBinding()] — this ordering had caused a real production
           bug and is now non-negotiable per spec.
         - Updated all boolean string parameter resolutions to use
           .Trim().ToLower() -eq 'true' (was bare -eq 'true'). DattoRMM does not
@@ -133,23 +133,6 @@
     v1.0.0.0 - 2026-02-20 - Sam Kirsch
         - Initial release
 #>
-
-# ==============================================================================
-# TLS 1.2 ENFORCEMENT
-# Required for any script making HTTPS REST calls.
-# PowerShell 5.1 on older Windows (Server 2012 R2, early Win10) defaults to
-# TLS 1.0/1.1. ITGlue, Microsoft Graph, and most modern REST APIs require
-# TLS 1.2 minimum and reject older connections with errors that look like
-# generic network failures.
-#
-# POSITION: This block must appear AFTER the help block and BEFORE
-# [CmdletBinding()]. The TLS line is an executable statement — it must never
-# appear between [CmdletBinding()] and param(). If you move this block during
-# editing, the script will silently break. Leave it here.
-#
-# Remove this block only if the script makes no HTTPS calls whatsoever.
-# ==============================================================================
-[Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject([Net.SecurityProtocolType], 3072)
 
 # ==============================================================================
 # PARAMETERS
@@ -200,9 +183,10 @@
 #   This ensures any ambiguous value (blank, typo, unexpected casing) stays
 #   safely in report-only mode. Only the explicit literal 'false' enables writes.
 #
-# NOTE: [CmdletBinding()] MUST appear immediately above param() with nothing
-# between them. The TLS enforcement line above is an executable statement and
-# belongs BEFORE this block, not between [CmdletBinding()] and param().
+# NOTE: This [CmdletBinding()] and param() MUST appear immediately first in the 
+# script after comments. This MUST be the first 'active' element of the script
+# otherwise it breaks PowerShell compliance.  Do NOT place the TLS block before 
+# this one.
 # ==============================================================================
 [CmdletBinding()]
 param (
@@ -230,6 +214,22 @@ param (
     [Parameter(Mandatory = $false)]
     [string]$Hostname = $(if ($env:CS_HOSTNAME) { $env:CS_HOSTNAME } else { $env:COMPUTERNAME })
 )
+# ==============================================================================
+# TLS 1.2 ENFORCEMENT
+# Required for any script making HTTPS REST calls.
+# PowerShell 5.1 on older Windows (Server 2012 R2, early Win10) defaults to
+# TLS 1.0/1.1. ITGlue, Microsoft Graph, and most modern REST APIs require
+# TLS 1.2 minimum and reject older connections with errors that look like
+# generic network failures.
+#
+# POSITION: This block must appear AFTER [CmdletBinding()] and param(). The TLS 
+# line is an executable statement — it must never before [CmdletBinding()] nor 
+# appear between [CmdletBinding()] and param(). Place it right before the master
+# function. 
+#
+# Remove this block only if the script makes no HTTPS calls whatsoever.
+# ==============================================================================
+[Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject([Net.SecurityProtocolType], 3072)
 
 # ==============================================================================
 # MASTER FUNCTION
