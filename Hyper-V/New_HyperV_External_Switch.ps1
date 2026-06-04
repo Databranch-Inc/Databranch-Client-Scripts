@@ -32,7 +32,7 @@ function New-HVNetworkConfig-NoVLAN {
 
     # Validate adapters
     $adapters = Get-NetAdapter | Where-Object { $_.Name -in $NetAdapterNames }
-    if ($adapters.Count -ne $NetAdapterNames.Count) {
+    if (($adapters | measure).Count -ne $NetAdapterNames.Count) {
         throw "[ERROR] One or more adapters not found: $NetAdapterNames"
     }
 
