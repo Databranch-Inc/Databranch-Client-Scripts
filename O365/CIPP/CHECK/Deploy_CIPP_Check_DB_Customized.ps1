@@ -56,9 +56,10 @@ $enableCippReporting = 1 # 0 = Unchecked, 1 = Checked (Enabled); default is 1; T
 $cippServerUrl = "https://cipp.databranch.com" # This will set the "CIPP Server URL" option in the extension settings; default is blank; if you set $enableCippReporting to 1, you must set this to a valid URL including the protocol (e.g., https://cipp.cyberdrain.com). Can be vanity URL or the default azurestaticapps.net domain.
 $cippTenantId = "$TenantId" # This will set the "Tenant ID/Domain" option in the extension settings; default is blank; if you set $enableCippReporting to 1, you must set this to a valid Tenant ID.
 $customRulesUrl = "https://raw.githubusercontent.com/Databranch-Inc/Check/refs/heads/main/rules/detection-rules.json" # This will set the "Config URL" option in the Detection Configuration settings; default is blank.
-$updateInterval = 24 # This will set the "Update Interval" option in the Detection Configuration settings; default is 24 (hours). Range: 1-168 hours (1 hour to 1 week).
+$updateInterval = 1 # This will set the "Update Interval" option in the Detection Configuration settings; default is 24 (hours). Range: 1-168 hours (1 hour to 1 week).
 $urlWhitelist = @() # This will set the "URL Whitelist" option in the Detection Configuration settings; default is blank; if you want to add multiple URLs, add them as a comma-separated list within the brackets (e.g., @("https://example1.com", "https://example2.com")). Supports simple URLs with * wildcard (e.g., https://*.example.com) or advanced regex patterns (e.g., ^https:\/\/(www\.)?example\.com\/.*$).
 $enableDebugLogging = 0 # 0 = Unchecked, 1 = Checked (Enabled); default is 0; This will set the "Enable Debug Logging" option in the Activity Log settings.
+$CHECKDeploymentVersionDate = "2026-06-09" # This is not a setting in the extension but is used for tracking the deployment version of the CHECK extension with customized settings. Update this date each time you make changes to the settings in this script or in the Custom Rules URL to ensure that the most recent versions of the extenstions are configured. You will also need to update the $ExpectedValue variable in the CIPP_REG_CHECK.ps1 monoitoring script, as that script reads this key to trigger re-deployment.environment.
 
 # Generic Webhook Settings
 $enableGenericWebhook = 0 # 0 = Disabled, 1 = Enabled; default is 0; This will enable the generic webhook for sending detection events to a custom endpoint.
@@ -101,6 +102,7 @@ function Configure-ExtensionSettings {
     New-ItemProperty -Path $ManagedStorageKey -Name "customRulesUrl" -PropertyType String -Value $customRulesUrl -Force | Out-Null
     New-ItemProperty -Path $ManagedStorageKey -Name "updateInterval" -PropertyType DWord -Value $updateInterval -Force | Out-Null
     New-ItemProperty -Path $ManagedStorageKey -Name "enableDebugLogging" -PropertyType DWord -Value $enableDebugLogging -Force | Out-Null
+    New-ItemProperty -Path $ManagedStorageKey -Name "CHECKDeploymentVersionDate" -PropertyType String -Value $CHECKDeploymentVersionDate -Force | Out-Null
 
     # Create and configure custom branding
     $customBrandingKey = "$ManagedStorageKey\customBranding"
