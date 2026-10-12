@@ -1,0 +1,12 @@
+{
+  "connection": [
+    {
+	"hostname":	"vpn.databranch.com:4433",
+	"domain":	"Databranch",
+	"authType":	"local",
+	"vpnProto":	"auto",
+	"serverCert":	"9D AA 18 B6 B0 E9 5A 90 0F 7D 5E E1 6C 2E CB 50 98 FF 2E 1B",
+    "owner": "BUILTIN\\Users"
+	}
+  ]
+}

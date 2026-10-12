@@ -1,13 +1,3 @@
-Function Check-ClusterHealth {
-    <#Param (
-        [Parameter(Mandatory=$true)]
-        [string]$ClusterIP,
-        [Parameter(Mandatory=$true)]
-        [string]$Username,
-        [Parameter(Mandatory=$true)]
-        [string]$Password
-    )
-    #>
 
 # Define the API endpoint and credentials
 $BaseUrl = "https://10.10.1.24/rest/v1"
@@ -53,5 +43,3 @@ $ErrorFilePath = "ClusterNodesInError.json"
 $NodesInError | ConvertTo-Json -Depth 10 | Set-Content -Path $ErrorFilePath
 
 Write-Host "Health check completed. Nodes in error saved to $ErrorFilePath."
-
-}
