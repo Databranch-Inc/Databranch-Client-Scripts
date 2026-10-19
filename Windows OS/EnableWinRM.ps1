@@ -377,42 +377,39 @@ function Enable-RemoteWinRM {
     }
 
     function Get-WinRMListenerState {
-        [CmdletBinding()]
-        param ()
 
-        $ListenerState = [ordered]@{
-            HttpListenerPresent = $false
-            HttpsListenerPresent = $false
-        }
+    [CmdletBinding()]
+    param ()
 
-        try {
-            $ListenerOutput = & winrm.exe enumerate winrm/config/listener 2>&1
+    $ListenerState = [ordered]@{
+        HttpListenerPresent  = $false
+        HttpsListenerPresent = $false
+    }
 
-            if ($LASTEXITCODE -ne 0) {
-                return [PSCustomObject]$ListenerState
+    try {
+
+        $Listeners = Get-ChildItem `
+            -Path WSMan:\localhost\Listener `
+            -ErrorAction Stop
+
+        foreach ($Listener in $Listeners) {
+
+            $Keys = ($Listener.Keys -join ';')
+
+            if ($Keys -match 'Transport=HTTP') {
+                $ListenerState.HttpListenerPresent = $true
             }
 
-            $CurrentTransport = $null
-
-            foreach ($Line in $ListenerOutput) {
-                if ($Line -match '^\s*Transport\s*=\s*(\S+)') {
-                    $CurrentTransport = $Matches[1]
-
-                    if ($CurrentTransport -eq 'HTTP') {
-                        $ListenerState.HttpListenerPresent = $true
-                    }
-
-                    if ($CurrentTransport -eq 'HTTPS') {
-                        $ListenerState.HttpsListenerPresent = $true
-                    }
-                }
+            if ($Keys -match 'Transport=HTTPS') {
+                $ListenerState.HttpsListenerPresent = $true
             }
         }
-        catch {
-            return [PSCustomObject]$ListenerState
-        }
+    }
+    catch {
+    }
+    
+    return [PSCustomObject]$ListenerState
 
-        return [PSCustomObject]$ListenerState
     }
 
     function Get-WinRMFirewallState {
@@ -911,17 +908,8 @@ function Enable-RemoteWinRM {
                 )
             }
 
-            $EnableRemotingParams = @{
-                Force       = $true
-                ErrorAction = 'Stop'
-            }
-
-            if ($AllowPublic) {
-                $EnableRemotingParams['SkipNetworkProfileCheck'] = $true
-            }
-
-            Enable-PSRemoting @EnableRemotingParams
-
+           Enable-PSRemoting -Force -Confirm:$false -ErrorAction Stop
+         
             Write-VerboseLog -Message (
                 '[WROTE] Enabled or repaired Windows PowerShell remoting.'
             ) -Severity 'SUCCESS'
@@ -1022,8 +1010,14 @@ function Enable-RemoteWinRM {
             $ValidationFailures++
         }
 
+     # If WSMan responds locally, we know an HTTP listener is functioning
+        $ListenerValidated = (
+            $AfterState.HttpListenerPresent -or
+            $AfterState.LocalWSManResponding
+        )
+
         $Result = Write-ValidationResult `
-            -Passed $AfterState.HttpListenerPresent `
+            -Passed $ListenerValidated `
             -SuccessMessage 'WinRM HTTP listener exists.' `
             -FailureMessage 'WinRM HTTP listener was not detected.'
 

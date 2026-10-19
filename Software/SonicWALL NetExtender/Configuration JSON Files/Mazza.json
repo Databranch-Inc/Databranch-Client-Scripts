@@ -1,13 +1,12 @@
-{
-"connection":[
-    {
+[{
 		"name":	"Mazza",
 		"hostname":	"sw.mazza-hvac.com:4433",
-		"domain":	"LocalDomain",
-		"authType":	"",
-		"vpnProto":	"auto",
-		"isDefault":	1,
+		"domain": "Choose during login",
+        "authType":     "",
+        "vpnProto":      "auto",
+        "serverCert":  "",
+        "clientCert":    "Choose during login",
+        "isDefault":	1,
 		"isAlwaysOn":	0
 	}
 ]
-}
